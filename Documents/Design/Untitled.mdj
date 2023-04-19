@@ -865,30 +865,13 @@
 													"height": 13,
 													"text": "entry/switchDynamicMode",
 													"horizontalAlignment": 0
-												},
-												{
-													"_type": "UMLInternalActivityView",
-													"_id": "AAAAAAGHlH5a1MVLlM4=",
-													"_parent": {
-														"$ref": "AAAAAAGHhBrpvuK4Q/E="
-													},
-													"model": {
-														"$ref": "AAAAAAGHlH5aycVIpOo="
-													},
-													"font": "Arial;13;0",
-													"left": 725,
-													"top": 781,
-													"width": 151.71533203125,
-													"height": 13,
-													"text": "do/supplyPower",
-													"horizontalAlignment": 0
 												}
 											],
 											"font": "Arial;13;0",
 											"left": 720,
 											"top": 761,
 											"width": 161.71533203125,
-											"height": 38
+											"height": 23
 										},
 										{
 											"_type": "UMLInternalTransitionCompartmentView",
@@ -917,7 +900,7 @@
 											},
 											"font": "Arial;13;0",
 											"left": 720,
-											"top": 799,
+											"top": 784,
 											"width": 161.71533203125
 										}
 									],
@@ -926,7 +909,7 @@
 									"left": 720,
 									"top": 736,
 									"width": 161.71533203125,
-									"height": 63,
+									"height": 48,
 									"nameCompartment": {
 										"$ref": "AAAAAAGHhBrpvuKz9Iw="
 									},
@@ -1156,7 +1139,7 @@
 												"$ref": "AAAAAAGHhCHp4OPsTRs="
 											},
 											"edgePosition": 1,
-											"text": "directorDetected / checkDirector"
+											"text": "directorDetected / registerDirector"
 										},
 										{
 											"_type": "EdgeLabelView",
@@ -1329,7 +1312,7 @@
 												"$ref": "AAAAAAGHhCh7NuTEzws="
 											},
 											"edgePosition": 1,
-											"text": "directorDetected / checkDirector"
+											"text": "directorDetected / registerDirector"
 										},
 										{
 											"_type": "EdgeLabelView",
@@ -1692,7 +1675,7 @@
 												"$ref": "AAAAAAGHhCszLOU0D+0="
 											},
 											"edgePosition": 1,
-											"text": "directorDetected / checkDirector"
+											"text": "directorDetected / registerDirector"
 										},
 										{
 											"_type": "EdgeLabelView",
@@ -2281,7 +2264,7 @@
 											},
 											"font": "Arial;13;0",
 											"left": 526,
-											"top": 776,
+											"top": 773,
 											"width": 179.9560546875,
 											"height": 13,
 											"alpha": 1.5707963267948966,
@@ -2303,8 +2286,8 @@
 											},
 											"visible": null,
 											"font": "Arial;13;0",
-											"left": 615,
-											"top": 791,
+											"left": 616,
+											"top": 788,
 											"height": 13,
 											"alpha": 1.5707963267948966,
 											"distance": 30,
@@ -2325,7 +2308,7 @@
 											"visible": false,
 											"font": "Arial;13;0",
 											"left": 614,
-											"top": 747,
+											"top": 744,
 											"height": 13,
 											"alpha": -1.5707963267948966,
 											"distance": 15,
@@ -2343,7 +2326,7 @@
 										"$ref": "AAAAAAGHhBrpvuKyIEU="
 									},
 									"lineStyle": 1,
-									"points": "719:768;511:769",
+									"points": "719:762;511:769",
 									"showVisibility": true,
 									"nameLabel": {
 										"$ref": "AAAAAAGHhESoq+f9kB4="
@@ -2376,7 +2359,7 @@
 											},
 											"font": "Arial;13;0",
 											"left": 416,
-											"top": 588,
+											"top": 551,
 											"width": 79.4599609375,
 											"height": 13,
 											"alpha": -3.1734179757649974,
@@ -2398,8 +2381,8 @@
 											},
 											"visible": null,
 											"font": "Arial;13;0",
-											"left": 501,
-											"top": 556,
+											"left": 504,
+											"top": 524,
 											"height": 13,
 											"alpha": 1.5707963267948966,
 											"distance": 30,
@@ -2419,8 +2402,8 @@
 											},
 											"visible": false,
 											"font": "Arial;13;0",
-											"left": 505,
-											"top": 600,
+											"left": 503,
+											"top": 568,
 											"height": 13,
 											"alpha": -1.5707963267948966,
 											"distance": 15,
@@ -2438,7 +2421,7 @@
 										"$ref": "AAAAAAGHhESWH+fr7YY="
 									},
 									"lineStyle": 1,
-									"points": "499:759;504:592;719:574",
+									"points": "499:759;504:560;719:565",
 									"showVisibility": true,
 									"nameLabel": {
 										"$ref": "AAAAAAGHhETa/+gRMK0="
@@ -3024,7 +3007,7 @@
 											},
 											"font": "Arial;13;0",
 											"left": 415,
-											"top": 539,
+											"top": 520,
 											"width": 67.90087890625,
 											"height": 13,
 											"alpha": -3.0422231506429207,
@@ -3046,8 +3029,8 @@
 											},
 											"visible": null,
 											"font": "Arial;13;0",
-											"left": 498,
-											"top": 508,
+											"left": 499,
+											"top": 492,
 											"height": 13,
 											"alpha": 1.5707963267948966,
 											"distance": 30,
@@ -3068,7 +3051,7 @@
 											"visible": false,
 											"font": "Arial;13;0",
 											"left": 494,
-											"top": 552,
+											"top": 536,
 											"height": 13,
 											"alpha": -1.5707963267948966,
 											"distance": 15,
@@ -3086,7 +3069,7 @@
 										"$ref": "AAAAAAGHhE+sp+jgRug="
 									},
 									"lineStyle": 1,
-									"points": "499:491;496:544;719:561",
+									"points": "498:491;496:528;719:557",
 									"showVisibility": true,
 									"nameLabel": {
 										"$ref": "AAAAAAGHhFFQyekkCTQ="
@@ -3128,7 +3111,7 @@
 												"$ref": "AAAAAAGHhFNibulvnKQ="
 											},
 											"edgePosition": 1,
-											"text": "directorDetected / checkDirector"
+											"text": "directorDetected / registerDirector"
 										},
 										{
 											"_type": "EdgeLabelView",
@@ -3307,8 +3290,8 @@
 												"$ref": "AAAAAAGHhGhhB+o/XfE="
 											},
 											"font": "Arial;13;0",
-											"left": 616,
-											"top": 867,
+											"left": 615,
+											"top": 860,
 											"width": 179.9560546875,
 											"height": 13,
 											"alpha": -4.6990494114949275,
@@ -3331,7 +3314,7 @@
 											"visible": null,
 											"font": "Arial;13;0",
 											"left": 768,
-											"top": 868,
+											"top": 860,
 											"height": 13,
 											"alpha": 1.5707963267948966,
 											"distance": 30,
@@ -3352,7 +3335,7 @@
 											"visible": false,
 											"font": "Arial;13;0",
 											"left": 812,
-											"top": 869,
+											"top": 861,
 											"height": 13,
 											"alpha": -1.5707963267948966,
 											"distance": 15,
@@ -3370,7 +3353,7 @@
 										"$ref": "AAAAAAGHhEGJUueUes8="
 									},
 									"lineStyle": 1,
-									"points": "797:951;800:799",
+									"points": "797:951;800:784",
 									"showVisibility": true,
 									"nameLabel": {
 										"$ref": "AAAAAAGHhGhhB+pBBJo="
@@ -3963,16 +3946,6 @@
 											},
 											"name": "switchDynamicMode"
 										}
-									],
-									"doActivities": [
-										{
-											"_type": "UMLOpaqueBehavior",
-											"_id": "AAAAAAGHlH5aycVIpOo=",
-											"_parent": {
-												"$ref": "AAAAAAGHhBrpvuKxIRg="
-											},
-											"name": "supplyPower"
-										}
 									]
 								},
 								{
@@ -4256,7 +4229,7 @@
 											"_parent": {
 												"$ref": "AAAAAAGHhCHp4OPrISI="
 											},
-											"name": "checkDirector"
+											"name": "registerDirector"
 										}
 									]
 								},
@@ -4302,7 +4275,7 @@
 											"_parent": {
 												"$ref": "AAAAAAGHhCb/8eSM6jo="
 											},
-											"name": "checkDirector"
+											"name": "registerDirector"
 										}
 									]
 								},
@@ -4335,7 +4308,7 @@
 											"_parent": {
 												"$ref": "AAAAAAGHhCh7NuTDdEQ="
 											},
-											"name": "checkDirector"
+											"name": "registerDirector"
 										}
 									]
 								},
@@ -4396,7 +4369,7 @@
 											"_parent": {
 												"$ref": "AAAAAAGHhCszLOUzJKU="
 											},
-											"name": "checkDirector"
+											"name": "registerDirector"
 										}
 									]
 								},
@@ -4909,7 +4882,7 @@
 											"_parent": {
 												"$ref": "AAAAAAGHhFNibuluWGs="
 											},
-											"name": "checkDirector"
+											"name": "registerDirector"
 										}
 									]
 								},

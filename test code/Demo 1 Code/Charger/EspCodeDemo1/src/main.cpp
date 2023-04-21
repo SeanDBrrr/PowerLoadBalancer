@@ -4,9 +4,9 @@
  
 const char *name = "Kiwy";
 const char *password = "aquamagic23";
-const char *mqtt_module = "Group4-PLB";
-const char *mqtt_topic = "group4/SentPower";
-const char *mqtt_topic_receiver = "group4/RequestPower";
+const char *mqtt_module = "Group4-Charger";
+const char *mqtt_topic = "group4/RequestPower";
+const char *mqtt_topic_receiver = "group4/SentPower";
 const char *broker_ip = "192.168.61.23";
 
 const int CONNECTION_LED = 2;
@@ -24,11 +24,10 @@ void setup()
 
 void onConnectionEstablished()
 {
-  digitalWrite(CONNECTION_LED, HIGH);
   client1.subscribe(mqtt_topic_receiver, [](const String & topic, const String & payload) {
-      if(payload == "requestPower")
+      if(payload == "11kW")
       {
-        client1.publish(mqtt_topic, "11kW", 0);
+        digitalWrite(CONNECTION_LED, HIGH);
       }
   });
 }
@@ -37,8 +36,6 @@ void loop()
 {
   client1.loop();
 
-  if(!client1.isConnected())
-  {
-    digitalWrite(CONNECTION_LED, LOW);
-  }
+  //IF BUTTON IS PRESSED
+  client1.publish(mqtt_topic, "requestPower");
 }

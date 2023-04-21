@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"name": "EspCodeDemo1",
+			"path": "../../../../../../../Documents/PlatformIO/Projects/EspCodeDemo1"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"typeinfo": "cpp"
+		}
+	}
+}

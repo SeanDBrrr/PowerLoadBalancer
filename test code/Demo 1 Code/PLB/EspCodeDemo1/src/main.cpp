@@ -30,6 +30,10 @@ void onConnectionEstablished()
       {
         client1.publish(mqtt_topic, "11kW", 0);
       }
+      else if(payload == "requestStop")
+      {
+        client1.publish(mqtt_topic, "0kW", 0);
+      }
   });
 }
 

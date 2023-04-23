@@ -14,6 +14,9 @@ const char *mqtt_topic = "group4/RequestPower";
 const char *mqtt_topic_receiver = "group4/SentPower";
 const char *broker_ip = "192.168.61.23";
 
+int dir = 1;
+int helper = 0;
+
 using namespace std;
 long previousTime = millis();
 Button button(BUTTON_PIN); 
@@ -35,23 +38,42 @@ void onConnectionEstablished()
       {
         digitalWrite(CONNECTION_LED, HIGH);
       }
+      else if(payload == "0kW")
+      {
+        digitalWrite(CONNECTION_LED, LOW);
+      }
   });
 }
 
 void loop()
 {
-  //IF BUTTON IS PRESSED
+  client1.loop();
+  
   if (button.Pressed())
   {
-    digitalWrite(REQUEST_POWER_LED, HIGH);
-    client1.publish(mqtt_topic, "requestPower");
-    Serial.println("Pressed");
+    if(helper == 0)
+    {
+      digitalWrite(REQUEST_POWER_LED, HIGH);
+      Serial.println("Pressed");
+      if(dir == 1)
+      {
+        client1.publish(mqtt_topic, "requestPower");
+      }
+      else if(dir == -1)
+      {
+        client1.publish(mqtt_topic, "requestStop");
+      }
+      dir *= -1;
+      helper = 1;
+    }
   }
   else
   {
     digitalWrite(REQUEST_POWER_LED, LOW);
+    if(helper == 1)
+    {
+      Serial.println("Released");
+      helper = 0;
+    }
   }
-  client1.loop();
-
-  delay(100);
 }

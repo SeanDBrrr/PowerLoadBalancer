@@ -1,6 +1,7 @@
 #ifndef IPLB_H
 #define IPLB_H
-#include "string.h"
+#include <Arduino.h>
+#include <string.h>
 
 class IPLB
 { 
@@ -9,7 +10,7 @@ class IPLB
     ~IPLB(){}
 
     virtual int supplyPower() = 0;
-    //virtual void Send(String topic, String attr);
+    virtual void Send(String topic, String attr);
 };
 
 #endif

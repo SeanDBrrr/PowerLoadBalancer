@@ -1,6 +1,7 @@
 #ifndef MQTTSERVER_H
 #define MQTTSERVER_H
 
+#include <string>
 // #include "IPLB.h"
 // #include "EspMQTTClient.h"
 // #include <string.h>

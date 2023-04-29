@@ -1,0 +1,10 @@
+PLB Changes:
+
+- 2 different supplyPower functions
+- checkDirector function modified, one arg added
+- 2 new attributes (lists of user and director stations)
+- addStation function added
+- 1 new attributes lists of director IDs
+- 1 static variable added
+- change power type from int to float
+- 1 function added in IStation

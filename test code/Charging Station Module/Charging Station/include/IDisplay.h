@@ -1,13 +1,16 @@
 #pragma once
 
-class IPlug
+#ifndef _IDisplay_HPP
+#define _IDisplay_HPP
+
+class IDisplay
 {
 public:
-    virtual ~IPlug();
-
-    virtual bool isPlugged() = 0;
+    virtual ~IDisplay();
 };
 
-IPlug::~IPlug()
+IDisplay::~IDisplay()
 {
 }
+
+#endif

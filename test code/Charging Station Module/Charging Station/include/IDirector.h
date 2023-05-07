@@ -1,13 +1,16 @@
 #pragma once
 
-class IPlug
+#ifndef _IDirector_HPP
+#define _IDirector_HPP
+
+class IDirector
 {
 public:
-    virtual ~IPlug();
-
-    virtual bool isPlugged() = 0;
+    virtual ~IDirector();
 };
 
-IPlug::~IPlug()
+IDirector::~IDirector()
 {
 }
+
+#endif

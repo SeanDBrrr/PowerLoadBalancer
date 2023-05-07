@@ -1,13 +1,19 @@
 #pragma once
 
-class IPlug
+#ifndef _IPLB_HPP
+#define _IPLB_HPP
+
+class IPLB
 {
 public:
-    virtual ~IPlug();
-
-    virtual bool isPlugged() = 0;
+    virtual ~IPLB();
+    virtual int supplyPower() = 0;
+    virtual int stopSupply() = 0;
+    virtual void checkDirector(int id) = 0;
 };
 
-IPlug::~IPlug()
+IPLB::~IPLB()
 {
 }
+
+#endif

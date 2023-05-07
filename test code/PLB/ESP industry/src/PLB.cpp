@@ -13,7 +13,7 @@ PLB::manageIdleState(Events ev) {
         supplyPowerToBuidling();
         break;
     case supply:
-        supplyPowerToStation();
+        supplyPowerToStation(_stations[1]);
         break;
     }
 }
@@ -117,7 +117,8 @@ PLB::supplyPowerToStation(IStation& station) {
     if (busyStations > _directorIds.size()) {
         _userStations.emplace_back(std::move(station));
     }
-    calculatePower(buidlingPower);
+    
+    _calculatePower(buidlingPower);
 }
 
 /*

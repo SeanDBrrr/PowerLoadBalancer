@@ -50,7 +50,7 @@ PLB::_calculatePower(int solarPower) {
     static int prevSolarPower = 0;
     if (solarPower==prevSolarPower) return;    
     int availablePower = 20+solarPower;
-    int directorPower, userPower;
+    int directorPower, userPower, stationPower;
     switch (_state) {
     case IDLE:
         break;
@@ -78,7 +78,7 @@ PLB::_calculatePower(int solarPower) {
         }
         break;
     case DIR3:
-        int stationPower = availablePower/4;
+        stationPower = availablePower/4;
         _userStations.at(0).charge(stationPower);
         for (size_t i = 0; i < _directorStations.size(); i++) {
             _directorStations.at(i).charge(stationPower);
@@ -99,8 +99,6 @@ PLB::_calculatePower(int solarPower) {
                 _directorStations.at(0).charge(availablePower/3);
             }
         }
-        break;
-    default:
         break;
     }
     prevSolarPower = solarPower;

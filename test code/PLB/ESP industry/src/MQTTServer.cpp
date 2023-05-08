@@ -82,7 +82,7 @@ bool MQTTServer::getSupplyRequest()
     return _receivedRequest;
 }
 
-void MQTTServer::setSupplyRequest()
+void MQTTServer::clearSupplyRequest()
 {
     _receivedRequest = false;
 }

@@ -32,7 +32,7 @@ public:
     void onConnectionEstablished();
     int getStationId();
     bool getSupplyRequest();
-    void setSupplyRequest();
+    void clearSupplyRequest();
     ~MQTTServer();
 };
 

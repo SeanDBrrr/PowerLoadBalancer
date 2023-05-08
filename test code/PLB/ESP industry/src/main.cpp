@@ -22,18 +22,18 @@ void loop()
     switch (mqtt.getStationId())
     {
     case 1:
-      event = supply1;
+      event = EV_supply1;
       break;
     case 2:
-      event = supply2;
+      event = EV_supply2;
       break;
     case 3:
-      event = supply3;
+      event = EV_supply3;
       break;
     case 4:
-      event = supply4;
+      event = EV_supply4;
       break;
     }
-    mqtt.setSupplyRequest();
+    mqtt.clearSupplyRequest();
   }
 }

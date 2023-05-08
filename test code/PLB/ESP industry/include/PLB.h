@@ -1,19 +1,25 @@
 #ifndef _PLB_HPP
 #define _PLB_HPP
 
-#include "vector"
-#include "utility"
+#include <vector>
+#include <utility>
 #include "IBuilding.h"
 #include "IStation.h"
 
 enum States {IDLE=1, NO_DIR, DIR1, DIR2, DIR3, DIR3_ONLY};
 enum Modes {Auto=1, Manual};
-enum Events {noEvent = 0, timeout=1, supply1, supply2, supply3, supply4, stop, director}variable;
+enum Events {noEvent = 0, 
+             EV_timeout, 
+             EV_supply1, 
+             EV_supply2, 
+             EV_supply3, 
+             EV_supply4,
+             EV_stop, 
+             EV_director};
 
 class PLB
 {
     static int busyStations;
-
 private:
     States _state;
     Modes _mode;
@@ -71,9 +77,5 @@ public:
     void 
     setEvent(Events ev) { _event = ev; }
 };
-
-
-
-
 
 #endif /* _PLB_HPP */

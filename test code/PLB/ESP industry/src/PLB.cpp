@@ -8,14 +8,15 @@ PLB::addStation(const IStation& station) {
 void 
 PLB::manageIdleState(Events ev) {
     switch (ev) {
-    case EV_Timeout: 
+    case EV_timeout: 
         _building.getPowerProduced();
         supplyPowerToBuidling();
         break;
-    case supply1:
+    case EV_supply1:
         supplyPowerToStation(_stations[1]);
         break;
-    case EV_Director:
+    case EV_director:
+        break;
     }
 }
 
@@ -126,7 +127,7 @@ PLB::_calculatePower(int solarPower) {
             _directorStations.at(0).charge(11);
             _directorStations.at(1).charge(11);
             _directorStations.at(2).charge(availablePower-22);
-        } 
+        }
         else {
             for (size_t i = 0; i < _userStations.size(); i++) {
                 _stations.at(i).switchMode(Dynamic);
@@ -134,25 +135,8 @@ PLB::_calculatePower(int solarPower) {
             }
         }
         break;
-    default:
-        break;
     }
     prevSolarPower = solarPower;
-}
-
-/*
- * @brief This function is called only when a user press the start button
- * @return void
-*/
-void 
-PLB::supplyPowerToStation(IStation& station) {
-    ++busyStations;
-    int buidlingPower = _building.getPowerProduced();
-    if (busyStations > _directorIds.size()) {
-        _userStations.emplace_back(std::move(station));
-    }
-    
-    _calculatePower(buidlingPower);
 }
 
 /*

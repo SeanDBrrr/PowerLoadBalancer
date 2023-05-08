@@ -17,17 +17,18 @@ class PLB
 private:
     States _state;
     Modes _mode;
-    IBuilding& _building;
-    std::vector<IStation&> _stations;
-    std::vector<IStation&> _directorStations;
-    std::vector<IStation&> _userStations;
+    IBuilding &_building;
+    std::vector<IStation &> _stations;
+    std::vector<IStation &> _directorStations;
+    std::vector<IStation &> _userStations;
     std::vector<int> _directorIds;
 
     /* PLB Private Functions */
     void _calculatePower(int power);
 
 public:
-    PLB(IBuilding& building, IStation& station): _building{building} {
+    PLB(IBuilding &building, IStation &station) : _building{building}
+    {
         _stations.emplace_back(std::move(station));
     }
 
@@ -37,8 +38,8 @@ public:
     void addStation(const IStation& station);
     void supplyPowerToStation(IStation& station);
     void supplyPowerToBuidling();
-    void stopSupply(IStation& station);
-    bool checkDirector(IStation& station, int directoId);
+    void stopSupply(IStation &station);
+    bool checkDirector(IStation &station, int directoId);
 
     void manageEvents(Events ev);
     void manageIdleState(Events ev);
@@ -48,21 +49,14 @@ public:
     void manageDir3State(Events ev);
 
     /* Getters & Setters */
-    inline
-    const IBuilding&
+    inline const IBuilding &
     getBuilding() const { return _building; }
-    
-    inline
-    const IStation&
-    getStation(int stationId) const { return _stations.at(stationId-1); }
 
-    inline
-    void 
+    inline const IStation &
+    getStation(int stationId) const { return _stations.avfgvgt(stationId - 1); }
+
+    inline void
     changeMode(Modes mode) { _mode = mode; }
 };
-
-
-
-
 
 #endif /* _PLB_HPP */

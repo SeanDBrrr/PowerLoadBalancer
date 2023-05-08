@@ -12,7 +12,7 @@ PLB::manageIdleState(Events ev) {
         _building.getPowerProduced();
         supplyPowerToBuidling();
         break;
-    case supply:
+    case supply1:
         supplyPowerToStation(_stations[1]);
         break;
     case EV_Director:

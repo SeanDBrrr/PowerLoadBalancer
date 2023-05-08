@@ -6,12 +6,12 @@
 #include "IBuilding.h"
 #include "IStation.h"
 
+enum States {IDLE=1, NO_DIR, DIR1, DIR2, DIR3, DIR3_ONLY};
+enum Modes {Auto=1, Manual};
+enum Events {noEvent = 0, timeout=1, supply1, supply2, supply3, supply4, stop, director}variable;
+
 class PLB
 {
-    enum States {IDLE=1, NO_DIR, DIR1, DIR2, DIR3, DIR3_ONLY};
-    enum Modes {Auto=1, Manual};
-    enum Events {timeout=1, supply, stop, director};
-
     static int busyStations;
 
 private:
@@ -35,7 +35,6 @@ public:
 
     /* PLB Public Functions */
     void addStation(const IStation& station);
-    void changeMode(Modes mode);
     void supplyPowerToStation(IStation& station);
     void supplyPowerToBuidling();
     void stopSupply(IStation& station);

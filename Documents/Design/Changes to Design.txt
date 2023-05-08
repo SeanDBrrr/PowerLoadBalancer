@@ -1,0 +1,1 @@
+Dorin - Requests will be handled in subscribe function. A stationId is received. A checker notifies the main loop when a request is received and then it is handled in the manageIdleState. Id is passed as parameter for stations array.

@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef _IStart_HPP
+#define _IStart_HPP
+
 class IStart
 {
 public:
@@ -11,3 +14,5 @@ public:
 IStart::~IStart()
 {
 }
+
+#endif

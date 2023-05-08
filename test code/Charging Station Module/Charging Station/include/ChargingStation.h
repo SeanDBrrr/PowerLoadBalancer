@@ -1,14 +1,24 @@
 #pragma once
-#include "plug.h"
+#include "IPlug.h"
+#include "IPLB.h"
+#include "IDirector.h"
+#include "IDisplay.h"
+#include "IStart.h"
 #include "Events.h"
 #include "States.h"
+#include "Plug.h"
 
 class ChargingStation
 {
 private:
     States currentState;
+    IPLB& _IPLB;
+    IPlug& _IPlug;
+    IDirector& _IDirector;
+    IDisplay& _IDisplay;
+    IStart& _IStart;
 public:
-    ChargingStation(IStart, Iplug, IDirector, IDisplay, IPLB);
+    ChargingStation(IStart& IStart, IPlug& IPlug, IDirector& IDirector, IDisplay& IDisplay, IPLB& IPLB);
     ~ChargingStation();
 
     void HandleMainEvent(Events ev);
@@ -26,7 +36,7 @@ public:
     States HandleErrorState(Events ev);
 };
 
-ChargingStation::ChargingStation(/* args */)
+ChargingStation::ChargingStation(IStart& IStart, IPlug& IPlug, IDirector& IDirector, IDisplay& IDisplay, IPLB& IPLB): _IPLB{IPLB}, _IPlug{IPlug}, _IStart{IStart}, _IDirector{IDirector}, _IDisplay{IDisplay}
 {
 }
 

@@ -15,7 +15,8 @@ public:
 
     bool isPlugged()
     {
-        return readButton();
+        //return readButton();
+        return false;
     }
 };
 

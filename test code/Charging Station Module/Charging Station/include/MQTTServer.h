@@ -2,37 +2,27 @@
 #define MQTTSERVER_H
 
 #include <string>
-#include "IBuilding.h"
-#include "IStation.h"
+#include "IPLB.h"
 #include "EspMQTTClient.h"
 #include <string.h>
 
 using namespace std;
 
-class MQTTServer : public IStation, public IBuilding
+class MQTTServer : public IPLB
 {
 private:
     EspMQTTClient& _client;
     int _id;
-    int _powerProduced;
-    bool _buildingState;
-    bool _receivedRequest;
-    int _stationId;
 public:
     MQTTServer();
 
     EspMQTTClient& getClient();
-    int getId();
-    void charge(int power);
-    void switchMode(StationModes mode);
-    int getPowerProduced();
-    bool getState();
+    void checkDirector(int id);
+    int supplyPower();
+    int stopSupply();
     void send(String topic, String message);
     void receive();
     void onConnectionEstablished();
-    int getStationId();
-    bool getSupplyRequest();
-    void setSupplyRequest();
     ~MQTTServer();
 };
 

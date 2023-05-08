@@ -6,7 +6,7 @@ int PlugState = 0;
 
 void setup() {
   button/*Plug*/ Plug(PlugPin, PlugState);
-  ChargingStation chargingStation(Plug)
+  ChargingStation chargingStation(/*Plug*/);
 }
 
 void loop() {

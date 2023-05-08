@@ -10,13 +10,14 @@ class PLB
 {
     enum States {IDLE=1, NO_DIR, DIR1, DIR2, DIR3, DIR3_ONLY};
     enum Modes {Auto=1, Manual};
-    enum Events {timeout=1, supply, stop, director};
+    enum Events {EV_Timeout=1, EV_Supply, EV_Stop, EV_Director};
 
     static int busyStations;
 
 private:
     States _state;
     Modes _mode;
+    Events _event;
     IBuilding& _building;
     std::vector<IStation&> _stations;
     std::vector<IStation&> _directorStations;
@@ -47,6 +48,8 @@ public:
     void manageDir1State(Events ev);
     void manageDir2State(Events ev);
     void manageDir3State(Events ev);
+    void manageDir3OnlyState(Events ev);
+    void readMessage(const char* payload);
 
     /* Getters & Setters */
     inline
@@ -60,6 +63,14 @@ public:
     inline
     void 
     changeMode(Modes mode) { _mode = mode; }
+
+    inline
+    void 
+    changeState(States state) { _state = state; }
+
+    inline
+    void 
+    setEvent(Events ev) { _event = ev; }
 };
 
 

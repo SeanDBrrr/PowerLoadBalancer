@@ -8,13 +8,14 @@ PLB::addStation(const IStation& station) {
 void 
 PLB::manageIdleState(Events ev) {
     switch (ev) {
-    case timeout: 
+    case EV_Timeout: 
         _building.getPowerProduced();
         supplyPowerToBuidling();
         break;
     case supply:
         supplyPowerToStation(_stations[1]);
         break;
+    case EV_Director:
     }
 }
 
@@ -41,8 +42,41 @@ PLB::manageDir3State(Events ev) {
 void 
 PLB::manageEvents(Events ev) {
     switch (_state) {
-    
+    case IDLE:
+        manageIdleState(ev);
+        break;
+    case NO_DIR:
+        manageNoDirState(ev);
+        break;
+    case DIR1:
+        manageDir1State(ev);
+        break;
+    case DIR2:
+        manageDir2State(ev);
+        break;
+    case DIR3:
+        manageDir3State(ev);
+        break;
+    case DIR3_ONLY:
+        manageDir3OnlyState(ev);
+        break;
+    default:
+        break;
     }
+}
+
+/*
+ * @brief This function is called only when a user press the start button
+ * @return void
+*/
+void 
+PLB::supplyPowerToStation(IStation& station) {
+    ++busyStations;
+    int buidlingPower = _building.getPowerProduced();
+    if (busyStations > _directorIds.size()) {
+        _userStations.emplace_back(std::move(station));
+    }
+    _calculatePower(buidlingPower);
 }
     
 void 

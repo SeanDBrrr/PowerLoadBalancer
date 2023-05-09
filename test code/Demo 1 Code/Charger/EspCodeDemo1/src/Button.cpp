@@ -29,6 +29,7 @@ void Button::begin()
 uint16_t Button::debounce()
 {       
   _state = (_state << 1) | digitalRead(_buttonPin) | DEBOUNCE_DELAY; // A beautiful press will result in the 16bit int being 0xFF00, (0XFE00)
+ // Serial.println(_state);
   return (_state);
 }
 
@@ -53,7 +54,7 @@ bool Button::pressed()
  */
 bool Button::toggle() {
   static bool toggle_state = false; // static variable to store toggle state
-  if (pressed()) { // check if button is pressed
+  if (debounce() == BUTTON_PRESSED) { // check if button is pressed
     toggle_state = !toggle_state; // toggle the toggle state
   }
   return toggle_state; // return the current toggle state
@@ -66,17 +67,9 @@ bool Button::toggle() {
  * @return true , once when button press flag detected.
  * @return false, in all other cases.
  */
-bool Button::singlePress() {
-  static bool singlePressFlag = false;
-  if (pressed()) {
-    if (!singlePressFlag) {  // check if the button has been pressed for the first time
-      singlePressFlag = true;
-      return true;
-    }
-  } else {
-    singlePressFlag = false;
-  }
-  return false;
+bool Button::singlePress() 
+{
+  return (debounce() == SINGLE_PRESS);
 }
 
 Button::~Button()

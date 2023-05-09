@@ -15,9 +15,10 @@
 #include <iostream>
 #include <Arduino.h>
 
-#define BUTTON_PRESSED 0xFF00
-#define BUTTON_RELEASED 0xFE01
+#define BUTTON_PRESSED 0xE000
+//#define BUTTON_RELEASED 0xFE01
 #define DEBOUNCE_DELAY 0xE000
+#define SINGLE_PRESS 0xFF00
 
 class Button
 {
@@ -35,23 +36,3 @@ public:
   bool singlePress();
 };
 
-// class Button
-// {
-// private:
-//   uint8_t btn;
-//   uint16_t state;
-
-// public:
-//   void begin(uint8_t button)
-//   {
-//     btn = button;
-//     state = 0;
-//     pinMode(btn, INPUT_PULLUP);
-//   }
-//   bool Debounce()
-//   {
-//     state = (state << 1) | digitalRead(btn) | 0xfe00;
-//     Serial.println(state);
-//     return (state == 0xff00);
-//   }
-// };

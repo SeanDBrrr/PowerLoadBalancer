@@ -1,16 +1,13 @@
 #pragma once
 
-#ifndef _IDisplay_HPP
-#define _IDisplay_HPP
-
 class IDisplay
 {
 public:
     virtual ~IDisplay();
+
+    virtual int display(String) = 0;
 };
 
 IDisplay::~IDisplay()
 {
 }
-
-#endif

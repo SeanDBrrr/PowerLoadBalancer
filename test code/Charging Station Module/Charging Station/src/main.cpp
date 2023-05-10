@@ -5,8 +5,9 @@ int PlugPin = 0;
 int PlugState = 0;
 
 void setup() {
-  button/*Plug*/ Plug(PlugPin, PlugState);
-  ChargingStation chargingStation(/*Plug*/);
+  button/*Plug*/ Plug(PlugState);
+  ChargingStation chargingStation(Plug);
+  //LCD lcd(0x27,20,4);
 }
 
 void loop() {

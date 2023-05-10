@@ -4,7 +4,6 @@ const char *name = "Kiwy";
 const char *password = "aquamagic23";
 const char *mqtt_module = "Group4-PLB";
 const char *broker_ip = "192.168.61.23";
-const char *mqtt_topic_charge = "group4/charge";
 short port = 1883;
 
 EspMQTTClient client(name, password, broker_ip, mqtt_module, port);
@@ -34,4 +33,14 @@ void MQTTClientBuilding::onConnectionSubscribe()
                     { 
         _isSolarPowerRequestFlag = true;
         _totalSolarPower = payload.toInt(); });
+}
+
+int MQTTClientBuilding::calculateSolarPower()
+{
+  return mqtt->getSolarPower();
+}
+
+void MQTTClientBuilding::charge(float power)
+{
+  send(mqtt_topic_charge, (String)power);
 }

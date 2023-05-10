@@ -41,7 +41,7 @@ uint16_t Button::debounce()
  */
 bool Button::pressed()
 {
-  return (debounce() == BUTTON_PRESSED);
+  return (debounce() == DEBOUNCE_DELAY);
 }
 
 /**

@@ -35,4 +35,3 @@ public:
   bool toggle();
   bool singlePress();
 };
-

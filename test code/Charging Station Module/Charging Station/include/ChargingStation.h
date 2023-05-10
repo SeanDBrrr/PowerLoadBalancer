@@ -6,7 +6,6 @@
 #include "IStart.h"
 #include "Events.h"
 #include "States.h"
-#include "Plug.h"
 
 class ChargingStation
 {
@@ -32,7 +31,7 @@ public:
     States HandlePluggedDirectorState(Events ev);
     States HandleWaitingForPowerState(Events ev);
     States HandleChargingState(Events ev);
-    States HandleDonePluggedState(Events ev);
+    States HandleStoppedChargingState(Events ev);
     States HandleErrorState(Events ev);
 };
 

@@ -10,6 +10,6 @@ enum States
     STATE_PLUGGED_DIRECTOR,
     STATE_WAITING_FOR_POWER,
     STATE_CHARGING,
-    STATE_DONE_PLUGGED,
+    STATE_STOPPED_CHARGING,
     STATE_ERROR//maybe not needed? Needs to exit substate machine via this I think
 };

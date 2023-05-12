@@ -2,20 +2,32 @@
 
 const char *name = "Kiwy";
 const char *password = "aquamagic23";
-const char *mqtt_module = "Group4-PLB";
+const char *mqtt_module = "Group4-PLB-Station";
 const char *broker_ip = "192.168.61.23";
-const char *mqtt_topic_charge = "group4/charge";
 short port = 1883;
 
 EspMQTTClient client(name, password, broker_ip, mqtt_module, port);
 
-MQTTClientStation::MQTTClientStation() : _client(client) {}
+MQTTClientStation::MQTTClientStation(int Id) : _client(client)
+{
+  _stationId = Id;
+  _setStationId();
+  _client.setMqttClientName(mqtt_module);
+}
 
 MQTTClientStation::~MQTTClientStation() {}
 
 EspMQTTClient &MQTTClientStation::getClient()
 {
   return _client;
+}
+
+void MQTTClientStation::_setStationId()
+{
+  mqtt_topic_StationId += (String)_stationId;
+  mqtt_topic_charge_station += (String)_stationId;
+  mqtt_module += (String)_stationId;
+  mqtt_topic_requestSupply += (String)_stationId;
 }
 
 void MQTTClientStation::send(String topic, String message)
@@ -34,8 +46,6 @@ void MQTTClientStation::onConnectionSubscribe()
                     {
     _isDirectorDetectedFlag = true;
     _directorId = payload.toInt(); });
-  // _client.subscribe(mqtt_topic_solarPower, [this](const String &topic, const String &payload)
-  //                   { _solarPower = payload.toInt(); });
   _client.subscribe(mqtt_topic_requestSupply, [this](const String &topic, const String &payload)
                     {
     _isRequestSupplyFlag = true;
@@ -43,66 +53,63 @@ void MQTTClientStation::onConnectionSubscribe()
     });
 }
 
-int MQTTClientStation::getId() override
+int MQTTClientStation::getId() //override
 {
   return _stationId;
 }
 
-int MQTTClientStation::getDirectorId()
+void MQTTClientStation::charge(float power) //override
 {
-  return _directorId;
+  send(mqtt_topic_charge_station, (String)power);
 }
 
-bool MQTTClientStation::isSupplyRequest()
-{
-  return _isRequestSupplyFlag;
-}
-
-bool MQTTClientStation::isDirectorChecked()
-{
-  return _isDirectorDetectedFlag;
-}
-
-void MQTTClientStation::clearSupplyRequest()
-{
-  _isRequestSupplyFlag = false;
-}
-
-void MQTTClientStation::clearDirectorCheck()
-{
-  _isDirectorDetectedFlag = false;
-}
-
-void MQTTClientStation::charge(float power)
-{
-  send(mqtt_topic_charge, (String)power);
-}
-
-void MQTTClientStation::switchMode(StationModes mode)
+void MQTTClientStation::switchMode(StationModes mode) //override
 {
   send(mqtt_topic_mode, (String)mode);
 }
 
-int MQTTClientStation::loop()
+PLBEvents MQTTClientStation::loop()
 {
   receive();
-  if(isDirectorChecked())
+  if(_isDirectorDetectedFlag)
   {
-    switch (getDirectorId()) 
+    switch (_directorId) 
     {
-        case 1:
+      case 1:
         _event = EV_director1;
         break;
-        case 2:
+      case 2:
         _event = EV_director2;
         break;
-        case 3:
+      case 3:
         _event = EV_director3;
         break;
-        case 4:
+      case 4:
         _event = EV_director4;
         break;
     }
-    clearDirectorCheck();
+    _isDirectorDetectedFlag = 0;
   }
+
+  if(_isRequestSupplyFlag)
+  {
+    switch (_stationId)
+    {
+      case 1:
+        _event = EV_supply1;
+        break;
+      case 2:
+        _event = EV_supply2;
+        break;
+      case 3:
+        _event = EV_supply3;
+        break;
+      case 4:
+        _event = EV_supply4;
+        break;
+    }
+    _isRequestSupplyFlag = 0;
+  }
+
+  return _event;
 }

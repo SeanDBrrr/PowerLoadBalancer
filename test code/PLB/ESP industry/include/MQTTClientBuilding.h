@@ -8,13 +8,14 @@
 using namespace std;
 
 const char *mqtt_topic_solarPower = "group4/powerProduced";
-const char *mqtt_topic_charge = "group4/charge";
+const char *mqtt_topic_calculateSolarPower= "group4/calculateSolarPower";
+const char *mqtt_topic_charge_building = "group4/chargeBuilding";
 
 class MQTTClientBuilding
 {
 private:
     EspMQTTClient& _client;
-    bool _isSolarPowerRequestFlag;
+    bool _isSolarPowerArrivedFlag;
     int _totalSolarPower;
 
 public:
@@ -25,11 +26,9 @@ public:
     void send(String topic, String message);
     void receive();
     void onConnectionSubscribe();
-    inline int getSolarPower() { return _totalSolarPower; }
 
     int calculateSolarPower();
     void charge(float power);
-    void loop();
 };
 
 #endif

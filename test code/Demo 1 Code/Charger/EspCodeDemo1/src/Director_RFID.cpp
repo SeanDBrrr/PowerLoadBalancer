@@ -1,14 +1,12 @@
 /**
  * @file Director_RFID.cpp
- * @authors
- *  Sean-David Brokke (4208501)
- * Luka Aerts (4202317)
- * @brief 
+ * @author Sean-David Brokke (4208501)
+ * @brief
  * @version 0.1
  * @date 2023-01-20
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 #include "Director_RFID.h"
 #include <iostream>
@@ -17,100 +15,69 @@ using namespace std;
 
 /**
  * @brief Construct a new Gate:: Gate object
- * 
- * @param SDA 
- * @param RST 
- * @param ledpin_ 
+ *
+ * @param SS
+ * @param RST
  */
-Director_RFID::Director_RFID(int SDA, int RST, int ledpin_) : state(IDLE), previousTime(0), ledPin(ledpin_), rfid(MFRC522(SDA, RST))
+Director_RFID::Director_RFID(int SS, int RST) : _ssPin(SS),
+                                               _rstPin(RST)
+                                                
 {
-  SPI.begin();
-  rfid.PCD_Init();
-  rfid.PCD_DumpVersionToSerial();
-  pinMode(ledPin, OUTPUT);
+  _rfid = new MFRC522(_ssPin,_rstPin);
+    SPI.begin();
+  _rfid->PCD_Init();
+}
+
+uint32_t Director_RFID::assembleID(byte *buffer, byte bufferSize)
+{
+  uint32_t value = 0;
+  for (byte i = bufferSize; i > 0; i--)
+  {
+    value |= static_cast<uint32_t>(buffer[i - 1]) << (8 * (bufferSize - i));
+  }
+  return value;
 }
 
 /**
  * @brief This function checks if a RFID card has been detected or not
- * 
+ *
  * @return int card succesfully detected or Error_ for card not detected
  */
-int Director_RFID::ReadRFID()
-{ 
-  //Read RFID card
+uint32_t Director_RFID::getID()
+{
+  /* function readRFID */
+  ////Read RFID card
+  uint32_t id = 0;
   for (byte i = 0; i < 6; i++)
   {
-    key.keyByte[i] = 0xFF;
+    _key.keyByte[i] = 0xFF;
   }
-
   // Look for new 1 cards
-  if (!rfid.PICC_IsNewCardPresent())
+  if (!_rfid->PICC_IsNewCardPresent())
   {
-    return ERROR_;
+    return id;
   }
 
   // Verify if the NUID has been readed
-  if (!rfid.PICC_ReadCardSerial())
+  if (!_rfid->PICC_ReadCardSerial())
   {
-    return SUCCESS;
+    return id;
   }
-  return NO_CARD_DETECTED;
-}
-
-/**
- * @brief Simulates gate in open state
- * 
- */
-void Director_RFID::OpenGate()
-{
-  digitalWrite(ledPin, HIGH);
-}
-
-/**
- * @brief Simulates gate in closed state
- * 
- */
-void Director_RFID::CloseGate()
-{
-  digitalWrite(ledPin, LOW);
-}
-
-/**
- * @brief 
- * This function has the sequence for simulating a gate with an LED, 
- * with the help of RFID reader
- * @return int State of the gate
- */
-int Director_RFID::GateState()
-{
-  int gateState = 0;
-  switch (state)
+  // Store NUID into nuidPICC array
+  for (byte i = 0; i < 4; i++)
   {
-  case IDLE:
-    if (ReadRFID() == SUCCESS)
-    {
-      gateState = OPEN;
-      state = CARD_DETECTED;
-    }
-    previousTime = millis();
-    break;
-  case CARD_DETECTED:
-    gateState = CLOSED;
-    OpenGate();
-    if (millis() - previousTime >= INTERVAL_GATE)
-    {
-      state = RESET;    
-    }
-    break;
-  case RESET:
-    CloseGate();
-    state = IDLE;
-    break;
+    _nuidPICC[i] = _rfid->uid.uidByte[i];
   }
+  id = assembleID(_rfid->uid.uidByte, _rfid->uid.size);
+  // Halt PICC
+  _rfid->PICC_HaltA();
+  // Stop encryption on PCD
+  _rfid->PCD_StopCrypto1();
 
-  return gateState;
+  return id;
 }
 
 Director_RFID::~Director_RFID()
 {
+  delete _rfid;
 }

@@ -1,14 +1,12 @@
 /**
  * @file Director_RFID.h
- * @authors
- *  Sean-David Brokke (460282)
- *  Luka Aerts (4202317)
- * @brief 
+ * @author Sean-David Brokke (460282)
+ * @brief
  * @version 0.1
  * @date 2023-01-20
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 #pragma once
 
@@ -16,33 +14,30 @@
 #include <SPI.h>
 #include <MFRC522.h>
 
-#define ERROR_ -1
-#define SUCCESS 1
-#define NO_CARD_DETECTED 0
-#define OPEN 1
-#define CLOSED 0
-#define INTERVAL_GATE 5000
+#define SS_PIN 5
+#define RST_PIN 27
 
-typedef enum 
+typedef enum
 {
     IDLE,
     CARD_DETECTED,
     RESET
-}States;
+} States;
 
 class Director_RFID
 {
 private:
-    int ledPin;
-    unsigned long previousTime;
-    MFRC522::MIFARE_Key key;
-    MFRC522 rfid;
-    States state;
+    int _ssPin;
+    int _rstPin;
+    uint32_t _id = 0;
+    MFRC522 *_rfid;
+    MFRC522::MIFARE_Key _key;
+    byte _nuidPICC[4] = {0, 0, 0, 0};
+    uint32_t assembleID(byte *, byte);
+
 public:
-    Director_RFID(int, int, int);
+    Director_RFID(int, int);
+    uint32_t getID();
+    void begin();
     ~Director_RFID();
-    int ReadRFID();
-    int GateState();
-    void OpenGate();
-    void CloseGate();
 };

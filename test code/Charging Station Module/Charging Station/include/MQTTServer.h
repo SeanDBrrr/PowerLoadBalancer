@@ -1,5 +1,4 @@
-#ifndef MQTTSERVER_H
-#define MQTTSERVER_H
+#pragma once
 
 #include <string>
 #include "IPLB.h"
@@ -29,5 +28,3 @@ public:
 MQTTServer::~MQTTServer()
 {
 }
-
-#endif

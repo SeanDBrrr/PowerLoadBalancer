@@ -6,20 +6,29 @@
 #include "IStart.h"
 #include "Events.h"
 #include "States.h"
+#include "StationModes.h"
 
 class ChargingStation
 {
 private:
-    States currentState;
-    IPLB& _IPLB;
-    IPlug& _IPlug;
-    IDirector& _IDirector;
-    IDisplay& _IDisplay;
-    IStart& _IStart;
-public:
-    ChargingStation(IStart& IStart, IPlug& IPlug, IDirector& IDirector, IDisplay& IDisplay, IPLB& IPLB);
-    ~ChargingStation();
+    int _id = 0;
+    bool _state = 0;//Not needed anymore?
+    bool _busy = 0;
 
+    StationModes _mode;
+    Events _currentEvent;
+    States _currentState;
+
+    IPLB* _IPLB;
+    IPlug* _IPlug;
+    IDirector* _IDirector;
+    IDisplay* _IDisplay;
+    IStart* _IStart;
+public:
+    ChargingStation(IStart *Start, IPlug *Plug, IDirector *Director, IDisplay *Display, IPLB *PLB){};
+    ~ChargingStation(){};
+
+    void loop();
     void HandleMainEvent(Events ev);
     States HandleMainWorkingState(Events ev);
     States HandleMainErrorState(Events ev);
@@ -33,12 +42,8 @@ public:
     States HandleChargingState(Events ev);
     States HandleStoppedChargingState(Events ev);
     States HandleErrorState(Events ev);
+    
+    void charge(float power);
+    void requestPower();
+    void switchMode(StationModes _mode);
 };
-
-ChargingStation::ChargingStation(IStart& IStart, IPlug& IPlug, IDirector& IDirector, IDisplay& IDisplay, IPLB& IPLB): _IPLB{IPLB}, _IPlug{IPlug}, _IStart{IStart}, _IDirector{IDirector}, _IDisplay{IDisplay}
-{
-}
-
-ChargingStation::~ChargingStation()
-{
-}

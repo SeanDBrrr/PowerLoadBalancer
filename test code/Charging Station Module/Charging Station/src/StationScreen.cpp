@@ -10,8 +10,7 @@
  * @copyright Copyright (c) 2023
  *
  */
-#include <LiquidCrystal_I2C.h>
-#include "IDisplay.h"
+#include "StationScreen.h"
 #include <iostream>
 
 using namespace std;
@@ -23,17 +22,18 @@ using namespace std;
  * @param sda
  */
 StationScreen::StationScreen(int scl, int sda)
-    : SCL(scl),
-      SDA(sda),
-      lcd(0x27, 16, 2)
+    : _SCL(scl),
+      _SDA(sda)
 {
-    lcd.init();
-    lcd.backlight();
-    lcd.setCursor(0, 0);
+    _lcd = new LiquidCrystal_I2C(0x27, 16, 2);
+    _lcd->init();
+    _lcd->backlight();
+    _lcd->setCursor(0, 0);
 }
 
 StationScreen::~StationScreen()
 {
+    delete _lcd;
 }
 
 /**
@@ -44,7 +44,7 @@ StationScreen::~StationScreen()
  */
 int StationScreen::Display(String message)
 {
-    lcd.clear();
-    lcd.print(message);
+    _lcd->clear();
+    _lcd->print(message);
     return 0;
 }

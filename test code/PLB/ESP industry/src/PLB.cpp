@@ -1,8 +1,12 @@
 #include "PLB.h"
 
-PLB::PLB(IBuilding *building, IStation *station) : _state{ST_Idle}, _mode{MO_Manual}, _building{building}
+PLB::PLB(IBuilding *building, IStation *station1, IStation *station2, IStation *station3, IStation *station4) : _state{ST_Idle}, _mode{MO_Manual}
 {
-    _stations.emplace_back(station);
+    _building = building;
+    _stations.emplace_back(station1);
+    _stations.emplace_back(station2);
+    _stations.emplace_back(station3);
+    _stations.emplace_back(station4);
 }
 
 void PLB::addStation(IStation *station)
@@ -10,14 +14,14 @@ void PLB::addStation(IStation *station)
     _stations.emplace_back(station);
 }
 
-void PLB::manageIdleState(Events ev)
+void PLB::manageIdleState(PLBEvents ev)
 {
     _state = ST_Idle;
     switch (ev)
     {
     case EV_timeout:
-        _building->getPowerProduced();
-        supplyPowerToBuidling();
+        _calculatePower(_building->calculateSolarPower());
+        supplyPowerToBuidling(_building->calculateSolarPower());
         break;
     case EV_supply1:
         if (_directorIds.size() == 0)
@@ -66,27 +70,27 @@ void PLB::manageIdleState(Events ev)
     }
 }
 
-void PLB::manageNoDirState(Events ev)
+void PLB::manageNoDirState(PLBEvents ev)
 {
 }
 
-void PLB::manageDir1State(Events ev)
+void PLB::manageDir1State(PLBEvents ev)
 {
 }
 
-void PLB::manageDir2State(Events ev)
+void PLB::manageDir2State(PLBEvents ev)
 {
 }
 
-void PLB::manageDir3State(Events ev)
+void PLB::manageDir3State(PLBEvents ev)
 {
 }
 
-void PLB::manageDir3OnlyState(Events ev)
+void PLB::manageDir3OnlyState(PLBEvents ev)
 {
 }
 
-void PLB::manageEvents(Events ev)
+void PLB::manageEvents(PLBEvents ev)
 {
     switch (_state)
     {
@@ -120,7 +124,11 @@ void PLB::manageEvents(Events ev)
 void PLB::supplyPowerToStation(IStation *station)
 {
     ++busyStations;
-    int buidlingPower = _building->getPowerProduced();
+    int buidlingPower = _building->calculateSolarPower();
+    if(buidlingPower == -1)
+    {
+        //handle error
+    }
     if (busyStations > _directorIds.size())
     {
         _userStations.emplace_back(station->getId());
@@ -161,13 +169,13 @@ void PLB::_calculatePower(int solarPower)
         for (size_t i = 0; i < _directorStations.size(); i++)
         {
             int stationId = _directorStations.at(i);
-            _stations.at(stationId)->switchMode(Director);
+            _stations.at(stationId)->switchMode(MO_Director);
             _stations.at(stationId)->charge(directorPower);
         }
         for (size_t i = 0; i < _userStations.size(); i++)
         {
             int stationId = _directorStations.at(i);
-            _stations.at(stationId)->switchMode(Dynamic);
+            _stations.at(stationId)->switchMode(MO_Dynamic);
             _stations.at(stationId)->charge(userPower);
         }
         break;
@@ -175,7 +183,7 @@ void PLB::_calculatePower(int solarPower)
         stationPower = availablePower / 4;
         for (size_t i = 0; i < _stations.size(); i++)
         {
-            _stations.at(i)->switchMode(Dynamic);
+            _stations.at(i)->switchMode(MO_Dynamic);
             _stations.at(i)->charge(stationPower);
         }
         break;
@@ -185,7 +193,7 @@ void PLB::_calculatePower(int solarPower)
             for (size_t i = 0; i < _directorStations.size(); i++)
             {
                 int stationId = _directorStations.at(i);
-                _stations.at(stationId)->switchMode(FCFS);
+                _stations.at(stationId)->switchMode(MO_FCFS);
                 availablePower -= 11;
                 if (availablePower < 11)
                 {
@@ -202,7 +210,7 @@ void PLB::_calculatePower(int solarPower)
             for (size_t i = 0; i < _directorStations.size(); i++)
             {
                 int stationId = _directorStations.at(i);
-                _stations.at(stationId)->switchMode(Dynamic);
+                _stations.at(stationId)->switchMode(MO_Dynamic);
                 _stations.at(stationId)->charge(availablePower / 3);
             }
         }
@@ -215,9 +223,9 @@ void PLB::_calculatePower(int solarPower)
  * @brief This function is called when a director swipes his RFID card
  * @return 0 (success) / 1 (failure)
  */
-void PLB::supplyPowerToBuidling()
+void PLB::supplyPowerToBuidling(int solarPower)
 {
-    _building.charge(80);
+    _building->charge(80 - solarPower);
 }
 
 /*
@@ -229,7 +237,7 @@ void PLB::stopSupply(IStation *station)
     --busyStations;
     for (size_t i = 0; i < _directorStations.size(); i++)
     {
-        if (station.getId() == _directorStations.at(i))
+        if (station->getId() == _directorStations.at(i))
         {
             _directorStations.erase(_directorStations.begin() + i);
             return;
@@ -237,7 +245,7 @@ void PLB::stopSupply(IStation *station)
     }
     for (size_t i = 0; i < _userStations.size(); i++)
     {
-        if (station.getId() == _userStations.at(i))
+        if (station->getId() == _userStations.at(i))
         {
             _userStations.erase(_userStations.begin() + i);
             return;
@@ -258,7 +266,7 @@ bool PLB::checkDirector(IStation *station, int directoId)
             return 1;
     }
     _directorIds.emplace_back(directoId);
-    _directorStations.emplace_back(station.getId());
+    _directorStations.emplace_back(station->getId());
     return 0;
 }
 
@@ -266,8 +274,12 @@ void PLB::loop()
 {
     for (const auto &s: _stations)
     {
-        s->loop();
+        _event = s->loop();
+        manageEvents(_event);
     }
-    _building->loop();
-    manageEvents(_event);
+
+    if(isTimeout())
+    {
+        manageEvents(EV_timeout);
+    }
 }

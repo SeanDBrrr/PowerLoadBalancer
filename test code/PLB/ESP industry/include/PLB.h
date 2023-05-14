@@ -37,26 +37,26 @@ private:
     void _calculatePower(int power);
 
 public:
-    PLB(IBuilding *building, IStation *station);
+    PLB(IBuilding *building, IStation *station1, IStation *station2, IStation *station3, IStation *station4);
 
     ~PLB() {}
 
     /* PLB Public Functions */
     void addStation(IStation* station);
     void supplyPowerToStation(IStation* station);
-    void supplyPowerToBuidling();
+    void supplyPowerToBuidling(int solarPower);
     void stopSupply(IStation* station);
     bool checkDirector(IStation* station, int directoId);
-    void isTimeout();
+    bool isTimeout();
     void loop();
 
-    void manageEvents(Events ev);
-    void manageIdleState(Events ev);
-    void manageNoDirState(Events ev);
-    void manageDir1State(Events ev);
-    void manageDir2State(Events ev);
-    void manageDir3State(Events ev);
-    void manageDir3OnlyState(Events ev);
+    void manageEvents(PLBEvents ev);
+    void manageIdleState(PLBEvents ev);
+    void manageNoDirState(PLBEvents ev);
+    void manageDir1State(PLBEvents ev);
+    void manageDir2State(PLBEvents ev);
+    void manageDir3State(PLBEvents ev);
+    void manageDir3OnlyState(PLBEvents ev);
 
     /* Getters & Setters */
     inline const IBuilding *
@@ -66,7 +66,7 @@ public:
     getStation(int stationId) const { return _stations.at(stationId-1); }
 
     inline void
-    changeMode(Modes mode) { _mode = mode; }
+    changeMode(PLBModes mode) { _mode = mode; }
 
 };
 

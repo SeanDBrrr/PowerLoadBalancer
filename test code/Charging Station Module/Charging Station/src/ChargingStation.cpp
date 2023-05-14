@@ -167,50 +167,81 @@ States ChargingStation::HandleStoppedChargingState(Events ev)
 
 void ChargingStation::HandleMainEvent(Events ev) // Technically might not be needed unless there are more states
 {
-    switch (currentState)
+    switch (_currentState)
     {
     case MAIN_STATE_WORKING:
-        currentState = HandleMainWorkingState(ev);
+        _currentState = HandleMainWorkingState(ev);
         break;
     case MAIN_STATE_ERROR:
-        currentState = HandleMainErrorState(ev);
+        _currentState = HandleMainErrorState(ev);
         break;
     default:
-        std::cerr << "ERROR: illegal/unhandled state with number: " << currentState;
+        std::cerr << "ERROR: illegal/unhandled state with number: " << _currentState;
         break;
     };
 }
 
 void ChargingStation::HandleEvent(Events ev)
 {
-    switch (currentState)
+    switch (_currentState)
     {
     case STATE_IDLE:
-        currentState = HandleIdleState(ev);
+        _currentState = HandleIdleState(ev);
         break;
     case STATE_IDLE_DIRECTOR:
-        currentState = HandleIdleDirectorState(ev);
+        _currentState = HandleIdleDirectorState(ev);
         break;
     case STATE_PLUGGED:
-        currentState = HandlePluggedState(ev);
+        _currentState = HandlePluggedState(ev);
         break;
     case STATE_PLUGGED_DIRECTOR:
-        currentState = HandlePluggedDirectorState(ev);
+        _currentState = HandlePluggedDirectorState(ev);
         break;
     case STATE_WAITING_FOR_POWER:
-        currentState = HandleWaitingForPowerState(ev);
+        _currentState = HandleWaitingForPowerState(ev);
         break;
     case STATE_CHARGING:
-        currentState = HandleChargingState(ev);
+        _currentState = HandleChargingState(ev);
         break;
     case STATE_STOPPED_CHARGING:
-        currentState = HandleStoppedChargingState(ev);
+        _currentState = HandleStoppedChargingState(ev);
         break;
     case STATE_ERROR:
-        currentState = HandleErrorState(ev);
+        _currentState = HandleErrorState(ev);
         break;
     default:
-        std::cerr << "ERROR: illegal/unhandled state with number: " << currentState;
+        std::cerr << "ERROR: illegal/unhandled state with number: " << _currentState;
         break;
     };
 }
+
+void ChargingStation::loop()
+{
+    if (_IPlug->isPlugged())
+    {
+       _currentEvent = EV_PLUGGED;
+    }
+
+    if (_IStart->isStarted())
+    {
+        _currentEvent = EV_START;
+    }
+    else if (!_IStart->isStarted())//Should work in theory
+    {
+        _currentEvent = EV_STOP;
+    }
+
+    _IDisplay->display("test");
+    
+    
+
+    HandleEvent(_currentEvent);
+     
+}
+
+ChargingStation::ChargingStation(IStart *Start, IPlug *Plug, IDirector *Director, IDisplay *Display, IPLB *PLB)
+: _IPLB{PLB}, _IPlug{Plug}, _IStart{Start}, _IDirector{Director}, _IDisplay{Display}
+{}
+
+ChargingStation::~ChargingStation()
+{}

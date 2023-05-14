@@ -11,7 +11,7 @@ const char *mqtt_topic_mode = "group4/mode";
 const char *mqtt_topic_StationId = "group4/StationId";
 const char *mqtt_topic_directorId = "group4/directorId";
 const char *mqtt_topic_requestSupply = "group4/requestSupply";
-const char *mqtt_topic_charge = "group4/charge";
+const char *mqtt_topic_charge_station = "group4/chargeStation";
 
 class MQTTClientStation : public IStation
 {
@@ -22,27 +22,21 @@ private:
     bool _isDirectorDetectedFlag;
     int _directorId;
     int _stationId;
+    void _setStationId();
 
 public:
-    MQTTClientStation();
+    MQTTClientStation(int Id);
     ~MQTTClientStation();
 
     EspMQTTClient& getClient();
     void send(String topic, String message);
     void receive();
     void onConnectionSubscribe();
-    inline int getDirectorId() { return _directorId; }
-    inline int getStationId() { return _stationId; }
 
     int getId();
     void charge(float power);
     void switchMode(StationModes mode);
-
-    bool isSupplyRequest();
-    bool isDirectorChecked();
-    void clearSupplyRequest();
-    void clearDirectorCheck();
-    void loop();
+    PLBEvents loop();
 };
 
 #endif

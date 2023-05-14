@@ -1,32 +1,28 @@
 #include "IPlug.h"
 #include "Button.h"
+#include "PlugButton.h"
+#include <iostream>
 
-#define BUTTON_PIN 4
+#define BUTTON_PIN 4 // TODO NEEDS TO BE CHANGED
 
-Button button(BUTTON_PIN);
+using namespace std;
 
-button.begin();
-
-class PlugButton : public IPlug
+/// @brief Construct a new PlugButton::PlugButton object
+PlugButton::PlugButton()
 {
-    bool state;// not needed anymore?
+    _button = new Button(BUTTON_PIN);
+    _button->begin();// DOUBLE CHECK IF THIS WORKS OUTSIDE OF VOID SETUP
+}
 
-public:
-    PlugButton(/*bool State*/)
-    {
-        //state = State;
-    }
-    ~PlugButton() {}
+/// @brief Destruct a PlugButton::PlugButton object
+PlugButton::~PlugButton()
+{
+    delete _button;
+}
 
-    bool isPlugged()
-    {
-        if (button.pressed)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-};
+/// @brief If charging station is plugged.
+/// @return True or false
+bool PlugButton::isPlugged()
+{
+    return _button->toggle();
+}

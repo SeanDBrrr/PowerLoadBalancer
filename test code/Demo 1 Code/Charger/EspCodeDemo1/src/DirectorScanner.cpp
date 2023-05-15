@@ -8,27 +8,35 @@
  * @copyright Copyright (c) 2023
  *
  */
-#include "Director_RFID.h"
+#include "DirectorScanner.h"
 #include <iostream>
 
 using namespace std;
 
 /**
- * @brief Construct a new Gate:: Gate object
- *
+ * @brief DirectorScanner constructor
+ * Constructor must be called inside void setup during object creation using new operator!!
  * @param SS
  * @param RST
  */
-Director_RFID::Director_RFID(int SS, int RST) : _ssPin(SS),
-                                               _rstPin(RST)
-                                                
+DirectorScanner::DirectorScanner(int SS, int RST) : _ssPin(SS),
+                                                    _rstPin(RST)
+
 {
-  _rfid = new MFRC522(_ssPin,_rstPin);
-    SPI.begin();
+  _rfid = new MFRC522(_ssPin, _rstPin);
+  SPI.begin();
   _rfid->PCD_Init();
+  delay(4); // Optional delay. Some board do need more time after init to be ready, see Readme
 }
 
-uint32_t Director_RFID::assembleID(byte *buffer, byte bufferSize)
+/**
+ * @brief Function to assemble all the bits of the ID to be stored in one single variable.
+ *
+ * @param buffer
+ * @param bufferSize
+ * @return ID in uint32_t
+ */
+uint32_t DirectorScanner::assembleID(byte *buffer, byte bufferSize)
 {
   uint32_t value = 0;
   for (byte i = bufferSize; i > 0; i--)
@@ -39,11 +47,11 @@ uint32_t Director_RFID::assembleID(byte *buffer, byte bufferSize)
 }
 
 /**
- * @brief This function checks if a RFID card has been detected or not
+ * @brief This function retrives the RFID of the director that has scanned his/her card
  *
- * @return int card succesfully detected or Error_ for card not detected
+ * @return Director's ID, else 0 when no card is detected. (uint32_t)
  */
-uint32_t Director_RFID::getID()
+uint32_t DirectorScanner::getID()
 {
   /* function readRFID */
   ////Read RFID card
@@ -55,12 +63,14 @@ uint32_t Director_RFID::getID()
   // Look for new 1 cards
   if (!_rfid->PICC_IsNewCardPresent())
   {
+    // Serial.println("Inside NOT 'IsNewCardPresent'");
     return id;
   }
 
   // Verify if the NUID has been readed
   if (!_rfid->PICC_ReadCardSerial())
   {
+    // Serial.println("Inside NOT 'ReadCardSerial()'");
     return id;
   }
   // Store NUID into nuidPICC array
@@ -77,7 +87,7 @@ uint32_t Director_RFID::getID()
   return id;
 }
 
-Director_RFID::~Director_RFID()
+DirectorScanner::~DirectorScanner()
 {
   delete _rfid;
 }

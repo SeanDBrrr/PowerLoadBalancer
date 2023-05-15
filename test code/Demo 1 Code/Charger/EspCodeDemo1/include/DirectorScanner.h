@@ -24,7 +24,7 @@ typedef enum
     RESET
 } States;
 
-class Director_RFID
+class DirectorScanner
 {
 private:
     int _ssPin;
@@ -36,8 +36,7 @@ private:
     uint32_t assembleID(byte *, byte);
 
 public:
-    Director_RFID(int, int);
+    DirectorScanner(int, int);
     uint32_t getID();
-    void begin();
-    ~Director_RFID();
+    ~DirectorScanner();
 };

@@ -1,62 +1,74 @@
 #ifndef _PLB_HPP
 #define _PLB_HPP
 
-#include "vector"
-#include "utility"
+#include <array>
+#include <vector>
+#include <list>
+#include <utility>
+#include <functional>
 #include "IBuilding.h"
 #include "IStation.h"
 
-enum States {IDLE=1, NO_DIR, DIR1, DIR2, DIR3, DIR3_ONLY};
-enum Modes {Auto=1, Manual};
-enum Events {noEvent = 0, timeout=1, supply1, supply2, supply3, supply4, stop, director}variable;
+enum PLBStates {ST_Idle=1, 
+                ST_NoDir, 
+                ST_Dir1, 
+                ST_Dir2, 
+                ST_Dir3, 
+                ST_Dir3Only};
+
+enum PLBModes {MO_Auto=1, 
+                MO_Manual};
 
 class PLB
 {
-    static int busyStations;
+    int busyStations;
 
 private:
-    States _state;
-    Modes _mode;
-    IBuilding &_building;
-    std::vector<IStation &> _stations;
-    std::vector<IStation &> _directorStations;
-    std::vector<IStation &> _userStations;
+    PLBStates _state;
+    PLBModes _mode;
+    PLBEvents _event;
+    IBuilding *_building;
+    std::vector<IStation *> _stations;
+    std::vector<int> _directorStations;
+    std::vector<int> _userStations;
     std::vector<int> _directorIds;
 
     /* PLB Private Functions */
     void _calculatePower(int power);
 
 public:
-    PLB(IBuilding &building, IStation &station) : _building{building}
-    {
-        _stations.emplace_back(std::move(station));
-    }
+    PLB(IBuilding *building, IStation *station1, IStation *station2, IStation *station3, IStation *station4);
 
     ~PLB() {}
 
     /* PLB Public Functions */
-    void addStation(const IStation& station);
-    void supplyPowerToStation(IStation& station);
-    void supplyPowerToBuidling();
-    void stopSupply(IStation &station);
-    bool checkDirector(IStation &station, int directoId);
+    void addStation(IStation* station);
+    void supplyPowerToStation(IStation* station);
+    void supplyPowerToBuidling(int solarPower);
+    void stopSupply(IStation* station);
+    bool checkDirector(IStation* station, int directoId);
+    bool isTimeout();
+    void loop();
 
-    void manageEvents(Events ev);
-    void manageIdleState(Events ev);
-    void manageNoDirState(Events ev);
-    void manageDir1State(Events ev);
-    void manageDir2State(Events ev);
-    void manageDir3State(Events ev);
+    void manageEvents(PLBEvents ev);
+    void manageIdleState(PLBEvents ev);
+    void manageNoDirState(PLBEvents ev);
+    void manageDir1State(PLBEvents ev);
+    void manageDir2State(PLBEvents ev);
+    void manageDir3State(PLBEvents ev);
+    void manageDir3OnlyState(PLBEvents ev);
 
     /* Getters & Setters */
-    inline const IBuilding &
+    inline const IBuilding *
     getBuilding() const { return _building; }
 
-    inline const IStation &
-    getStation(int stationId) const { return _stations.avfgvgt(stationId - 1); }
+    inline const IStation *
+    getStation(int stationId) const { return _stations.at(stationId-1); }
 
     inline void
-    changeMode(Modes mode) { _mode = mode; }
+    changeMode(PLBModes mode) { _mode = mode; }
+
 };
+
 
 #endif /* _PLB_HPP */

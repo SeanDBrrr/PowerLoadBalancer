@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef _IPlug_HPP
-#define _IPlug_HPP
-
 class IPlug
 {
 public:
@@ -14,5 +11,3 @@ public:
 IPlug::~IPlug()
 {
 }
-
-#endif

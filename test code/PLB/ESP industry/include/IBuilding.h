@@ -4,10 +4,9 @@
 class IBuilding
 {
 public:
-    virtual ~IBuilding(){}
-    virtual int getPowerProduced() = 0;
-    virtual void charge(int power) = 0;
-    virtual bool getState() = 0;
+    virtual ~IBuilding() = default;
+    virtual int calculateSolarPower() = 0;
+    virtual void charge(float power) = 0;
 };
 
 

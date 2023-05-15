@@ -1,12 +1,14 @@
 #include <Arduino.h>
 #include "ChargingStation.h"
 
-int PlugPin = 0;
-int PlugState = 0;
+// int PlugPin = 0;
+// int PlugState = 0;
+  // button/*Plug*/ Plug(PlugState);
+  // ChargingStation chargingStation(Plug);
 
 void setup() {
-  button/*Plug*/ Plug(PlugPin, PlugState);
-  ChargingStation chargingStation(/*Plug*/);
+
+  //LCD lcd(0x27,20,4);
 }
 
 void loop() {

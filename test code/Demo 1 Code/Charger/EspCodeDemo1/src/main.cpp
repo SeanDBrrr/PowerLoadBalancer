@@ -104,7 +104,7 @@ void loop()
   }
   else
   {
-    digitalWrite(DIRECTOR_LED, LOW);
+    digitalWrite(CONNECTION_LED, LOW);
   }
 
   // // SINGLE PRESS

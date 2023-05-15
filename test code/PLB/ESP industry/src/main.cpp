@@ -1,39 +1,34 @@
 #include <Arduino.h>
 #include <string.h>
 #include "PLB.h"
-#include "MQTTServer.h"
+#include "MQTTClientStation.h"
+#include "MQTTClientBuilding.h"
 
-MQTTServer mqtt;
-PLB plb(mqtt, mqtt);
-Events event;
+MQTTClientStation* mqttStation1;
+MQTTClientStation* mqttStation2;
+MQTTClientStation* mqttStation3;
+MQTTClientStation* mqttStation4;
+MQTTClientBuilding* mqttBuilding;
+PLB plb(mqttBuilding, mqttStation1, mqttStation2, mqttStation3, mqttStation4);
+PLBEvents event;
 
-void setup()
-{
-  Serial.begin(115200);
+void onConnectionEstablished() {
+  mqttStation1->onConnectionSubscribe();
+  mqttStation2->onConnectionSubscribe();
+  mqttStation3->onConnectionSubscribe();
+  mqttStation4->onConnectionSubscribe();
+  mqttBuilding->onConnectionSubscribe();
 }
 
-void loop()
-{
-  mqtt.receive();
-  plb.manageEvents(event);
-  event = noEvent;
-  if(mqtt.getSupplyRequest() == true)
-  {
-    switch (mqtt.getStationId())
-    {
-    case 1:
-      event = supply1;
-      break;
-    case 2:
-      event = supply2;
-      break;
-    case 3:
-      event = supply3;
-      break;
-    case 4:
-      event = supply4;
-      break;
-    }
-    mqtt.setSupplyRequest();
-  }
+void setup() {
+  Serial.begin(115200);
+mqttStation1 = new MQTTClientStation(1);
+mqttStation2 = new MQTTClientStation(2);
+mqttStation3 = new MQTTClientStation(3);
+mqttStation4 = new MQTTClientStation(4);
+mqttBuilding = new MQTTClientBuilding();
+}
+
+void loop() {
+  plb.loop();
 }

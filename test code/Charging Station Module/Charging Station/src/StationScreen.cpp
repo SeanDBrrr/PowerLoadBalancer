@@ -21,20 +21,16 @@ using namespace std;
  * @param scl
  * @param sda
  */
-StationScreen::StationScreen(int scl, int sda)
-    : _SCL(scl),
-      _SDA(sda)
+StationScreen::StationScreen(int scl, int sda) : _scl(scl),
+                                                 _sda(sda)
+
 {
-    _lcd = new LiquidCrystal_I2C(0x27, 16, 2);
-    _lcd->init();
-    _lcd->backlight();
-    _lcd->setCursor(0, 0);
+    lcd = new LiquidCrystal_I2C(SS_ADDRESS, SS_COLUMNS, SS_ROWS);
+    lcd->init();
+    lcd->backlight();
+    lcd->setCursor(0, 0);
 }
 
-StationScreen::~StationScreen()
-{
-    delete _lcd;
-}
 
 /**
  * @brief Function for displaying StationScreen
@@ -42,9 +38,13 @@ StationScreen::~StationScreen()
  * @param message Input message to be displayed on StationScreen
  * @return int for future unit testing implementation
  */
-int StationScreen::Display(String message)
+void StationScreen::display(String message)
 {
-    _lcd->clear();
-    _lcd->print(message);
-    return 0;
+    lcd->clear();
+    lcd->print(message);
+}
+
+StationScreen::~StationScreen()
+{
+    delete lcd;
 }

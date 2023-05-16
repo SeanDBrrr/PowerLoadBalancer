@@ -4,14 +4,11 @@
 #include <string>
 #include "IBuilding.h"
 #include "EspMQTTClient.h"
+#include "Topics.h"
 
 using namespace std;
 
-const char *mqtt_topic_solarPower = "group4/powerProduced";
-const char *mqtt_topic_calculateSolarPower= "group4/calculateSolarPower";
-const char *mqtt_topic_charge_building = "group4/chargeBuilding";
-
-class MQTTClientBuilding
+class MQTTClientBuilding : public IBuilding
 {
 private:
     EspMQTTClient& _client;

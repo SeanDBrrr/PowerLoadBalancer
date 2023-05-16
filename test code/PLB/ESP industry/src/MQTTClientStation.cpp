@@ -1,4 +1,5 @@
 #include "MQTTClientStation.h"
+#include <string>
 
 const char *name = "Kiwy";
 const char *password = "aquamagic23";
@@ -24,10 +25,16 @@ EspMQTTClient &MQTTClientStation::getClient()
 
 void MQTTClientStation::_setStationId()
 {
-  mqtt_topic_StationId += (String)_stationId;
-  mqtt_topic_charge_station += (String)_stationId;
-  mqtt_module += (String)_stationId;
-  mqtt_topic_requestSupply += (String)_stationId;
+  char topic_StationId[30];
+  sprintf(topic_StationId, mqtt_topic_StationId);
+  sprintf(topic_StationId, "%d", _stationId);
+  // char topic_ChargeStation_[30];
+  // char topic_Module_[30];
+  // char topic_RequestSupply_[30];
+  
+  // mqtt_topic_charge_station += (String)_stationId;
+  // mqtt_module += (String)_stationId;
+  // mqtt_topic_requestSupply += (String)_stationId;
 }
 
 void MQTTClientStation::send(String topic, String message)

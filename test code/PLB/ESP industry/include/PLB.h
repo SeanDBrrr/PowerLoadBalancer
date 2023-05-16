@@ -8,16 +8,7 @@
 #include <functional>
 #include "IBuilding.h"
 #include "IStation.h"
-
-enum PLBStates {ST_Idle=1, 
-                ST_NoDir, 
-                ST_Dir1, 
-                ST_Dir2, 
-                ST_Dir3, 
-                ST_Dir3Only};
-
-enum PLBModes {MO_Auto=1, 
-                MO_Manual};
+#include "PLBEnums.h"
 
 class PLB
 {
@@ -34,7 +25,7 @@ private:
     std::vector<int> _directorIds;
 
     /* PLB Private Functions */
-    void _calculatePower(int power);
+    void _distributePower(int power);
 
 public:
     PLB(IBuilding *building, IStation *station1, IStation *station2, IStation *station3, IStation *station4);
@@ -48,22 +39,23 @@ public:
     void stopSupply(IStation* station);
     bool checkDirector(IStation* station, int directoId);
     bool isTimeout();
+    void setEvent(PLBEvents ev) { _event = ev; }
     void loop();
 
-    void manageEvents(PLBEvents ev);
-    void manageIdleState(PLBEvents ev);
-    void manageNoDirState(PLBEvents ev);
-    void manageDir1State(PLBEvents ev);
-    void manageDir2State(PLBEvents ev);
-    void manageDir3State(PLBEvents ev);
-    void manageDir3OnlyState(PLBEvents ev);
+    void manageEvents();
+    PLBStates manageIdleState();
+    PLBStates manageNoDirState();
+    PLBStates manageDir1State();
+    PLBStates manageDir2State();
+    PLBStates manageDir3State();
+    PLBStates manageDir3OnlyState();
 
     /* Getters & Setters */
     inline const IBuilding *
     getBuilding() const { return _building; }
 
-    inline const IStation *
-    getStation(int stationId) const { return _stations.at(stationId-1); }
+    inline IStation *
+    getStation(int stationId) const { return _stations.at(stationId); }
 
     inline void
     changeMode(PLBModes mode) { _mode = mode; }

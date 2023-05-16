@@ -1,6 +1,7 @@
 #include "PLB.h"
 
-PLB::PLB(IBuilding *building, IStation *station1, IStation *station2, IStation *station3, IStation *station4) : _state{ST_Idle}, _mode{MO_Manual}
+PLB::PLB(IBuilding *building, IStation *station1, IStation *station2, IStation *station3, IStation *station4) : 
+    _state{ST_Idle}, _mode{MO_Manual}, _event{NoEvent}
 {
     _building = building;
     _stations.emplace_back(station1);
@@ -14,13 +15,17 @@ void PLB::addStation(IStation *station)
     _stations.emplace_back(station);
 }
 
-void PLB::manageIdleState(PLBEvents ev)
+/*
+ * @brief 
+ * This function handles event while PLB is in 
+*/
+PLBStates PLB::manageIdleState()
 {
     _state = ST_Idle;
-    switch (ev)
+    switch (_event)
     {
     case EV_timeout:
-        _calculatePower(_building->calculateSolarPower());
+        _distributePower(_building->calculateSolarPower());
         supplyPowerToBuidling(_building->calculateSolarPower());
         break;
     case EV_supply1:
@@ -68,49 +73,55 @@ void PLB::manageIdleState(PLBEvents ev)
         checkDirector(_stations.at(3), 4);
         break;
     }
+    return _state;
 }
 
-void PLB::manageNoDirState(PLBEvents ev)
+PLBStates PLB::manageNoDirState()
 {
+    return _state;
 }
 
-void PLB::manageDir1State(PLBEvents ev)
+PLBStates PLB::manageDir1State()
 {
+    return _state;
 }
 
-void PLB::manageDir2State(PLBEvents ev)
+PLBStates PLB::manageDir2State()
 {
+    return _state;
 }
 
-void PLB::manageDir3State(PLBEvents ev)
+PLBStates PLB::manageDir3State()
 {
+    return _state;
 }
 
-void PLB::manageDir3OnlyState(PLBEvents ev)
+PLBStates PLB::manageDir3OnlyState()
 {
+    return _state;
 }
 
-void PLB::manageEvents(PLBEvents ev)
+void PLB::manageEvents()
 {
     switch (_state)
     {
     case ST_Idle:
-        manageIdleState(ev);
+        manageIdleState();
         break;
     case ST_NoDir:
-        manageNoDirState(ev);
+        manageNoDirState();
         break;
     case ST_Dir1:
-        manageDir1State(ev);
+        manageDir1State();
         break;
     case ST_Dir2:
-        manageDir2State(ev);
+        manageDir2State();
         break;
     case ST_Dir3:
-        manageDir3State(ev);
+        manageDir3State();
         break;
     case ST_Dir3Only:
-        manageDir3OnlyState(ev);
+        manageDir3OnlyState();
         break;
     default:
         break;
@@ -124,8 +135,8 @@ void PLB::manageEvents(PLBEvents ev)
 void PLB::supplyPowerToStation(IStation *station)
 {
     ++busyStations;
-    int buidlingPower = _building->calculateSolarPower();
-    if(buidlingPower == -1)
+    int solarPower = _building->calculateSolarPower();
+    if(solarPower == -1)
     {
         //handle error
     }
@@ -133,15 +144,19 @@ void PLB::supplyPowerToStation(IStation *station)
     {
         _userStations.emplace_back(station->getId());
     }
-    _calculatePower(buidlingPower);
+    _distributePower(solarPower);
 }
 
-void PLB::_calculatePower(int solarPower)
+void PLB::_distributePower(int solarPower)
 {
     static int prevSolarPower = 0;
-    if (solarPower == prevSolarPower)
-        return;
+    /* If the power production from the solar panels did not fluctuate, we don't need to proceed calculations */
+    if (solarPower == prevSolarPower) return;
+
+    prevSolarPower = solarPower;
     int availablePower = 20 + solarPower;
+    supplyPowerToBuidling(solarPower);
+
     float directorPower, userPower, stationPower;
     switch (_state)
     {
@@ -272,14 +287,9 @@ bool PLB::checkDirector(IStation *station, int directoId)
 
 void PLB::loop()
 {
-    for (const auto &s: _stations)
-    {
-        _event = s->loop();
-        manageEvents(_event);
-    }
-
     if(isTimeout())
     {
-        manageEvents(EV_timeout);
+        _event = EV_timeout;
     }
+    manageEvents();
 }

@@ -1,14 +1,8 @@
 #include "MQTTClientBuilding.h"
 
-const char *name = "Kiwy";
-const char *password = "aquamagic23";
-const char *mqtt_module = "Group4-PLB-Building";
-const char *broker_ip = "192.168.61.23";
-short port = 1883;
-
-EspMQTTClient client(name, password, broker_ip, mqtt_module, port);
-
-MQTTClientBuilding::MQTTClientBuilding() : _client(client) {}
+MQTTClientBuilding::MQTTClientBuilding()
+{
+}
 
 MQTTClientBuilding::~MQTTClientBuilding() {}
 

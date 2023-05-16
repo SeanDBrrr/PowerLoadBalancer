@@ -1,4 +1,5 @@
 #include "MQTTClientStation.h"
+#include <string>
 
 MQTTClientStation::MQTTClientStation(int Id)
 {

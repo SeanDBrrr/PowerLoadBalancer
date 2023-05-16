@@ -4,10 +4,9 @@
 #include <string>
 #include "IBuilding.h"
 #include "EspMQTTClient.h"
+#include "Topics.h"
 
 using namespace std;
-
-
 
 class MQTTClientBuilding : public IBuilding
 {

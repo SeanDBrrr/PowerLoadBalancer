@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef _IPLB_HPP
-#define _IPLB_HPP
-
 class IPLB
 {
 public:
@@ -15,5 +12,3 @@ public:
 IPLB::~IPLB()
 {
 }
-
-#endif

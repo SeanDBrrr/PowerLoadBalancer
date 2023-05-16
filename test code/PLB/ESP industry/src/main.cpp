@@ -31,14 +31,13 @@ void setup() {
 }
 
 void loop() {
-  event = mqttStation1->loop();
-  plb->manageEvents(event);
-  event = mqttStation2->loop();
-  plb->manageEvents(event);
-  event = mqttStation3->loop();
-  plb->manageEvents(event);
-  event = mqttStation4->loop();
-  plb->manageEvents(event);
-  
-  plb->loop();
+  plb.loop();
+  plb.setEvent(mqttStation1->loop());
+  // plb.manageEvents();
+  plb.setEvent(mqttStation2->loop());
+  // plb.manageEvents();
+  plb.setEvent(mqttStation3->loop());
+  // plb.manageEvents();
+  plb.setEvent(mqttStation4->loop());
+  plb.manageEvents();
 }

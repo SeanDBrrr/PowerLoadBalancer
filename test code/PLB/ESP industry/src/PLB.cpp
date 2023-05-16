@@ -1,8 +1,9 @@
 #include "PLB.h"
 
-PLB::PLB(IBuilding *building, IStation *station1, IStation *station2, IStation *station3, IStation *station4) : _state{ST_Idle}, _mode{MO_Manual}
+PLB::PLB(IBuilding *building, IStation *station1, IStation *station2, IStation *station3, IStation *station4) : _state(ST_Idle),
+                                                                                                                _mode(MO_Manual),
+                                                                                                                _building(building)
 {
-    _building = building;
     _stations.emplace_back(station1);
     _stations.emplace_back(station2);
     _stations.emplace_back(station3);
@@ -125,9 +126,9 @@ void PLB::supplyPowerToStation(IStation *station)
 {
     ++busyStations;
     int buidlingPower = _building->calculateSolarPower();
-    if(buidlingPower == -1)
+    if (buidlingPower == -1)
     {
-        //handle error
+        // handle error
     }
     if (busyStations > _directorIds.size())
     {
@@ -270,15 +271,19 @@ bool PLB::checkDirector(IStation *station, int directoId)
     return 0;
 }
 
+bool PLB::isTimeout()
+{
+    return false;
+}
+
 void PLB::loop()
 {
-    for (const auto &s: _stations)
-    {
-        _event = s->loop();
-        manageEvents(_event);
-    }
-
-    if(isTimeout())
+    // for (const auto &s : _stations)
+    // {
+    //     _event = s->loop();
+    //     manageEvents(_event);
+    // }
+    if (isTimeout())
     {
         manageEvents(EV_timeout);
     }

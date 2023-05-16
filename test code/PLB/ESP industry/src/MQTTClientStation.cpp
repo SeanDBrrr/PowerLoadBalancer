@@ -1,14 +1,6 @@
 #include "MQTTClientStation.h"
 
-const char *name = "Kiwy";
-const char *password = "aquamagic23";
-const char *mqtt_module = "Group4-PLB-Station";
-const char *broker_ip = "192.168.61.23";
-short port = 1883;
-
-EspMQTTClient client(name, password, broker_ip, mqtt_module, port);
-
-MQTTClientStation::MQTTClientStation(int Id) : _client(client)
+MQTTClientStation::MQTTClientStation(int Id)
 {
   _stationId = Id;
   _setStationId();
@@ -24,10 +16,21 @@ EspMQTTClient &MQTTClientStation::getClient()
 
 void MQTTClientStation::_setStationId()
 {
-  mqtt_topic_StationId += (String)_stationId;
-  mqtt_topic_charge_station += (String)_stationId;
-  mqtt_module += (String)_stationId;
-  mqtt_topic_requestSupply += (String)_stationId;
+  String mqtt_topic_StationId_str = String(mqtt_topic_StationId);
+  mqtt_topic_StationId_str += String(_stationId);
+  mqtt_topic_StationId = mqtt_topic_StationId_str.c_str();
+
+  String mqtt_topic_charge_station_str = String(mqtt_topic_charge_station);
+  mqtt_topic_charge_station_str += String(_stationId);
+  mqtt_topic_charge_station = mqtt_topic_charge_station_str.c_str();
+
+  String mqtt_module_str = String(mqtt_module);
+  mqtt_module_str += String(_stationId);
+  mqtt_module = mqtt_module_str.c_str();
+
+  String mqtt_topic_requestSupply_str = String(mqtt_topic_requestSupply);
+  mqtt_topic_requestSupply_str += String(_stationId);
+  mqtt_topic_requestSupply = mqtt_topic_requestSupply_str.c_str();
 }
 
 void MQTTClientStation::send(String topic, String message)

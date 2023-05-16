@@ -9,7 +9,7 @@ MQTTClientStation* mqttStation2;
 MQTTClientStation* mqttStation3;
 MQTTClientStation* mqttStation4;
 MQTTClientBuilding* mqttBuilding;
-PLB plb(mqttBuilding, mqttStation1, mqttStation2, mqttStation3, mqttStation4);
+PLB* plb;
 PLBEvents event;
 
 void onConnectionEstablished() {
@@ -22,13 +22,23 @@ void onConnectionEstablished() {
 
 void setup() {
   Serial.begin(115200);
-mqttStation1 = new MQTTClientStation(1);
-mqttStation2 = new MQTTClientStation(2);
-mqttStation3 = new MQTTClientStation(3);
-mqttStation4 = new MQTTClientStation(4);
-mqttBuilding = new MQTTClientBuilding();
+  mqttStation1 = new MQTTClientStation(1);
+  mqttStation2 = new MQTTClientStation(2);
+  mqttStation3 = new MQTTClientStation(3);
+  mqttStation4 = new MQTTClientStation(4);
+  mqttBuilding = new MQTTClientBuilding();
+  plb = new PLB(mqttBuilding, mqttStation1, mqttStation2, mqttStation3, mqttStation4);
 }
 
 void loop() {
-  plb.loop();
+  event = mqttStation1->loop();
+  plb->manageEvents(event);
+  event = mqttStation2->loop();
+  plb->manageEvents(event);
+  event = mqttStation3->loop();
+  plb->manageEvents(event);
+  event = mqttStation4->loop();
+  plb->manageEvents(event);
+  
+  plb->loop();
 }

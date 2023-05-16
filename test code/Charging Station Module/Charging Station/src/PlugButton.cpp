@@ -10,8 +10,7 @@ using namespace std;
 /// @brief Construct a new PlugButton::PlugButton object
 PlugButton::PlugButton()
 {
-    _button = new Button(BUTTON_PIN);
-    _button->begin();// DOUBLE CHECK IF THIS WORKS OUTSIDE OF VOID SETUP
+    _button = new Button(BUTTON_PIN); // DOUBLE CHECK IF THIS WORKS OUTSIDE OF VOID SETUP
 }
 
 /// @brief Destruct a PlugButton::PlugButton object

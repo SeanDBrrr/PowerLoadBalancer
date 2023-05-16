@@ -11,7 +11,6 @@ public:
     PlugButton()
     {
         _button = new Button(BUTTON_PIN);
-        _button->begin();
     }
     ~PlugButton() 
     {

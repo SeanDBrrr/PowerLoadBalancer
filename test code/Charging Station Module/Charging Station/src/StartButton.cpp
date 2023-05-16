@@ -11,7 +11,6 @@ using namespace std;
 StartButton::StartButton()
 {
     _button = new Button(BUTTON_PIN);
-    _button->begin();
 }
 
 /// @brief Destruct a StartButton::StartButton object

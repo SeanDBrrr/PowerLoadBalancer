@@ -32,7 +32,8 @@ State ChargingStation::HandleIdleDirectorState(Event ev)
     case Event::EV_PLUGGED:
         result = State::STATE_PLUGGED;
         break;
-    case Event::EV_UNPLUGGED || Event::EV_INVALID_RFID: // SHOULD WORK, OTHERWISE try only 1 |, OTHERWISE make 2 cases.
+    case Event::EV_UNPLUGGED:
+    case Event::EV_INVALID_RFID: 
         result = State::STATE_IDLE;
         break;
     case Event::EV_ERROR:

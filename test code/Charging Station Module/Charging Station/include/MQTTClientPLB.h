@@ -5,14 +5,14 @@
 #include "IPLB.h"
 #include "EspMQTTClient.h"
 #include <string.h>
-#include "Events.h"
+#include "Event.h"
 
 using namespace std;
 
 class MQTTClientPLB : public IPLB
 {
 private:
-    Events _event;
+    Event _event;
     int _id;
     float _powerReceived;
     bool _isPowerReceivedFlag;
@@ -38,7 +38,7 @@ public:
     void send(String topic, String message);
     void receive();
     void onConnectionSubscribe();
-    Events loop();
+    Event loop();
     ~MQTTClientPLB();
 };
 

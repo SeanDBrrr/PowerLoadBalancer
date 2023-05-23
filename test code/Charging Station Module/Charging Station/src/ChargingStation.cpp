@@ -259,6 +259,5 @@ ChargingStation::ChargingStation(
 
 ChargingStation::~ChargingStation()
 {
-}
-{
+
 }

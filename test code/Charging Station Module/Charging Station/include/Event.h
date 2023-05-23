@@ -2,6 +2,7 @@
 
 enum class Event
 {
+    noEvent = 0,
     EV_PLUGGED,
     EV_UNPLUGGED,
     EV_INVALID_RFID,

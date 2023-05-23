@@ -24,8 +24,18 @@ uint32_t id = 0;
 DirectorScanner *director;
 StationScreen *lcd;
 bool check;
+
+StartButton* startButton;
+PlugButton* plugButton;
+MQTTClientPLB* mqttStation;
+ChargingStation* chargingStation;
 // EspMQTTClient client1(name, password, broker_ip, mqtt_module, 1883);
 // Director_RFID *director;
+
+void onConnectionEstablished()
+{
+  mqttStation->onConnectionSubscribe();
+}
 
 void setup()
 {
@@ -37,29 +47,13 @@ void setup()
   pinMode(CONNECTION_LED, OUTPUT);
   pinMode(REQUEST_POWER_LED, OUTPUT);
   pinMode(DIRECTOR_LED, OUTPUT);
-  // LCD lcd(0x27,20,4);
-StartButton* startButton;
-PlugButton* plugButton;
-DirectorScanner* directorScanner;
-StationScreen* stationScreen;
-MQTTClientPLB* mqttStation;
-ChargingStation* chargingStation;
-
-
-
   // button/*Plug*/ Plug(PlugState);
   // ChargingStation chargingStation(Plug);
   //LCD lcd(0x27,20,4);
   startButton = new StartButton();
   plugButton = new PlugButton();
-  directorScanner = new DirectorScanner();
-  stationScreen = new StationScreen();
   mqttStation = new MQTTClientPLB(1);
-  chargingStation = new ChargingStation(startButton, plugButton, directorScanner, stationScreen, mqttStation);
-void onConnectionEstablished()
-{
-  mqttStation->onConnectionSubscribe();
-}
+  chargingStation = new ChargingStation(startButton, plugButton, director, lcd, mqttStation);
 }
 
   // put your main code here, to run repeatedly:

@@ -49,13 +49,13 @@ float MQTTClientPLB::getPowerReceived()
     return _powerReceived;
 }
 
-Events MQTTClientPLB::loop()
+Event MQTTClientPLB::loop()
 {
   receive();
-  _event = noEvent;
+  _event = Event::noEvent;
   if(_isPowerReceivedFlag)
   {
-    _event = EV_CHARGING;
+    _event = Event::EV_CHARGING;
     _isPowerReceivedFlag = 0;
   }
   return _event;

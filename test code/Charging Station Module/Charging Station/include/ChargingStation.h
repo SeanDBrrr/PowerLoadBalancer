@@ -4,8 +4,8 @@
 #include "IDirector.h"
 #include "IDisplay.h"
 #include "IStart.h"
-#include "Events.h"
-#include "States.h"
+#include "Event.h"
+#include "State.h"
 #include "StationModes.h"
 #include <iostream>
 #include <exception>

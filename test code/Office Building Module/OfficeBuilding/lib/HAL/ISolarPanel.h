@@ -4,9 +4,7 @@
 class ISolarPanel
 {  
     public:
-    ISolarPanel(){}
-    ~ISolarPanel(){}
-
+    virtual ~ISolarPanel() = default;
     virtual int getSolarPower() = 0;
 };
 

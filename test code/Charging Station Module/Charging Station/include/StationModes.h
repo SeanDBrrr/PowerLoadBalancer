@@ -1,6 +1,6 @@
 #pragma once
 
-enum StationModes
+enum class StationModes
 {
     
 };

@@ -1,6 +1,6 @@
 #pragma once
 
-enum States
+enum class State
 {
     MAIN_STATE_WORKING,
     MAIN_STATE_ERROR,

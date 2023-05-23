@@ -10,6 +10,9 @@
 #include <iostream>
 #include <exception>
 
+enum class Event; 
+enum class State;
+
 class ChargingStation
 {
 private:
@@ -18,8 +21,8 @@ private:
     bool _busy = 0;
 
     StationModes _mode;
-    Events _currentEvent;
-    States _currentState;
+    Event _currentEvent;
+    State _currentState;
 
     IPLB* _IPLB;
     IPlug* _IPlug;
@@ -31,19 +34,19 @@ public:
     ~ChargingStation(){};
 
     void loop();
-    void HandleMainEvent(Events ev);
-    States HandleMainWorkingState(Events ev);
-    States HandleMainErrorState(Events ev);
+    void HandleMainEvent(Event ev);
+    State HandleMainWorkingState(Event ev);
+    State HandleMainErrorState(Event ev);
 
-    void HandleEvent(Events ev);
-    States HandleIdleState(Events ev);
-    States HandleIdleDirectorState(Events ev);
-    States HandlePluggedState(Events ev);
-    States HandlePluggedDirectorState(Events ev);
-    States HandleWaitingForPowerState(Events ev);
-    States HandleChargingState(Events ev);
-    States HandleStoppedChargingState(Events ev);
-    States HandleErrorState(Events ev);
+    void HandleEvent(Event ev);
+    State HandleIdleState(Event ev);
+    State HandleIdleDirectorState(Event ev);
+    State HandlePluggedState(Event ev);
+    State HandlePluggedDirectorState(Event ev);
+    State HandleWaitingForPowerState(Event ev);
+    State HandleChargingState(Event ev);
+    State HandleStoppedChargingState(Event ev);
+    State HandleErrorState(Event ev);
     
     void charge(float power);
     void requestPower();

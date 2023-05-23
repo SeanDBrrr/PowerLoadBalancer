@@ -1,19 +1,19 @@
 #include "ChargingStation.h"
 
-States ChargingStation::HandleIdleState(Events ev)
+State ChargingStation::HandleIdleState(Event ev)
 {
-    States result = STATE_IDLE;
+    State result = State::STATE_IDLE;
 
     switch (ev)
     {
-    case EV_PLUGGED:
-        result = STATE_PLUGGED;
+    case Event::EV_PLUGGED:
+        result = State::STATE_PLUGGED;
         break;
-    case EV_RFID_DIRECTOR_DETECTED:
-        result = STATE_IDLE_DIRECTOR;
+    case Event::EV_RFID_DIRECTOR_DETECTED:
+        result = State::STATE_IDLE_DIRECTOR;
         break;
-    case EV_ERROR:
-        result = STATE_ERROR;
+    case Event::EV_ERROR:
+        result = State::STATE_ERROR;
         break;
     default:
         // ignored event, nothing to do here
@@ -23,20 +23,20 @@ States ChargingStation::HandleIdleState(Events ev)
     return result;
 }
 
-States ChargingStation::HandleIdleDirectorState(Events ev)
+State ChargingStation::HandleIdleDirectorState(Event ev)
 {
-    States result = STATE_IDLE_DIRECTOR;
+    State result = State::STATE_IDLE_DIRECTOR;
 
     switch (ev)
     {
-    case EV_PLUGGED:
-        result = STATE_PLUGGED;
+    case Event::EV_PLUGGED:
+        result = State::STATE_PLUGGED;
         break;
-    case EV_UNPLUGGED || EV_INVALID_RFID: // SHOULD WORK, OTHERWISE try only 1 |, OTHERWISE make 2 cases.
-        result = STATE_IDLE;
+    case Event::EV_UNPLUGGED || Event::EV_INVALID_RFID: // SHOULD WORK, OTHERWISE try only 1 |, OTHERWISE make 2 cases.
+        result = State::STATE_IDLE;
         break;
-    case EV_ERROR:
-        result = STATE_ERROR;
+    case Event::EV_ERROR:
+        result = State::STATE_ERROR;
         break;
     default:
         // ignored event, nothing to do here
@@ -46,23 +46,23 @@ States ChargingStation::HandleIdleDirectorState(Events ev)
     return result;
 }
 
-States ChargingStation::HandlePluggedState(Events ev)
+State ChargingStation::HandlePluggedState(Event ev)
 {
-    States result = STATE_PLUGGED;
+    State result = State::STATE_PLUGGED;
 
     switch (ev)
     {
-    case EV_UNPLUGGED:
-        result = STATE_IDLE;
+    case Event::EV_UNPLUGGED:
+        result = State::STATE_IDLE;
         break;
-    case EV_RFID_DIRECTOR_DETECTED:
-        result = STATE_PLUGGED_DIRECTOR;
+    case Event::EV_RFID_DIRECTOR_DETECTED:
+        result = State::STATE_PLUGGED_DIRECTOR;
         break;
-    case EV_START:
-        result = STATE_CHARGING;
+    case Event::EV_START:
+        result = State::STATE_CHARGING;
         break;
-    case EV_ERROR:
-        result = STATE_ERROR;
+    case Event::EV_ERROR:
+        result = State::STATE_ERROR;
         break;
     default:
         // ignored event, nothing to do here
@@ -72,23 +72,23 @@ States ChargingStation::HandlePluggedState(Events ev)
     return result;
 }
 
-States ChargingStation::HandlePluggedDirectorState(Events ev)
+State ChargingStation::HandlePluggedDirectorState(Event ev)
 {
-    States result = STATE_PLUGGED_DIRECTOR;
+    State result = State::STATE_PLUGGED_DIRECTOR;
 
     switch (ev)
     {
-    case EV_UNPLUGGED:
-        result = STATE_IDLE_DIRECTOR;
+    case Event::EV_UNPLUGGED:
+        result = State::STATE_IDLE_DIRECTOR;
         break;
-    case EV_INVALID_RFID:
-        result = STATE_PLUGGED;
+    case Event::EV_INVALID_RFID:
+        result = State::STATE_PLUGGED;
         break;
-    case EV_START:
-        result = STATE_WAITING_FOR_POWER;
+    case Event::EV_START:
+        result = State::STATE_WAITING_FOR_POWER;
         break;
-    case EV_ERROR:
-        result = STATE_ERROR;
+    case Event::EV_ERROR:
+        result = State::STATE_ERROR;
         break;
     default:
         // ignored event, nothing to do here
@@ -98,20 +98,20 @@ States ChargingStation::HandlePluggedDirectorState(Events ev)
     return result;
 }
 
-States ChargingStation::HandleWaitingForPowerState(Events ev)
+State ChargingStation::HandleWaitingForPowerState(Event ev)
 {
-    States result = STATE_WAITING_FOR_POWER;
+    State result = State::STATE_WAITING_FOR_POWER;
 
     switch (ev)
     {
-    case EV_CHARGING:
-        result = STATE_CHARGING;
+    case Event::EV_CHARGING:
+        result = State::STATE_CHARGING;
         break;
-    case EV_STOP:
-        result = STATE_STOPPED_CHARGING;
+    case Event::EV_STOP:
+        result = State::STATE_STOPPED_CHARGING;
         break;
-    case EV_ERROR:
-        result = STATE_ERROR;
+    case Event::EV_ERROR:
+        result = State::STATE_ERROR;
         break;
     default:
         // ignored event, nothing to do here
@@ -121,17 +121,17 @@ States ChargingStation::HandleWaitingForPowerState(Events ev)
     return result;
 }
 
-States ChargingStation::HandleChargingState(Events ev)
+State ChargingStation::HandleChargingState(Event ev)
 {
-    States result = STATE_CHARGING;
+    State result = State::STATE_CHARGING;
 
     switch (ev)
     {
-    case EV_STOP:
-        result = STATE_STOPPED_CHARGING;
+    case Event::EV_STOP:
+        result = State::STATE_STOPPED_CHARGING;
         break;
-    case EV_ERROR:
-        result = STATE_ERROR;
+    case Event::EV_ERROR:
+        result = State::STATE_ERROR;
         break;
     default:
         // ignored event, nothing to do here
@@ -141,20 +141,20 @@ States ChargingStation::HandleChargingState(Events ev)
     return result;
 }
 
-States ChargingStation::HandleStoppedChargingState(Events ev)
+State ChargingStation::HandleStoppedChargingState(Event ev)
 {
-    States result = STATE_STOPPED_CHARGING;
+    State result = State::STATE_STOPPED_CHARGING;
 
     switch (ev)
     {
-    case EV_START:
-        result = STATE_WAITING_FOR_POWER;
+    case Event::EV_START:
+        result = State::STATE_WAITING_FOR_POWER;
         break;
-    case EV_UNPLUGGED:
-        result = STATE_IDLE;
+    case Event::EV_UNPLUGGED:
+        result = State::STATE_IDLE;
         break;
-    case EV_ERROR:
-        result = STATE_ERROR;
+    case Event::EV_ERROR:
+        result = State::STATE_ERROR;
         break;
     default:
         // ignored event, nothing to do here
@@ -164,14 +164,14 @@ States ChargingStation::HandleStoppedChargingState(Events ev)
     return result;
 }
 
-void ChargingStation::HandleMainEvent(Events ev) // Technically might not be needed unless there are more states
+void ChargingStation::HandleMainEvent(Event ev) // Technically might not be needed unless there are more states
 {
     switch (_currentState)
     {
-    case MAIN_STATE_WORKING:
+    case State::MAIN_STATE_WORKING:
         _currentState = HandleMainWorkingState(ev);
         break;
-    case MAIN_STATE_ERROR:
+    case State::MAIN_STATE_ERROR:
         _currentState = HandleMainErrorState(ev);
         break;
     default:
@@ -180,32 +180,32 @@ void ChargingStation::HandleMainEvent(Events ev) // Technically might not be nee
     };
 }
 
-void ChargingStation::HandleEvent(Events ev)
+void ChargingStation::HandleEvent(Event ev)
 {
     switch (_currentState)
     {
-    case STATE_IDLE:
+    case State::STATE_IDLE:
         _currentState = HandleIdleState(ev);
         break;
-    case STATE_IDLE_DIRECTOR:
+    case State::STATE_IDLE_DIRECTOR:
         _currentState = HandleIdleDirectorState(ev);
         break;
-    case STATE_PLUGGED:
+    case State::STATE_PLUGGED:
         _currentState = HandlePluggedState(ev);
         break;
-    case STATE_PLUGGED_DIRECTOR:
+    case State::STATE_PLUGGED_DIRECTOR:
         _currentState = HandlePluggedDirectorState(ev);
         break;
-    case STATE_WAITING_FOR_POWER:
+    case State::STATE_WAITING_FOR_POWER:
         _currentState = HandleWaitingForPowerState(ev);
         break;
-    case STATE_CHARGING:
+    case State::STATE_CHARGING:
         _currentState = HandleChargingState(ev);
         break;
-    case STATE_STOPPED_CHARGING:
+    case State::STATE_STOPPED_CHARGING:
         _currentState = HandleStoppedChargingState(ev);
         break;
-    case STATE_ERROR:
+    case State::STATE_ERROR:
         _currentState = HandleErrorState(ev);
         break;
     default:
@@ -218,16 +218,16 @@ void ChargingStation::loop()
 {
     if (_IPlug->isPlugged())
     {
-        _currentEvent = EV_PLUGGED;
+        _currentEvent = Event::EV_PLUGGED;
     }
 
     if (_IStart->isStarted())
     {
-        _currentEvent = EV_START;
+        _currentEvent = Event::EV_START;
     }
     else if (!_IStart->isStarted()) // Should work in theory
     {
-        _currentEvent = EV_STOP;
+        _currentEvent = Event::EV_STOP;
     }
 
     _IDisplay->display("test");

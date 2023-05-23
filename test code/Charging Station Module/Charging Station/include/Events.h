@@ -1,6 +1,6 @@
 #pragma once
 
-enum Events
+enum class Event
 {
     EV_PLUGGED,
     EV_UNPLUGGED,

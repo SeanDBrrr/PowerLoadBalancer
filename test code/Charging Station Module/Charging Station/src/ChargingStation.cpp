@@ -1,5 +1,4 @@
 #include "ChargingStation.h"
-#include <iostream>
 
 States ChargingStation::HandleIdleState(Events ev)
 {
@@ -176,7 +175,7 @@ void ChargingStation::HandleMainEvent(Events ev) // Technically might not be nee
         _currentState = HandleMainErrorState(ev);
         break;
     default:
-        std::cerr << "ERROR: illegal/unhandled state with number: " << _currentState;
+        throw std::runtime_error("ERROR: illegal/unhandled state with number");
         break;
     };
 }
@@ -210,7 +209,7 @@ void ChargingStation::HandleEvent(Events ev)
         _currentState = HandleErrorState(ev);
         break;
     default:
-        std::cerr << "ERROR: illegal/unhandled state with number: " << _currentState;
+        throw std::runtime_error("ERROR: illegal/unhandled state with number");
         break;
     };
 }
@@ -219,29 +218,35 @@ void ChargingStation::loop()
 {
     if (_IPlug->isPlugged())
     {
-       _currentEvent = EV_PLUGGED;
+        _currentEvent = EV_PLUGGED;
     }
 
     if (_IStart->isStarted())
     {
         _currentEvent = EV_START;
     }
-    else if (!_IStart->isStarted())//Should work in theory
+    else if (!_IStart->isStarted()) // Should work in theory
     {
         _currentEvent = EV_STOP;
     }
 
     _IDisplay->display("test");
-    
-    
 
-    HandleEvent(_currentEvent);
-     
+    try
+    {
+        HandleEvent(_currentEvent);
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Exception occurred: " << e.what() << std::endl;
+    }
 }
 
 ChargingStation::ChargingStation(IStart *Start, IPlug *Plug, IDirector *Director, IDisplay *Display, IPLB *PLB)
-: _IPLB{PLB}, _IPlug{Plug}, _IStart{Start}, _IDirector{Director}, _IDisplay{Display}
-{}
+    : _IPLB{PLB}, _IPlug{Plug}, _IStart{Start}, _IDirector{Director}, _IDisplay{Display}
+{
+}
 
 ChargingStation::~ChargingStation()
-{}
+{
+}

@@ -7,6 +7,8 @@
 #include "Events.h"
 #include "States.h"
 #include "StationModes.h"
+#include <iostream>
+#include <exception>
 
 class ChargingStation
 {

@@ -14,15 +14,8 @@
 #include <SPI.h>
 #include <MFRC522.h>
 
-#define SS_PIN 5
-#define RST_PIN 27
-
-typedef enum
-{
-    IDLE,
-    CARD_DETECTED,
-    RESET
-} States;
+const int SS_PIN = 5;
+const int RST_PIN = 27;
 
 class DirectorScanner
 {
@@ -30,7 +23,7 @@ private:
     int _ssPin;
     int _rstPin;
     uint32_t _id = 0;
-    MFRC522 *_rfid;
+    MFRC522 _rfid;
     MFRC522::MIFARE_Key _key;
     byte _nuidPICC[4] = {0, 0, 0, 0};
     uint32_t assembleID(byte *, byte);
@@ -38,5 +31,4 @@ private:
 public:
     DirectorScanner(int, int);
     uint32_t getID();
-    ~DirectorScanner();
 };

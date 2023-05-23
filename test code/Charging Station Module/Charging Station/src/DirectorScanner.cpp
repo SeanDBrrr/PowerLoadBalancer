@@ -11,7 +11,6 @@
 #include "DirectorScanner.h"
 #include <iostream>
 
-using namespace std;
 
 /**
  * @brief DirectorScanner constructor
@@ -20,12 +19,12 @@ using namespace std;
  * @param RST
  */
 DirectorScanner::DirectorScanner(int SS, int RST) : _ssPin(SS),
-                                                    _rstPin(RST)
+                                                    _rstPin(RST),
+                                                    _rfid(MFRC522(_ssPin, _rstPin))
 
 {
-  _rfid = new MFRC522(_ssPin, _rstPin);
   SPI.begin();
-  _rfid->PCD_Init();
+  _rfid.PCD_Init();
   delay(4); // Optional delay. Some board do need more time after init to be ready, see Readme
 }
 
@@ -61,14 +60,14 @@ uint32_t DirectorScanner::getID()
     _key.keyByte[i] = 0xFF;
   }
   // Look for new 1 cards
-  if (!_rfid->PICC_IsNewCardPresent())
+  if (!_rfid.PICC_IsNewCardPresent())
   {
     // Serial.println("Inside NOT 'IsNewCardPresent'");
     return id;
   }
 
   // Verify if the NUID has been readed
-  if (!_rfid->PICC_ReadCardSerial())
+  if (!_rfid.PICC_ReadCardSerial())
   {
     // Serial.println("Inside NOT 'ReadCardSerial()'");
     return id;
@@ -76,18 +75,14 @@ uint32_t DirectorScanner::getID()
   // Store NUID into nuidPICC array
   for (byte i = 0; i < 4; i++)
   {
-    _nuidPICC[i] = _rfid->uid.uidByte[i];
+    _nuidPICC[i] = _rfid.uid.uidByte[i];
   }
-  id = assembleID(_rfid->uid.uidByte, _rfid->uid.size);
+  id = assembleID(_rfid.uid.uidByte, _rfid.uid.size);
   // Halt PICC
-  _rfid->PICC_HaltA();
+  _rfid.PICC_HaltA();
   // Stop encryption on PCD
-  _rfid->PCD_StopCrypto1();
+  _rfid.PCD_StopCrypto1();
 
   return id;
 }
 
-DirectorScanner::~DirectorScanner()
-{
-  delete _rfid;
-}

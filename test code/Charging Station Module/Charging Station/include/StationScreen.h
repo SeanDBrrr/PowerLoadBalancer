@@ -15,18 +15,17 @@
 #include "Arduino.h"
 #include <LiquidCrystal_I2C.h>
 
-#define SS_ADDRESS 0x27
-#define SS_COLUMNS 16
-#define SS_ROWS 2
+const int SS_ADDRESS = 0x27;
+const int SS_COLUMNS = 16;
+const int SS_ROWS = 2;
 class StationScreen
 {
 private:
     int _scl;
     int _sda;
-    LiquidCrystal_I2C *lcd;
+    LiquidCrystal_I2C _lcd;
 
 public:
     StationScreen(int, int);
-    ~StationScreen();
     void display(String);
 };

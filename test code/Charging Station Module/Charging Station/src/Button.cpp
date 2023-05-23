@@ -10,7 +10,6 @@
  */
 #include "Button.h"
 
-using namespace std;
 
 Button::Button(int btn) : _buttonPin(btn), _state(0)
 {  
@@ -19,14 +18,12 @@ Button::Button(int btn) : _buttonPin(btn), _state(0)
 
 /**
  * @brief Debouncer using  bit shifting
- *
+ * A beautiful press will result in the 16bit int being 0xFF00, (0XFE00)
  * @return uint16_t Value of button state.
  */
 void Button::debounce()
 {
-  _state = (_state << 1) | digitalRead(_buttonPin) | DEBOUNCE_MAX_TARGET; // A beautiful press will result in the 16bit int being 0xFF00, (0XFE00)
-  // Serial.println(_state);
-  // return (_state);
+  _state = (_state << 1) | digitalRead(_buttonPin) | _DEBOUNCE_MAX_TARGET; 
 }
 
 /**
@@ -37,7 +34,7 @@ void Button::debounce()
  */
 bool Button::pressed()
 {
-  return (PRESSED(_state));
+  return (_state < _DELAY_TARGET);
 }
 
 /**
@@ -50,12 +47,12 @@ bool Button::pressed()
  */
 bool Button::toggle()
 {
-  static bool toggle_state = false; // static variable to store toggle state
-  if (SINGLE_PRESS(_state))
-  {                               // check if button is pressed
-    toggle_state = !toggle_state; // toggle the toggle state
+  static bool toggle_state = false; 
+  if (singlePress())
+  {                               
+    toggle_state = !toggle_state;
   }
-  return toggle_state; // return the current toggle state
+  return toggle_state; 
 }
 
 /**
@@ -67,9 +64,5 @@ bool Button::toggle()
  */
 bool Button::singlePress()
 {
-  return (SINGLE_PRESS(_state));
-}
-
-Button::~Button()
-{
+  return ((_state < _RELEASED) && (_state > _DELAY_TARGET));
 }

@@ -2,6 +2,7 @@
 
 MQTTClientBuilding::MQTTClientBuilding()
 {
+  Serial.println("OBJECT CREATED: BUILDING");
 }
 
 MQTTClientBuilding::~MQTTClientBuilding() {}

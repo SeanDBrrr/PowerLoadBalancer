@@ -11,21 +11,20 @@ using namespace std;
 class MQTTClientBuilding : public IBuilding
 {
 private:
-    EspMQTTClient _client = EspMQTTClient(name, password, broker_ip, mqtt_module, port);
     bool _isSolarPowerArrivedFlag;
     int _totalSolarPower;
 
-    const char *mqtt_topic_solarPower = "group4/powerProduced";
-    const char *mqtt_topic_calculateSolarPower= "group4/calculateSolarPower";
-    const char *mqtt_topic_charge_building = "group4/chargeBuilding";
+    String mqtt_topic_solarPower = "group4/powerProduced";
+    String mqtt_topic_calculateSolarPower= "group4/calculateSolarPower";
+    String mqtt_topic_charge_building = "group4/chargeBuilding";
+    String name = "Kiwy";
+    String password = "aquamagic23";
+    String mqtt_module = "Group4-PLB-Building";
+    String broker_ip = "192.168.4.23";
+    short port = 1883;
+    EspMQTTClient _client = EspMQTTClient(name.c_str(), password.c_str(), broker_ip.c_str(), mqtt_module.c_str(), port);
 
 public:
-    const char *name = "Kiwy";
-    const char *password = "aquamagic23";
-    const char *mqtt_module = "Group4-PLB-Building";
-    const char *broker_ip = "192.168.61.23";
-    short port = 1883;
-
     MQTTClientBuilding();
     ~MQTTClientBuilding();
 

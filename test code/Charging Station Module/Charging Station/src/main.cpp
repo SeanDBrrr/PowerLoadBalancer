@@ -1,9 +1,17 @@
 #include <Arduino.h>
 #include "ChargingStation.h"
+#include "MQTTClientPLB.h"
+#include "PlugButton.h"
+#include "StartButton.h"
+#include "DirectorScanner.h"
+#include "StationScreen.h"
 
 #include "Button.h"
 #include "DirectorScanner.h"
 #include "StationScreen.h"
+
+int PlugPin = 0;
+int PlugState = 0;
 
 const int BUTTON_PIN = 4;
 const int CONNECTION_LED = 2;
@@ -30,9 +38,31 @@ void setup()
   pinMode(REQUEST_POWER_LED, OUTPUT);
   pinMode(DIRECTOR_LED, OUTPUT);
   // LCD lcd(0x27,20,4);
+StartButton* startButton;
+PlugButton* plugButton;
+DirectorScanner* directorScanner;
+StationScreen* stationScreen;
+MQTTClientPLB* mqttStation;
+ChargingStation* chargingStation;
+
+
+
+  // button/*Plug*/ Plug(PlugState);
+  // ChargingStation chargingStation(Plug);
+  //LCD lcd(0x27,20,4);
+  startButton = new StartButton();
+  plugButton = new PlugButton();
+  directorScanner = new DirectorScanner();
+  stationScreen = new StationScreen();
+  mqttStation = new MQTTClientPLB(1);
+  chargingStation = new ChargingStation(startButton, plugButton, directorScanner, stationScreen, mqttStation);
+void onConnectionEstablished()
+{
+  mqttStation->onConnectionSubscribe();
+}
 }
 
-void loop()
-{
   // put your main code here, to run repeatedly:
+void loop() {
+  chargingStation->HandleEvent(mqttStation->loop());
 }

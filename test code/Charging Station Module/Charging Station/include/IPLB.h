@@ -3,9 +3,9 @@
 class IPLB
 {
 public:
-    virtual ~IPLB() = default;
-    virtual int supplyPower() = 0;
-    virtual int stopSupply() = 0;
+    virtual ~IPLB();
+    virtual void supplyPowerToStation(int id) = 0;
+    virtual void stopSupplyToStation(int id) = 0;
     virtual void checkDirector(int id) = 0;
 };
 

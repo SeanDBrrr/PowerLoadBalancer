@@ -12,9 +12,6 @@ public:
     MOCK_METHOD(int, getId, ());
     MOCK_METHOD(void, charge, (float));
     MOCK_METHOD(void, switchMode, (StationModes));
-
-    MOCK_METHOD(void, receive, ());
-    MOCK_METHOD(void, send, (String, String));
 };
 
 #endif

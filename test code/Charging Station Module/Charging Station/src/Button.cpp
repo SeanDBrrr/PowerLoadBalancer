@@ -10,7 +10,6 @@
  */
 #include "Button.h"
 
-
 Button::Button(int btn) : _buttonPin(btn), _state(0)
 {  
   pinMode(_buttonPin, INPUT_PULLUP);

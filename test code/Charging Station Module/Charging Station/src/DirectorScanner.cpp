@@ -11,7 +11,6 @@
 #include "DirectorScanner.h"
 #include <iostream>
 
-
 /**
  * @brief DirectorScanner constructor
  * Constructor must be called inside void setup during object creation using new operator!!

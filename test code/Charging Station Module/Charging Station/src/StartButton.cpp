@@ -5,8 +5,6 @@
 
 #define BUTTON_PIN 3 // TODO NEEDS TO BE CHANGED
 
-using namespace std;
-
 /// @brief Construct a new StartButton::StartButton object
 StartButton::StartButton()
 {

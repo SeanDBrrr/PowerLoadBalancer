@@ -1,11 +1,12 @@
 #pragma once
+#include <string>
 
 class IDisplay
 {
 public:
-    virtual ~IDisplay();
+    virtual ~IDisplay() = default;
 
-    virtual int display(String) = 0;
+    virtual int display(std::string) = 0;
 };
 
 IDisplay::~IDisplay()

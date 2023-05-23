@@ -3,7 +3,7 @@
 class IPLB
 {
 public:
-    virtual ~IPLB();
+    virtual ~IPLB() = default;
     virtual int supplyPower() = 0;
     virtual int stopSupply() = 0;
     virtual void checkDirector(int id) = 0;

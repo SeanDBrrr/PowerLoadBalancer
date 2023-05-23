@@ -3,7 +3,7 @@
 class IStart
 {
 public:
-    virtual ~IStart();
+    virtual ~IStart() = default;
 
     virtual bool isStarted() = 0;
 };

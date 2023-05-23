@@ -3,7 +3,7 @@
 class IDirector
 {
 public:
-    virtual ~IDirector();
+    virtual ~IDirector() = default;
 };
 
 IDirector::~IDirector()

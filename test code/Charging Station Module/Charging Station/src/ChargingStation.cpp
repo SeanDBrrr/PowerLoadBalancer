@@ -177,7 +177,7 @@ void ChargingStation::HandleMainEvent(Event ev) // Technically might not be need
     default:
         throw std::runtime_error("ERROR: illegal/unhandled state with number");
         break;
-    };
+    }
 }
 
 void ChargingStation::HandleEvent(Event ev)
@@ -211,11 +211,12 @@ void ChargingStation::HandleEvent(Event ev)
     default:
         throw std::runtime_error("ERROR: illegal/unhandled state with number");
         break;
-    };
+    }
 }
 
 void ChargingStation::loop()
 {
+
     if (_IPlug->isPlugged())
     {
         _currentEvent = Event::EV_PLUGGED;
@@ -242,11 +243,22 @@ void ChargingStation::loop()
     }
 }
 
-ChargingStation::ChargingStation(IStart *Start, IPlug *Plug, IDirector *Director, IDisplay *Display, IPLB *PLB)
-    : _IPLB{PLB}, _IPlug{Plug}, _IStart{Start}, _IDirector{Director}, _IDisplay{Display}
+ChargingStation::ChargingStation(
+    IStart *Start,
+    IPlug *Plug,
+    IDirector *Director,
+    IDisplay *Display,
+    IPLB *PLB)
+    : _IPLB{PLB},
+      _IPlug{Plug},
+      _IStart{Start},
+      _IDirector{Director},
+      _IDisplay{Display}
 {
 }
 
 ChargingStation::~ChargingStation()
+{
+}
 {
 }

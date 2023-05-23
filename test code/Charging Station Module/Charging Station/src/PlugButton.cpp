@@ -5,8 +5,6 @@
 
 #define BUTTON_PIN 4 // TODO NEEDS TO BE CHANGED
 
-using namespace std;
-
 /// @brief Construct a new PlugButton::PlugButton object
 PlugButton::PlugButton()
 {

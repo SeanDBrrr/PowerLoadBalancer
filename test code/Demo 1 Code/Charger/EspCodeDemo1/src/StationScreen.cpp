@@ -13,24 +13,22 @@
 #include "StationScreen.h"
 #include <iostream>
 
-using namespace std;
-
 /**
  * @brief Construct a new StationScreen::StationScreen object
  *
  * @param scl
  * @param sda
  */
-StationScreen::StationScreen(int scl, int sda) : _scl(scl),
-                                                 _sda(sda)
+StationScreen::StationScreen(int scl, int sda)
+    : _scl(scl),
+      _sda(sda),
+      _lcd(LiquidCrystal_I2C(SS_ADDRESS, SS_COLUMNS, SS_ROWS))
 
 {
-    lcd = new LiquidCrystal_I2C(SS_ADDRESS, SS_COLUMNS, SS_ROWS);
-    lcd->init();
-    lcd->backlight();
-    lcd->setCursor(0, 0);
+    _lcd.init();
+    _lcd.backlight();
+    _lcd.setCursor(0, 0);
 }
-
 
 /**
  * @brief Function for displaying StationScreen
@@ -40,11 +38,6 @@ StationScreen::StationScreen(int scl, int sda) : _scl(scl),
  */
 void StationScreen::display(String message)
 {
-    lcd->clear();
-    lcd->print(message);
-}
-
-StationScreen::~StationScreen()
-{
-    delete lcd;
+    _lcd.clear();
+    _lcd.print(message);
 }

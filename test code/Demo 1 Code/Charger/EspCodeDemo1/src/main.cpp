@@ -5,10 +5,10 @@
 #include "DirectorScanner.h"
 #include "StationScreen.h"
 
-#define BUTTON_PIN 4
-#define CONNECTION_LED 2
-#define REQUEST_POWER_LED 15
-#define DIRECTOR_LED 26
+ const int BUTTON_PIN = 4;
+ const int CONNECTION_LED = 2;
+ const int REQUEST_POWER_LED = 15;
+ const int DIRECTOR_LED = 26;
 int counter = 0;
 // const char *name = "Kiwy";
 // const char *password = "aquamagic23";
@@ -20,7 +20,6 @@ int counter = 0;
 // int dir = 1;
 // int helper = 0;
 
-using namespace std;
 // long previousTime = millis();
 Button *button;
 uint32_t id = 0;
@@ -94,6 +93,7 @@ void loop()
   }
 
   // TOGGLE
+  
   if (button->toggle())
   {
     if (id > 0)
@@ -104,7 +104,7 @@ void loop()
   }
   else
   {
-    digitalWrite(CONNECTION_LED, LOW);
+    digitalWrite(DIRECTOR_LED, LOW);
   }
 
   // // SINGLE PRESS

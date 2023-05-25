@@ -7,7 +7,3 @@ public:
 
     virtual bool isStarted() = 0;
 };
-
-IStart::~IStart()
-{
-}

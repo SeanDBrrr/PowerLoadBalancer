@@ -7,7 +7,3 @@ public:
 
     virtual bool isPlugged() = 0;
 };
-
-IPlug::~IPlug()
-{
-}

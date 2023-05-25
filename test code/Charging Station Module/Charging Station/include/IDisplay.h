@@ -8,7 +8,3 @@ public:
 
     virtual int display(std::string) = 0;
 };
-
-IDisplay::~IDisplay()
-{
-}

@@ -19,6 +19,27 @@ void MQTTClientPLB::send(String topic, String message)
 void MQTTClientPLB::receive()
 {
     _client.loop();
+    _event = Event::noEvent;
+    if(_isDirectorResponseFlag)
+    {
+      if (_directorState == DirectorState::INVALID)
+      {
+        _event = Event::EV_RFID_INVALID;
+      }
+      else if (_directorState == DirectorState::VALID)
+      {
+        _event = Event::EV_RFID_VALID;
+      }
+      else if (_directorState == DirectorState::TIMED_OUT)
+      {
+        _event = Event::EV_RFID_TIMED_OUT;
+      }
+      else if (_directorState == DirectorState::ALREADY_CHECKED_IN)
+      {
+       _event = Event::EV_RFID_ALREADY_CHECKED_IN;
+      }
+      _isDirectorResponseFlag = 0;
+    }
 }
 
 void MQTTClientPLB::onConnectionSubscribe()
@@ -26,6 +47,21 @@ void MQTTClientPLB::onConnectionSubscribe()
   _client.subscribe(mqtt_topic_receivePower, [this](const String & topic, const String & payload) {
     _isPowerReceivedFlag = true;
     _powerReceived = payload.toFloat();
+  });
+  _client.subscribe(mqtt_topic_directorResponse, [this](const String & topic, const String & payload) {
+    _isDirectorResponseFlag = true;
+    if (payload == "VALID")
+    {
+      _directorState = DirectorState::VALID;
+    }
+    else if (payload == "INVALID")
+    {
+      _directorState = DirectorState::INVALID;
+    }
+    else if (payload == "ALREADY CHECKED IN")
+    {
+      _directorState = DirectorState::ALREADY_CHECKED_IN;
+    }
   });
 }
 
@@ -49,17 +85,21 @@ float MQTTClientPLB::getPowerReceived()
     return _powerReceived;
 }
 
-Event MQTTClientPLB::loop()
+Event MQTTClientPLB::getEvent()
 {
-  receive();
-  _event = Event::noEvent;
-  if(_isPowerReceivedFlag)
-  {
-    _event = Event::EV_CHARGING;
-    _isPowerReceivedFlag = 0;
-  }
   return _event;
 }
 
-
-
+// DirectorState MQTTClientPLB::waitingForPlb(int waitingTime)
+// {
+//     long lastTime = millis();
+//     while(!_isDirectorResponseFlag)
+//     {
+//         if(millis() - lastTime >= waitingTime)
+//         {
+//           return DirectorState::TIMED_OUT;
+//         }
+//     }
+//     _isDirectorResponseFlag = 0;
+//     return _directorState;
+// }

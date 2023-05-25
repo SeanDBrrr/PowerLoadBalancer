@@ -3,7 +3,7 @@
 State ChargingStation::HandleIdleState(Event ev)
 {
     State result = State::STATE_IDLE;
-
+    
     switch (ev)
     {
     case Event::EV_PLUGGED:
@@ -25,15 +25,19 @@ State ChargingStation::HandleIdleState(Event ev)
 
 State ChargingStation::HandleIdleDirectorState(Event ev)
 {
+    
     State result = State::STATE_IDLE_DIRECTOR;
 
+    //_IDisplay->display("verifying RFID");
+   
+    
     switch (ev)
     {
     case Event::EV_PLUGGED:
         result = State::STATE_PLUGGED;
         break;
-    case Event::EV_UNPLUGGED:
-    case Event::EV_INVALID_RFID: 
+    case Event::EV_UNPLUGGED://needs to be deleted after state machine
+    case Event::EV_RFID_INVALID: 
         result = State::STATE_IDLE;
         break;
     case Event::EV_ERROR:
@@ -82,7 +86,7 @@ State ChargingStation::HandlePluggedDirectorState(Event ev)
     case Event::EV_UNPLUGGED:
         result = State::STATE_IDLE_DIRECTOR;
         break;
-    case Event::EV_INVALID_RFID:
+    case Event::EV_RFID_INVALID:
         result = State::STATE_PLUGGED;
         break;
     case Event::EV_START:
@@ -228,12 +232,21 @@ void ChargingStation::loop()
         _currentEvent = Event::EV_PLUGGED;
     }
 
-    if (_IStart->isStarted())
+    _directorId = _IDirector->getID();
+    if (_directorId != 0)
     {
+        _IPLB->checkDirector(_directorId);
+        _currentEvent = Event::EV_RFID_DIRECTOR_DETECTED;
+    }    
+   
+    if (_IStart->isStarted() && !_isStartedFlag)
+    {
+        _isStartedFlag = true;
         _currentEvent = Event::EV_START;
     }
-    else if (!_IStart->isStarted()) // Should work in theory
+    else if (!_IStart->isStarted() && _isStartedFlag) // Should be correct
     {
+        _isStartedFlag = false;
         _currentEvent = Event::EV_STOP;
     }
 

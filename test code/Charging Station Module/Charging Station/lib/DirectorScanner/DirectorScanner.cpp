@@ -10,6 +10,7 @@
  */
 #include "DirectorScanner.h"
 #include <iostream>
+#include <stdint.h>
 
 /**
  * @brief DirectorScanner constructor

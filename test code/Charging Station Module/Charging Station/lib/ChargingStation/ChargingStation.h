@@ -14,8 +14,9 @@ enum class State;
 class ChargingStation
 {
 private:
+    uint32_t _directorId = 0;
     int _id = 0;
-    bool _state = 0;//Not needed anymore?
+    bool _isStartedFlag = 0;
     bool _busy = 0;
 
     Event _currentEvent;

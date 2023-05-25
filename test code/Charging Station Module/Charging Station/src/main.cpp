@@ -27,14 +27,14 @@ bool check;
 
 StartButton* startButton;
 PlugButton* plugButton;
-MQTTClientPLB* mqttStation;
+MQTTClientPLB* mqttPLB;
 ChargingStation* chargingStation;
 // EspMQTTClient client1(name, password, broker_ip, mqtt_module, 1883);
 // Director_RFID *director;
 
 void onConnectionEstablished()
 {
-  mqttStation->onConnectionSubscribe();
+  mqttPLB->onConnectionSubscribe();
 }
 
 void setup()
@@ -52,17 +52,18 @@ void setup()
   //LCD lcd(0x27,20,4);
   startButton = new StartButton();
   plugButton = new PlugButton();
-  mqttStation = new MQTTClientPLB(1);
+  mqttPLB = new MQTTClientPLB(1);
   chargingStation = new ChargingStation(
     startButton,
     plugButton,
     director,
     lcd,
-    mqttStation
+    mqttPLB
   );
 }
 
   // put your main code here, to run repeatedly:
 void loop() {
-  chargingStation->HandleEvent(mqttStation->loop());
+  
+  chargingStation->HandleEvent(mqttPLB->getEvent());
 }

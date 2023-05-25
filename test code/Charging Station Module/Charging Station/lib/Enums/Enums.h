@@ -5,7 +5,10 @@ enum class Event
     noEvent = 0,
     EV_PLUGGED,
     EV_UNPLUGGED,
-    EV_INVALID_RFID,
+    EV_RFID_VALID,
+    EV_RFID_INVALID,
+    EV_RFID_TIMED_OUT,
+    EV_RFID_ALREADY_CHECKED_IN,
     EV_RFID_DIRECTOR_DETECTED,
     EV_START,
     EV_CHARGING,
@@ -27,4 +30,12 @@ enum class State
     STATE_CHARGING,
     STATE_STOPPED_CHARGING,
     STATE_ERROR//maybe not needed? Needs to exit substate machine via this I think
+};
+
+enum class DirectorState
+{
+    VALID,
+    INVALID,
+    ALREADY_CHECKED_IN,
+    TIMED_OUT
 };

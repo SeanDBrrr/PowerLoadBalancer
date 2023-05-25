@@ -263,8 +263,3 @@ ChargingStation::ChargingStation(
       _IDisplay(Display)
 {
 }
-
-ChargingStation::~ChargingStation()
-{
-
-}

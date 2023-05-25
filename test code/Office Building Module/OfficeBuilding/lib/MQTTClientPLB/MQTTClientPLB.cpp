@@ -22,7 +22,7 @@ MQTTClientPLB::receive()
     {
         return BuildingEvents::EV_RequestSolarPower;
     }
-    
+    return BuildingEvents::NoEvent;
 }
 
 

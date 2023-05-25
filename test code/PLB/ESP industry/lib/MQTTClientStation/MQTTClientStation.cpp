@@ -31,25 +31,25 @@ void MQTTClientStation::send(String topic, String message)
   _client.publish(topic, message, 0);
 }
 
-PLBEvents MQTTClientStation::receive()
+void MQTTClientStation::receive()
 {
   _client.loop();
-  _event = noEvent;
+  _event = PLBEvents::noEvent;
   if(_isDirectorDetectedFlag)
   {
-    switch (_directorId) 
+    switch (_stationId) 
     {
       case 1:
-        _event = EV_Director1;
+        _event = PLBEvents::EV_Director1;
         break;
       case 2:
-        _event = EV_Director2;
+        _event = PLBEvents::EV_Director2;
         break;
       case 3:
-        _event = EV_Director3;
+        _event = PLBEvents::EV_Director3;
         break;
       case 4:
-        _event = EV_Director4;
+        _event = PLBEvents::EV_Director4;
         break;
     }
     _isDirectorDetectedFlag = 0;
@@ -60,16 +60,16 @@ PLBEvents MQTTClientStation::receive()
     switch (_stationId)
     {
       case 1:
-        _event = EV_Supply1;
+        _event = PLBEvents::EV_Supply1;
         break;
       case 2:
-        _event = EV_Supply2;
+        _event = PLBEvents::EV_Supply2;
         break;
       case 3:
-        _event = EV_Supply3;
+        _event = PLBEvents::EV_Supply3;
         break;
       case 4:
-        _event = EV_Supply4;
+        _event = PLBEvents::EV_Supply4;
         break;
     }
     _isRequestSupplyFlag = 0;
@@ -80,22 +80,20 @@ PLBEvents MQTTClientStation::receive()
     switch (_stationId)
     {
       case 1:
-        _event = EV_Stop1;
+        _event = PLBEvents::EV_Stop1;
         break;
       case 2:
-        _event = EV_Stop2;
+        _event = PLBEvents::EV_Stop2;
         break;
       case 3:
-        _event = EV_Stop3;
+        _event = PLBEvents::EV_Stop3;
         break;
       case 4:
-        _event = EV_Stop4;
+        _event = PLBEvents::EV_Stop4;
         break;
     }
     _isStopSupplyFlag = 0;
   }
-
-  return _event;
 }
 
 void MQTTClientStation::onConnectionSubscribe()
@@ -126,12 +124,40 @@ int MQTTClientStation::getDirectorId() //override
   return _directorId;
 }
 
+void MQTTClientStation::validateDirector(bool directorValidated)
+{
+  if(directorValidated)
+  {
+    send(mqtt_topic_directorValidate, "validated");
+  }
+  else if(!directorValidated)
+  {
+    send(mqtt_topic_directorValidate, "invalidated");
+  }
+}
+
 void MQTTClientStation::charge(float power) //override
 {
-  send(mqtt_topic_charge_station, (String)power);
+  send(mqtt_topic_charge_station, String(power));
 }
 
 void MQTTClientStation::switchMode(StationModes mode) //override
 {
-  send(mqtt_topic_mode, (String)mode);
+  if(mode == StationModes::MO_Director)
+  {
+    send(mqtt_topic_mode, "Director Mode");
+  }
+  else if(mode == StationModes::MO_FCFS)
+  {
+    send(mqtt_topic_mode, "FCFS Mode");
+  }
+  else if(mode == StationModes::MO_Dynamic)
+  {
+    send(mqtt_topic_mode, "Dynamic Mode");
+  }
+}
+
+PLBEvents MQTTClientStation::getEvent()
+{
+  return _event;
 }

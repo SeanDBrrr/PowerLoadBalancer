@@ -3,6 +3,7 @@
 
 #include "IStation.h"
 #include "EspMQTTClient.h"
+#include "Enums.h"
 
 using namespace std;
 
@@ -24,6 +25,7 @@ private:
     String mqtt_topic_requestSupply = "group4/requestPowerSupply";
     String mqtt_topic_stopSupply = "group4/stopPowerSupply";
     String mqtt_topic_charge_station = "group4/chargeStation";
+    String mqtt_topic_directorValidate = "group4/directorResponse";
     String name = "Kiwy";
     String password = "aquamagic23";
     String mqtt_module = "Group4-PLB-Station";
@@ -43,9 +45,11 @@ public:
 
     EspMQTTClient& getClient();
     void send(String topic, String message);
-    PLBEvents receive();
+    void receive();
+    PLBEvents getEvent();
     void onConnectionSubscribe();
 
+    void validateDirector(bool directorValidated);
     int getId();
     int getDirectorId();
     void charge(float power);

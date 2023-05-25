@@ -36,9 +36,13 @@ void setup() {
 
 void loop() {
   mqttBuilding->receive();
-  plb->handleEvents(mqttStation1->receive());
-  plb->handleEvents(mqttStation2->receive());
-  plb->handleEvents(mqttStation3->receive());
-  plb->handleEvents(mqttStation4->receive());
+  mqttStation1->receive();
+  mqttStation2->receive();
+  mqttStation3->receive();
+  mqttStation4->receive();
+  plb->handleEvents(mqttStation1->getEvent());
+  plb->handleEvents(mqttStation2->getEvent());
+  plb->handleEvents(mqttStation3->getEvent());
+  plb->handleEvents(mqttStation4->getEvent());
   plb->loop();
 }

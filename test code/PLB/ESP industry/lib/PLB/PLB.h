@@ -1,24 +1,13 @@
 #ifndef _PLB_HPP
 #define _PLB_HPP
 
-#include <array>
 #include <vector>
-#include <list>
 #include <utility>
 #include <functional>
+#include <Arduino.h>
+#include "Enums.h"
 #include "IBuilding.h"
 #include "IStation.h"
-
-enum PLBStates {ST_Idle=1, 
-                ST_NoDir, 
-                ST_Dir1, 
-                ST_Dir2, 
-                ST_Dir3, 
-                ST_Dir3Only,
-                ST_Dir4};
-
-enum PLBModes {MO_Auto=1, 
-                MO_Manual};
 
 class PLB
 {

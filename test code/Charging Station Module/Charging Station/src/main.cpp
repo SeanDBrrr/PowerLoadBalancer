@@ -64,6 +64,6 @@ void setup()
 
   // put your main code here, to run repeatedly:
 void loop() {
-  
-  chargingStation->HandleEvent(mqttPLB->getEvent());
+  chargingStation->loop();
+  //chargingStation->HandleEvent(mqttPLB->getEvent());
 }

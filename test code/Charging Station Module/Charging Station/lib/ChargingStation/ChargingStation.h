@@ -14,11 +14,10 @@ enum class State;
 class ChargingStation
 {
 private:
-    uint32_t _directorId = 0;
-    int _id = 0;
-    bool _isStartedFlag = 0;
-    bool _busy = 0;
-
+    uint32_t _directorId;
+    int _id;
+    bool _isStartedFlag;
+    bool _busy;
     Event _currentEvent;
     State _currentState;
 

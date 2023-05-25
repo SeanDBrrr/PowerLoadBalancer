@@ -3,7 +3,7 @@
 #include "PlugButton.h"
 #include <iostream>
 
-#define BUTTON_PIN 4 // TODO NEEDS TO BE CHANGED
+constexpr int BUTTON_PIN = 4; // TODO NEEDS TO BE CHANGED
 
 /// @brief Construct a new PlugButton::PlugButton object
 PlugButton::PlugButton()

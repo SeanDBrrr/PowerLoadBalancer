@@ -2,11 +2,13 @@
 
 State ChargingStation::HandleIdleState(Event ev)
 {
+
     State result = State::STATE_IDLE;
-    
+
     switch (ev)
     {
     case Event::EV_PLUGGED:
+        _IDisplay->display("PLUGGED");
         result = State::STATE_PLUGGED;
         break;
     case Event::EV_RFID_DIRECTOR_DETECTED:
@@ -25,19 +27,18 @@ State ChargingStation::HandleIdleState(Event ev)
 
 State ChargingStation::HandleIdleDirectorState(Event ev)
 {
-    
+
     State result = State::STATE_IDLE_DIRECTOR;
 
     //_IDisplay->display("verifying RFID");
-   
-    
+
     switch (ev)
     {
     case Event::EV_PLUGGED:
         result = State::STATE_PLUGGED;
         break;
-    case Event::EV_UNPLUGGED://needs to be deleted after state machine
-    case Event::EV_RFID_INVALID: 
+    case Event::EV_UNPLUGGED: // needs to be deleted after state machine
+    case Event::EV_RFID_INVALID:
         result = State::STATE_IDLE;
         break;
     case Event::EV_ERROR:
@@ -53,6 +54,7 @@ State ChargingStation::HandleIdleDirectorState(Event ev)
 
 State ChargingStation::HandlePluggedState(Event ev)
 {
+
     State result = State::STATE_PLUGGED;
 
     switch (ev)
@@ -61,6 +63,7 @@ State ChargingStation::HandlePluggedState(Event ev)
         result = State::STATE_IDLE;
         break;
     case Event::EV_RFID_DIRECTOR_DETECTED:
+        _IDisplay->display("PLUGGED DIR");
         result = State::STATE_PLUGGED_DIRECTOR;
         break;
     case Event::EV_START:
@@ -79,6 +82,7 @@ State ChargingStation::HandlePluggedState(Event ev)
 
 State ChargingStation::HandlePluggedDirectorState(Event ev)
 {
+    //_IDisplay->display("Plugged Director");
     State result = State::STATE_PLUGGED_DIRECTOR;
 
     switch (ev)
@@ -226,7 +230,6 @@ void ChargingStation::HandleEvent(Event ev)
 
 void ChargingStation::loop()
 {
-    
 
     if (_IPlug->isPlugged())
     {
@@ -236,22 +239,20 @@ void ChargingStation::loop()
     _directorId = _IDirector->getID();
     if (_directorId != 0)
     {
-        _IPLB->checkDirector(_directorId);
+        //_IPLB->checkDirector(_directorId);
         _currentEvent = Event::EV_RFID_DIRECTOR_DETECTED;
-    }    
-   
-    if (_IStart->isStarted() && !_isStartedFlag)
-    {
-        _isStartedFlag = true;
-        _currentEvent = Event::EV_START;
-    }
-    else if (!_IStart->isStarted() && _isStartedFlag) // Should be correct
-    {
-        _isStartedFlag = false;
-        _currentEvent = Event::EV_STOP;
     }
 
-    _IDisplay->display("test");
+    // if (_IStart->isStarted() && !_isStartedFlag)
+    // {
+    //     _isStartedFlag = true;
+    //     _currentEvent = Event::EV_START;
+    // }
+    // else if (_IStart->isStarted() && _isStartedFlag) // Should be correct
+    // {
+    //     _isStartedFlag = false;
+    //     _currentEvent = Event::EV_STOP;
+    // }
 
     try
     {
@@ -268,12 +269,18 @@ ChargingStation::ChargingStation(
     IPlug *Plug,
     IDirector *Director,
     IDisplay *Display,
-    IPLB *PLB
-    )
-    : _IPLB(PLB),
+    IPLB *PLB)
+    : _directorId(0),
+      _id(0),
+      _isStartedFlag(0),
+      _busy(0),
+      _currentEvent(Event::noEvent),
+      _currentState(State::STATE_IDLE),
+      _IPLB(PLB),
       _IPlug(Plug),
       _IStart(Start),
       _IDirector(Director),
       _IDisplay(Display)
 {
+    _IDisplay->display("IDLE");
 }

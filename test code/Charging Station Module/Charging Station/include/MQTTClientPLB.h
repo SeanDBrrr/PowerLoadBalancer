@@ -26,7 +26,13 @@ private:
     String mqtt_topic_receivePower = "group4/chargeStation" + String(_id);
     String mqtt_topic_directorId = "group4/directorId";
     short port = 1883;
-    EspMQTTClient _client = EspMQTTClient(name.c_str(), password.c_str(), broker_ip.c_str(), mqtt_module.c_str(), port);
+    EspMQTTClient _client = EspMQTTClient(
+        name.c_str(),
+        password.c_str(),
+        broker_ip.c_str(),
+        mqtt_module.c_str(),
+        port
+    );
 public:
     MQTTClientPLB(int id);
 

@@ -17,10 +17,13 @@
  * @param SS
  * @param RST
  */
-DirectorScanner::DirectorScanner(int SS, int RST) : _ssPin(SS),
-                                                    _rstPin(RST),
-                                                    _rfid(MFRC522(_ssPin, _rstPin))
-
+DirectorScanner::DirectorScanner(
+  int SS,
+  int RST
+  ) 
+  : _ssPin(SS),
+    _rstPin(RST),
+    _rfid(MFRC522(_ssPin, _rstPin))
 {
   SPI.begin();
   _rfid.PCD_Init();

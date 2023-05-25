@@ -30,7 +30,14 @@ private:
     IDisplay* _IDisplay;
     IStart* _IStart;
 public:
-    ChargingStation(IStart *Start, IPlug *Plug, IDirector *Director, IDisplay *Display, IPLB *PLB);
+    ChargingStation(
+        IStart *Start,
+        IPlug *Plug,
+        IDirector *Director,
+        IDisplay *Display,
+        IPLB *PLB
+    );
+
     ~ChargingStation();
 
     void loop();

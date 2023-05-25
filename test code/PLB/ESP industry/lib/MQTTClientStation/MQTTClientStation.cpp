@@ -101,16 +101,17 @@ PLBEvents MQTTClientStation::receive()
 void MQTTClientStation::onConnectionSubscribe()
 {
   _client.subscribe(mqtt_topic_directorId, [this](const String &topic, const String &payload)
-                    {
+  {
     _isDirectorDetectedFlag = true;
-    _directorId = payload.toInt(); });
+    _directorId = payload.toInt(); 
+  });
   _client.subscribe(mqtt_topic_requestSupply, [this](const String &topic, const String &payload)
-                    {
+  {
     _isRequestSupplyFlag = true;
     _stationId = payload.toInt();
-    });
+  });
   _client.subscribe(mqtt_topic_stopSupply, [this](const String &topic, const String &payload)
-                  {
+  {
     charge(0);
   });
 }

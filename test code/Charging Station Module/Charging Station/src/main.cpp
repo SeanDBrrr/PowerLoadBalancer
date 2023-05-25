@@ -53,7 +53,13 @@ void setup()
   startButton = new StartButton();
   plugButton = new PlugButton();
   mqttStation = new MQTTClientPLB(1);
-  chargingStation = new ChargingStation(startButton, plugButton, director, lcd, mqttStation);
+  chargingStation = new ChargingStation(
+    startButton,
+    plugButton,
+    director,
+    lcd,
+    mqttStation
+  );
 }
 
   // put your main code here, to run repeatedly:

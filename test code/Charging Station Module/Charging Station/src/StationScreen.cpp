@@ -19,11 +19,13 @@
  * @param scl
  * @param sda
  */
-StationScreen::StationScreen(int scl, int sda)
+StationScreen::StationScreen(
+    int scl,
+    int sda
+    )
     : _scl(scl),
       _sda(sda),
       _lcd(LiquidCrystal_I2C(SS_ADDRESS, SS_COLUMNS, SS_ROWS))
-
 {
     _lcd.init();
     _lcd.backlight();

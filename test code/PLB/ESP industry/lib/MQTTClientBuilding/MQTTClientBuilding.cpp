@@ -25,9 +25,10 @@ void MQTTClientBuilding::receive()
 void MQTTClientBuilding::onConnectionSubscribe()
 {
   _client.subscribe(mqtt_topic_solarPower, [this](const String &topic, const String &payload)
-                    { 
-        _isSolarPowerArrivedFlag = true;
-        _totalSolarPower = payload.toInt(); });
+  { 
+    _isSolarPowerArrivedFlag = true;
+    _totalSolarPower = payload.toInt(); 
+  });
 }
 
 int MQTTClientBuilding::calculateSolarPower()

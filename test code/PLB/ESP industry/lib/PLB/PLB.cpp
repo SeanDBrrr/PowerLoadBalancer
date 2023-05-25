@@ -1,8 +1,15 @@
 #include "PLB.h"
 
-PLB::PLB(IBuilding *building, IStation *station1, IStation *station2, IStation *station3, IStation *station4) : _state(ST_Idle),
-                                                                                                                _mode(MO_Auto),
-                                                                                                                _building(building)
+PLB::PLB(
+    IBuilding *building,
+    IStation *station1,
+    IStation *station2,
+    IStation *station3,
+    IStation *station4
+    )
+    : _state(ST_Idle),
+      _mode(MO_Auto),
+      _building(building)
 {
     _stations.emplace_back(station1);
     _stations.emplace_back(station2);
@@ -114,16 +121,20 @@ PLBStates PLB::handleNoDirState(PLBEvents ev)
         _supplyPowerToStation(_stations.at(3));
         break;
     case EV_Director1:
-        if(checkDirector(_stations.at(0))) _state = ST_Dir1;
+        if (checkDirector(_stations.at(0)))
+            _state = ST_Dir1;
         break;
     case EV_Director2:
-        if(checkDirector(_stations.at(1))) _state = ST_Dir1;
+        if (checkDirector(_stations.at(1)))
+            _state = ST_Dir1;
         break;
     case EV_Director3:
-        if(checkDirector(_stations.at(2))) _state = ST_Dir1;
+        if (checkDirector(_stations.at(2)))
+            _state = ST_Dir1;
         break;
     case EV_Director4:
-        if(checkDirector(_stations.at(3))) _state = ST_Dir1;
+        if (checkDirector(_stations.at(3)))
+            _state = ST_Dir1;
         break;
     case EV_Stop1:
         _stopSupply(_stations.at(0));
@@ -182,16 +193,20 @@ PLBStates PLB::handleDir1State(PLBEvents ev)
         _supplyPowerToStation(_stations.at(3));
         break;
     case EV_Director1:
-        if (checkDirector(_stations.at(0))) _state = ST_Dir2;
+        if (checkDirector(_stations.at(0)))
+            _state = ST_Dir2;
         break;
     case EV_Director2:
-        if (checkDirector(_stations.at(1))) _state = ST_Dir2;
+        if (checkDirector(_stations.at(1)))
+            _state = ST_Dir2;
         break;
     case EV_Director3:
-        if (checkDirector(_stations.at(2))) _state = ST_Dir2;
+        if (checkDirector(_stations.at(2)))
+            _state = ST_Dir2;
         break;
     case EV_Director4:
-        if (checkDirector(_stations.at(3))) _state = ST_Dir2;
+        if (checkDirector(_stations.at(3)))
+            _state = ST_Dir2;
         break;
     case EV_Stop1:
         _state = (_stopSupply(_stations.at(0))) ? ST_NoDir : ST_Dir1;
@@ -246,16 +261,20 @@ PLBStates PLB::handleDir2State(PLBEvents ev)
         _supplyPowerToStation(_stations.at(3));
         break;
     case EV_Director1:
-        if (checkDirector(_stations.at(0))) _state = ST_Dir3;
+        if (checkDirector(_stations.at(0)))
+            _state = ST_Dir3;
         break;
     case EV_Director2:
-        if (checkDirector(_stations.at(1))) _state = ST_Dir3;
+        if (checkDirector(_stations.at(1)))
+            _state = ST_Dir3;
         break;
     case EV_Director3:
-        if (checkDirector(_stations.at(2))) _state = ST_Dir3;
+        if (checkDirector(_stations.at(2)))
+            _state = ST_Dir3;
         break;
     case EV_Director4:
-        if (checkDirector(_stations.at(3))) _state = ST_Dir3;
+        if (checkDirector(_stations.at(3)))
+            _state = ST_Dir3;
         break;
     case EV_Stop1:
         _state = (_stopSupply(_stations.at(0))) ? ST_Dir1 : ST_Dir2;
@@ -310,16 +329,20 @@ PLBStates PLB::handleDir3OnlyState(PLBEvents ev)
         _supplyPowerToStation(_stations.at(3));
         break;
     case EV_Director1:
-        if (checkDirector(_stations.at(0))) _state = ST_Dir4;
+        if (checkDirector(_stations.at(0)))
+            _state = ST_Dir4;
         break;
     case EV_Director2:
-        if (checkDirector(_stations.at(1))) _state = ST_Dir4;
+        if (checkDirector(_stations.at(1)))
+            _state = ST_Dir4;
         break;
     case EV_Director3:
-        if (checkDirector(_stations.at(2))) _state = ST_Dir4;
+        if (checkDirector(_stations.at(2)))
+            _state = ST_Dir4;
         break;
     case EV_Director4:
-        if (checkDirector(_stations.at(3))) _state = ST_Dir4;
+        if (checkDirector(_stations.at(3)))
+            _state = ST_Dir4;
         break;
     case EV_Stop1:
         _stopSupply(_stations.at(0));

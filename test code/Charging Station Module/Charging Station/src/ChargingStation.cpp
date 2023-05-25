@@ -249,12 +249,13 @@ ChargingStation::ChargingStation(
     IPlug *Plug,
     IDirector *Director,
     IDisplay *Display,
-    IPLB *PLB)
-    : _IPLB{PLB},
-      _IPlug{Plug},
-      _IStart{Start},
-      _IDirector{Director},
-      _IDisplay{Display}
+    IPLB *PLB
+    )
+    : _IPLB(PLB),
+      _IPlug(Plug),
+      _IStart(Start),
+      _IDirector(Director),
+      _IDisplay(Display)
 {
 }
 

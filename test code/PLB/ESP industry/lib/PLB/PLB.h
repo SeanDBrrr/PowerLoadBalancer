@@ -41,7 +41,12 @@ private:
     int _stopSupply(IStation* station);
 
 public:
-    PLB(IBuilding *building, IStation *station1, IStation *station2, IStation *station3, IStation *station4);
+    PLB(IBuilding *building,
+        IStation *station1,
+        IStation *station2,
+        IStation *station3,
+        IStation *station4
+    );
 
     ~PLB() {}
 

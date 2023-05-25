@@ -29,7 +29,13 @@ private:
     String mqtt_module = "Group4-PLB-Station";
     String broker_ip = "192.168.4.23";
     short port = 1883;
-    EspMQTTClient _client = EspMQTTClient(name.c_str(), password.c_str(), broker_ip.c_str(), mqtt_module.c_str(), port);
+    EspMQTTClient _client = EspMQTTClient(
+        name.c_str(),
+        password.c_str(),
+        broker_ip.c_str(),
+        mqtt_module.c_str(),
+        port
+    );
 
 public:
     MQTTClientStation(int Id);

@@ -1,10 +1,10 @@
 #pragma once
-#include <string>
+#include <Arduino.h>
 
 class IDisplay
 {
 public:
     virtual ~IDisplay() = default;
 
-    virtual int display(std::string) = 0;
+    virtual void display(String) = 0;
 };

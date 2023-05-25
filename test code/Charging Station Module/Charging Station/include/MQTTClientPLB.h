@@ -1,5 +1,4 @@
-#ifndef MQTTCLIENTPLB_H
-#define MQTTCLIENTPLB_H
+#pragma once
 
 #include <string>
 #include "IPLB.h"
@@ -45,11 +44,5 @@ public:
     void receive();
     void onConnectionSubscribe();
     Event loop();
-    ~MQTTClientPLB();
+    ~MQTTClientPLB() = default;
 };
-
-MQTTClientPLB::~MQTTClientPLB()
-{
-}
-
-#endif

@@ -165,6 +165,11 @@ State ChargingStation::HandleStoppedChargingState(Event ev)
     return result;
 }
 
+State ChargingStation::HandleErrorState(Event ev)
+{
+    return State::STATE_STOPPED_CHARGING;
+}
+
 void ChargingStation::HandleMainEvent(Event ev) // Technically might not be needed unless there are more states
 {
     switch (_currentState)

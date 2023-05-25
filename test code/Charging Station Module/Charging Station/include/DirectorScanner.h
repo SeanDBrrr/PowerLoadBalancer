@@ -13,11 +13,11 @@
 #include "Arduino.h"
 #include <SPI.h>
 #include <MFRC522.h>
-
+#include "IDirector.h"
 const int SS_PIN = 5;
 const int RST_PIN = 27;
 
-class DirectorScanner
+class DirectorScanner : public IDirector
 {
 private:
     int _ssPin;

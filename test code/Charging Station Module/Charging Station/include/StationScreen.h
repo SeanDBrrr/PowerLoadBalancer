@@ -14,11 +14,12 @@
 
 #include "Arduino.h"
 #include <LiquidCrystal_I2C.h>
+#include "IDisplay.h"
 
 const int SS_ADDRESS = 0x27;
 const int SS_COLUMNS = 16;
 const int SS_ROWS = 2;
-class StationScreen
+class StationScreen : public IDisplay
 {
 private:
     int _scl;

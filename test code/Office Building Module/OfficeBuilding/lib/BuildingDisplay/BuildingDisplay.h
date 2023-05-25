@@ -1,6 +1,7 @@
 #ifndef BUILDINGDISPLAY_H
 #define BUILDINGDISPLAY_H
 
+#include "LiquidCrystal_I2C.h"
 #include "IDisplay.h"
 
 class BuildingDisplay : public IDisplay

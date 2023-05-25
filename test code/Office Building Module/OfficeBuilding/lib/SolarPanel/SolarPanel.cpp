@@ -1,10 +1,6 @@
 #include "SolarPanel.h"
 
-SolarPanel::SolarPanel(int pin)
-{
-    _solarPower = 0;
-    _ldr = LDR(pin);
-}
+SolarPanel::SolarPanel(int pin) : _solarPower{0}, _ldr{pin} {}
 
 int
 SolarPanel::getSolarPower()

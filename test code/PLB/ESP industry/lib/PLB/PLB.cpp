@@ -572,19 +572,24 @@ bool PLB::checkDirector(IStation *station)
 
 bool PLB::isTimeout()
 {
-
+    static unsigned long prev_millis = 0;
+    if (millis() - prev_millis > 10000) {
+        return true;
+        prev_millis = millis();
+    }
     return false;
 }
 
 void PLB::loop()
 {
-    // for (const auto &s : _stations)
-    // {
-    //     _event = s->loop();
-    //     manageEvents(_event);
-    // }
     if (isTimeout())
     {
-        handleEvents(EV_Timeout);
+        int solarPower = _building->calculateSolarPower();
+        if (solarPower == -1)
+        {
+            // handle solar request timeout error
+            // maybe display sth on the Building screen
+        }
+        _distributePower(solarPower);
     }
 }

@@ -4,9 +4,7 @@
 #include "IDirector.h"
 #include "IDisplay.h"
 #include "IStart.h"
-#include "Event.h"
-#include "State.h"
-#include "StationModes.h"
+#include "Enums.h"
 #include <iostream>
 #include <exception>
 
@@ -20,7 +18,6 @@ private:
     bool _state = 0;//Not needed anymore?
     bool _busy = 0;
 
-    StationModes _mode;
     Event _currentEvent;
     State _currentState;
 
@@ -57,5 +54,4 @@ public:
     
     void charge(float power);
     void requestPower();
-    void switchMode(StationModes _mode);
 };

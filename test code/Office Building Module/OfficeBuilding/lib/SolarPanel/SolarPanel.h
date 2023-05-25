@@ -1,8 +1,9 @@
 #ifndef SOLARPANEL_H
 #define SOLARPANEL_H
+
 #include <Arduino.h>
-#include "ISolarPanel.h"
 #include "LDR.h"
+#include "ISolarPanel.h"
 
 class SolarPanel : public ISolarPanel
 {

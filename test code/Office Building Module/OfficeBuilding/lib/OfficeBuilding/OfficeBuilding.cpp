@@ -33,6 +33,7 @@ OfficeBuilding::calculateSolarPower()
     {
         currentSolarPower += sp->getSolarPower();
     }
+    return currentSolarPower;
 }
 
 void 

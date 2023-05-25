@@ -226,6 +226,7 @@ void ChargingStation::HandleEvent(Event ev)
 
 void ChargingStation::loop()
 {
+    
 
     if (_IPlug->isPlugged())
     {

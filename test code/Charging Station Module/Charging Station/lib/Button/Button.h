@@ -17,18 +17,36 @@
 
 class Button
 {
-private:
+protected:
   int _buttonPin;
   uint16_t _state;
   const uint16_t _RELEASED = 0xFFFF;
   const uint16_t _DEBOUNCE_MAX_TARGET = 0xFFE0;
   const uint16_t _DELAY_TARGET = 0xFFFD;
+  bool singlePress();
+  uint16_t debounce();
 
 public:
   Button(int);
-  // void read();
-  void debounce();
+};
+
+class PushHoldButton : public Button
+{
+public:
+  PushHoldButton(int pin) : Button(pin) {}
   bool pressed();
-  bool toggle();
-  bool singlePress();
+};
+
+class ToggleButton : public Button
+{
+public:
+  ToggleButton(int pin) : Button(pin) {}
+  bool pressed();
+};
+
+class SinglePressButton : public Button
+{
+public:
+  SinglePressButton(int pin) : Button(pin) {}
+  bool pressed();
 };

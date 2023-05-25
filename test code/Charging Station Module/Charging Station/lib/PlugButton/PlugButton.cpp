@@ -8,7 +8,7 @@
 /// @brief Construct a new PlugButton::PlugButton object
 PlugButton::PlugButton()
 {
-    _button = new Button(BUTTON_PIN); // DOUBLE CHECK IF THIS WORKS OUTSIDE OF VOID SETUP
+    _button = new SinglePressButton(BUTTON_PIN); // DOUBLE CHECK IF THIS WORKS OUTSIDE OF VOID SETUP
 }
 
 /// @brief Destruct a PlugButton::PlugButton object
@@ -21,5 +21,5 @@ PlugButton::~PlugButton()
 /// @return True or false
 bool PlugButton::isPlugged()
 {
-    return _button->toggle();
+    return _button->pressed();
 }

@@ -1,5 +1,5 @@
-#ifndef LDR_H
-#define LDR_H
+#ifndef SOLAR_LDR_H
+#define SOLAR_LDR_H
 
 class LDR
 {

@@ -21,7 +21,7 @@ int counter = 0;
 // int helper = 0;
 
 // long previousTime = millis();
-Button *button;
+SinglePressButton *button;
 uint32_t id = 0;
 DirectorScanner *director;
 StationScreen *lcd;
@@ -30,7 +30,7 @@ bool check;
 // Director_RFID *director;
 void setup()
 {
-  button = new Button(BUTTON_PIN);
+  button = new SinglePressButton(BUTTON_PIN);
   lcd = new StationScreen(22, 21);
   director = new DirectorScanner(SS_PIN, RST_PIN);
   Serial.begin(115200);
@@ -65,7 +65,7 @@ void loop()
   //   lcd->display(String(id));
   // }
 
-  button->debounce();
+ // button->debounce();
   id = director->getID();
   // // client1.loop();
   // // id = director->getID();
@@ -95,18 +95,18 @@ void loop()
 
   // TOGGLE
   
-  if (button->toggle())
-  {
-    if (id > 0)
-    {
-      lcd->display(String(id));
-    }
-    digitalWrite(DIRECTOR_LED, HIGH);
-  }
-  else
-  {
-    digitalWrite(DIRECTOR_LED, LOW);
-  }
+  // if (button->toggle())
+  // {
+  //   if (id > 0)
+  //   {
+  //     lcd->display(String(id));
+  //   }
+  //   digitalWrite(DIRECTOR_LED, HIGH);
+  // }
+  // else
+  // {
+  //   digitalWrite(DIRECTOR_LED, LOW);
+  // }
 
   // // SINGLE PRESS
   // if (button->singlePress())

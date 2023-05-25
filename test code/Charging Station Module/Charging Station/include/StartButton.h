@@ -4,7 +4,7 @@
 class StartButton : public IStart
 {
 private:
-    Button *_button;
+    SinglePressButton *_button;
 
 public:
     StartButton();

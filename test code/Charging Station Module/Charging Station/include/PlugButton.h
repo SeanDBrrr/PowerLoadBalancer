@@ -4,7 +4,7 @@
 class PlugButton : public IPlug
 {
 private:
-    Button *_button;
+    SinglePressButton *_button;
 
 public:
     PlugButton();

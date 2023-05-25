@@ -8,7 +8,7 @@
 /// @brief Construct a new StartButton::StartButton object
 StartButton::StartButton()
 {
-    _button = new Button(BUTTON_PIN);
+    _button = new SinglePressButton(BUTTON_PIN);
 }
 
 /// @brief Destruct a StartButton::StartButton object
@@ -21,5 +21,5 @@ StartButton::~StartButton()
 /// @return True or false
 bool StartButton::isStarted()
 {
-    return _button->toggle();
+    return _button->pressed();
 }

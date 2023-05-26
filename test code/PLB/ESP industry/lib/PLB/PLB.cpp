@@ -329,7 +329,7 @@ PLBStates PLB::handleDir3OnlyState(PLBEvents ev)
         _supplyPowerToStation(_stations.at(3));
         break;
     case PLBEvents::EV_Director1:
-        if (checkDirector(_stations.at(0)))
+        if (checkDirector(_stations.at(0)) == 1)
             _state = PLBStates::ST_Dir4;
         break;
     case PLBEvents::EV_Director2:
@@ -536,6 +536,7 @@ int PLB::_stopSupply(IStation *station)
         if (station->getId() == _directorStations.at(i))
         {
             _directorStations.erase(_directorStations.begin() + i);
+            _directorIds.erase(_directorIds.begin() + i);
             station->charge(0);
             return 1;
         }
@@ -556,18 +557,28 @@ int PLB::_stopSupply(IStation *station)
  * @brief This function is called when a director swipes his RFID card
  * @return true (success) / false (failure)
  */
-bool PLB::checkDirector(IStation *station)
+int PLB::checkDirector(IStation *station)
 {
-    int directoId = station->getDirectorId();
+    int directorId = station->getDirectorId();
     for (size_t i = 0; i < _directorIds.size(); i++)
     {
         /* return RFID state: failed(-1), checkedIn(1), notCheckedIn(0) */
-        if (_directorIds.at(i) == directoId)
-            return false;
+        if (_directorIds.at(i) == directorId)
+            station->validateDirector(DirectorState::ALREADY_CHECKED_IN);
+            return -1;
     }
-    _directorIds.emplace_back(directoId);
-    _directorStations.emplace_back(station->getId());
-    return true;
+    for(size_t i = 0; i < _validDirectorIds.size(); i++)
+    {
+        if(_validDirectorIds.at(i) == directorId)
+        {
+            _directorIds.emplace_back(directorId);
+            _directorStations.emplace_back(station->getId());
+            station->validateDirector(DirectorState::VALID);
+            return 1;
+        }
+    }
+    station->validateDirector(DirectorState::INVALID);
+    return 0;
 }
 
 bool PLB::isTimeout()

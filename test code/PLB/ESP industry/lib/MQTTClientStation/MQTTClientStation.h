@@ -49,7 +49,7 @@ public:
     PLBEvents getEvent();
     void onConnectionSubscribe();
 
-    void validateDirector(bool directorValidated);
+    void validateDirector(DirectorState directorState);
     int getId();
     int getDirectorId();
     void charge(float power);

@@ -40,6 +40,23 @@ void MQTTClientPLB::receive()
       }
       _isDirectorResponseFlag = 0;
     }
+
+    if(_isModeChangedFlag)
+    {
+      if (_stationMode == StationMode::Director)
+      {
+        _event = Event::EV_MODE_CHANGED_DIRECTOR;
+      }
+      else if (_stationMode == StationMode::FCFS)
+      {
+        _event = Event::EV_MODE_CHANGED_FCFS;
+      }
+      else if (_stationMode == StationMode::Dynamic)
+      {
+        _event = Event::EV_MODE_CHANGED_DYNAMIC;
+      }
+      _isModeChangedFlag = 0;
+    }
 }
 
 void MQTTClientPLB::onConnectionSubscribe()
@@ -61,6 +78,21 @@ void MQTTClientPLB::onConnectionSubscribe()
     else if (payload == "ALREADY CHECKED IN")
     {
       _directorState = DirectorState::ALREADY_CHECKED_IN;
+    }
+  });
+    _client.subscribe(mqtt_topic_mode, [this](const String & topic, const String & payload) {
+    _isModeChangedFlag = true;
+    if (payload == "Director Mode")
+    {
+      _stationMode = StationMode::Director;
+    }
+    else if (payload == "FCFS Mode")
+    {
+      _stationMode = StationMode::FCFS;
+    }
+    else if (payload == "Dynamic Mode")
+    {
+      _stationMode = StationMode::Dynamic;
     }
   });
 }

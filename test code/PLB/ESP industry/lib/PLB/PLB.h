@@ -22,6 +22,7 @@ private:
     std::vector<int> _directorStations;
     std::vector<int> _userStations;
     std::vector<int> _directorIds;
+    std::vector<int> _validDirectorIds = {10, 20, 30, 40, 50}; //maybe make this and directorIds uint32_t? It implies other changes so be careful
 
     /* PLB Private Functions */
     void _distributePower(int power);
@@ -42,7 +43,7 @@ public:
     /* PLB Public Functions */
     void addStation(IStation* station);
     
-    bool checkDirector(IStation* station);
+    int checkDirector(IStation* station);
     bool isTimeout();
     void loop();
 

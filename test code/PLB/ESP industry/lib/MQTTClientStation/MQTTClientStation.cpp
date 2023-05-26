@@ -124,15 +124,19 @@ int MQTTClientStation::getDirectorId() //override
   return _directorId;
 }
 
-void MQTTClientStation::validateDirector(bool directorValidated)
+void MQTTClientStation::validateDirector(DirectorState directorState)
 {
-  if(directorValidated)
+  if(directorState == DirectorState::VALID)
   {
-    send(mqtt_topic_directorValidate, "validated");
+    send(mqtt_topic_directorValidate, "VALID");
   }
-  else if(!directorValidated)
+  else if(directorState == DirectorState::INVALID)
   {
-    send(mqtt_topic_directorValidate, "invalidated");
+    send(mqtt_topic_directorValidate, "INVALID");
+  }
+  else if(directorState == DirectorState::ALREADY_CHECKED_IN)
+  {
+    send(mqtt_topic_directorValidate, "ALREADY CHECKED IN");
   }
 }
 

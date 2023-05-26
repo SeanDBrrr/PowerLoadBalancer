@@ -142,6 +142,15 @@ State ChargingStation::HandleChargingState(Event ev)
     case Event::EV_ERROR:
         result = State::STATE_ERROR;
         break;
+    case Event::EV_MODE_CHANGED_DIRECTOR:
+        _IDisplay->display("Mode: Director");
+        break;
+    case Event::EV_MODE_CHANGED_FCFS:
+        _IDisplay->display("Mode: FCFS");
+        break;
+    case Event::EV_MODE_CHANGED_DYNAMIC:
+        _IDisplay->display("Mode: Dynamic");
+        break;
     default:
         // ignored event, nothing to do here
         break;
@@ -239,20 +248,20 @@ void ChargingStation::loop()
     _directorId = _IDirector->getID();
     if (_directorId != 0)
     {
-        //_IPLB->checkDirector(_directorId);
+        _IPLB->checkDirector(_directorId);
         _currentEvent = Event::EV_RFID_DIRECTOR_DETECTED;
     }
 
-    // if (_IStart->isStarted() && !_isStartedFlag)
-    // {
-    //     _isStartedFlag = true;
-    //     _currentEvent = Event::EV_START;
-    // }
-    // else if (_IStart->isStarted() && _isStartedFlag) // Should be correct
-    // {
-    //     _isStartedFlag = false;
-    //     _currentEvent = Event::EV_STOP;
-    // }
+    if (_IStart->isStarted() && !_isStartedFlag)
+    {
+        _isStartedFlag = true;
+        _currentEvent = Event::EV_START;
+    }
+    else if (_IStart->isStarted() && _isStartedFlag) // Should be correct
+    {
+        _isStartedFlag = false;
+        _currentEvent = Event::EV_STOP;
+    }
 
     try
     {

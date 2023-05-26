@@ -15,7 +15,10 @@ enum class Event
     EV_DONE_CHARGING,
     EV_ERROR,
     EV_RESET,
-    EV_STOP
+    EV_STOP,
+    EV_MODE_CHANGED_DYNAMIC,
+    EV_MODE_CHANGED_FCFS,
+    EV_MODE_CHANGED_DIRECTOR
 };
 
 enum class State
@@ -38,4 +41,11 @@ enum class DirectorState
     INVALID,
     ALREADY_CHECKED_IN,
     TIMED_OUT
+};
+
+enum class StationMode
+{
+    Dynamic = 1,
+    FCFS,
+    Director
 };

@@ -7,13 +7,20 @@ enum class StationModes {
     MO_Director,
 };
 
+enum class DirectorState
+{
+    VALID = 1,
+    INVALID = 0,
+    ALREADY_CHECKED_IN = -1,
+};
+
 class IStation
 {
 public:
     virtual ~IStation() = default;
     virtual int getId() = 0;
     virtual int getDirectorId() = 0;
-    void validateDirector(bool directorValidated);
+    virtual void validateDirector(DirectorState directorState) = 0;
     virtual void charge(float power) = 0;
     virtual void switchMode(StationModes mode) = 0;
 };

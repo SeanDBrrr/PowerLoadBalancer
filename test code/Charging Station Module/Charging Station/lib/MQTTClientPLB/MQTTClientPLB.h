@@ -16,8 +16,9 @@ private:
     float _powerReceived;
     bool _isPowerReceivedFlag;
     bool _isDirectorResponseFlag;
+    bool _isModeChangedFlag;
     DirectorState _directorState;
-
+    StationMode _stationMode;
 
     String name = "Kiwy";
     String password = "aquamagic23";
@@ -28,6 +29,7 @@ private:
     String mqtt_topic_receivePower = "group4/chargeStation" + String(_id);
     String mqtt_topic_directorId = "group4/directorId";
     String mqtt_topic_directorResponse = "group4/directorResponse";
+    String mqtt_topic_mode = "group4/stationMode";
     short port = 1883;
     EspMQTTClient _client = EspMQTTClient(
         name.c_str(),
@@ -47,7 +49,7 @@ public:
     void send(String topic, String message);
     void receive();
     void onConnectionSubscribe();
-    DirectorState waitingForPlb(int waitingTime);
+    // DirectorState waitingForPlb(int waitingTime);
     Event getEvent();
     ~MQTTClientPLB() = default;
 };

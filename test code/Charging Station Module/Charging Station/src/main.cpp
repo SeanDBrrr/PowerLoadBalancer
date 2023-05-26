@@ -29,6 +29,7 @@ void setup()
   startButton = new StartButton();
   plugButton = new PlugButton();
   mqttPLB = new MQTTClientPLB(1);
+  mqttPLB->getClient().enableDebuggingMessages();
   chargingStation = new ChargingStation(
     startButton,
     plugButton,

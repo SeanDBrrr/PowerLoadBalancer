@@ -23,7 +23,7 @@ private:
     String name = "Kiwy";
     String password = "aquamagic23";
     String mqtt_module = "Group4-Charger" + String(_id);
-    String broker_ip = "192.168.4.23";
+    String broker_ip = "192.168.165.23";
     String mqtt_topic_requestPower = "group4/requestPowerSupply" + String(_id);
     String mqtt_topic_stopSupply = "group4/stopPowerSupply" + String(_id);
     String mqtt_topic_receivePower = "group4/chargeStation" + String(_id);

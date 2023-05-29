@@ -60,9 +60,3 @@ OfficeBuilding::requestPower()
 {
     _plb->supplyPowerToBuilding();
 }
-
-void
-OfficeBuilding::loop()
-{
-    // handleEvent();
-}

@@ -18,6 +18,7 @@ private:
 
     int currentSolarPower;
 
+
 public:
     OfficeBuilding(IPLB *plb, 
                    IDisplay *display, 
@@ -29,10 +30,8 @@ public:
     
     void addSolarPanel(ISolarPanel *panel);
     void handleEvent(BuildingEvents ev); 
-    int calculateSolarPower();
     void requestPower();
-    void loop();
-
+    int calculateSolarPower();
 };
 
 #endif

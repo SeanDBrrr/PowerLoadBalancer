@@ -17,6 +17,7 @@ private:
     uint32_t _directorId;
     int _id;
     bool _isStartedFlag;
+    bool _isPluggedFlag;
     bool _busy;
     Event _currentEvent;
     State _currentState;

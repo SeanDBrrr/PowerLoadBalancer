@@ -30,7 +30,7 @@ public:
     void addSolarPanel(ISolarPanel *panel);
     void handleEvent(BuildingEvents ev); 
     int calculateSolarPower();
-    void requestPower();
+    void sendPower(int power);
     void loop();
 
 };

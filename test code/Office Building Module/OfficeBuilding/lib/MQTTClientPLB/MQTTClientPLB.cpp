@@ -20,11 +20,11 @@ MQTTClientPLB::receive()
     _client.loop();
     if (_solarPowerRequested)
     {
+        _solarPowerRequested = false;
         return BuildingEvents::EV_RequestSolarPower;
     }
     return BuildingEvents::NoEvent;
 }
-
 
 void 
 MQTTClientPLB::onConnectionSubscribe()
@@ -36,7 +36,7 @@ MQTTClientPLB::onConnectionSubscribe()
 }
 
 void 
-MQTTClientPLB::supplyPowerToBuilding()
+MQTTClientPLB::supplyPowerToBuilding(int power)
 {
-    send(mqtt_topic_charge_building, "Charge Building");
+    send(mqtt_topic_send_power, (String)power);
 }

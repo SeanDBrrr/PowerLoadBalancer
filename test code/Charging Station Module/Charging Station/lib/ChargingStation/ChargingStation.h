@@ -45,6 +45,7 @@ public:
 
     void HandleEvent(Event ev);
     State HandleIdleState(Event ev);
+    State HandleVerifyingDirectorState(Event ev);
     State HandleIdleDirectorState(Event ev);
     State HandlePluggedState(Event ev);
     State HandlePluggedDirectorState(Event ev);

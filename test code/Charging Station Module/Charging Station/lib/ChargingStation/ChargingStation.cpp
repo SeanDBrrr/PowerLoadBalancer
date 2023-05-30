@@ -12,8 +12,62 @@ State ChargingStation::HandleIdleState(Event ev)
         result = State::STATE_PLUGGED;
         break;
     case Event::EV_RFID_DIRECTOR_DETECTED:
-        _IDisplay->display("IDLE DIR"); // should display director status
-        result = State::STATE_IDLE_DIRECTOR;
+        _IDisplay->display("VERIFYING DIR"); // should display director status
+        result = State::STATE_VERIFYING_DIRECTOR;
+        break;
+    case Event::EV_ERROR:
+        _IDisplay->display("ERROR");
+        result = State::STATE_ERROR;
+        break;
+    default:
+        // ignored event, nothing to do here
+        break;
+    }
+
+    return result;
+}
+
+State ChargingStation::HandleVerifyingDirectorState(Event ev)
+{
+    State result = State::STATE_VERIFYING_DIRECTOR;
+
+    switch (ev)
+    {
+    case Event::EV_RFID_VALID:
+        if (_isPluggedFlag)
+        {
+            _IDisplay->display("valid PLUGGED DIR");
+            result = State::STATE_PLUGGED_DIRECTOR;
+        }
+        else if (!_isPluggedFlag)
+        {
+            _IDisplay->display("valid IDLE_DIR");
+            result = State::STATE_IDLE_DIRECTOR;
+        }
+        break;
+    case Event::EV_RFID_INVALID:
+        if (_isPluggedFlag)
+        {
+            _IDisplay->display("inval IDLE");
+            result = State::STATE_PLUGGED;
+        }
+        else if (!_isPluggedFlag)
+        {
+            _IDisplay->display("inval PLUGGED");
+            result = State::STATE_IDLE;
+        }
+        break;
+    case Event::EV_RFID_TIMED_OUT:
+        if (_isPluggedFlag)
+        {
+            _IDisplay->display("timed out IDLE");
+            result = State::STATE_PLUGGED;
+        }
+        else if (!_isPluggedFlag)
+        {
+            _IDisplay->display("timed out PLUGGED");
+            result = State::STATE_PLUGGED;
+        }
         break;
     case Event::EV_ERROR:
         _IDisplay->display("ERROR");
@@ -36,10 +90,6 @@ State ChargingStation::HandleIdleDirectorState(Event ev)
     case Event::EV_PLUGGED:
         _IDisplay->display("PLUGGED DIR");
         result = State::STATE_PLUGGED_DIRECTOR;
-        break;
-    case Event::EV_RFID_INVALID:
-        _IDisplay->display("rfid inval IDLE");
-        result = State::STATE_IDLE;
         break;
     case Event::EV_ERROR:
         _IDisplay->display("ERROR");

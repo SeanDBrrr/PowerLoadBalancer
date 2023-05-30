@@ -119,6 +119,7 @@ State ChargingStation::HandlePluggedState(Event ev)
         result = State::STATE_VERIFYING_DIRECTOR;
         break;
     case Event::EV_START:
+        _IPLB->supplyPowerToStation(_id);
         _IDisplay->display("WAITING FOR POWER");
         result = State::STATE_WAITING_FOR_POWER;
         break;
@@ -150,6 +151,7 @@ State ChargingStation::HandlePluggedDirectorState(Event ev)
         result = State::STATE_PLUGGED;
         break;
     case Event::EV_START:
+        _IPLB->supplyPowerToStation(_id);
         _IDisplay->display("WAITING FOR POWER");
         result = State::STATE_WAITING_FOR_POWER;
         break;
@@ -176,6 +178,7 @@ State ChargingStation::HandleWaitingForPowerState(Event ev)
         result = State::STATE_CHARGING;
         break;
     case Event::EV_STOP:
+        _IPLB->stopSupplyToStation(_id);
         _IDisplay->display("STOPED CHARGING");
         result = State::STATE_STOPPED_CHARGING;
         break;
@@ -198,6 +201,7 @@ State ChargingStation::HandleChargingState(Event ev)
     switch (ev)
     {
     case Event::EV_STOP:
+        _IPLB->stopSupplyToStation(_id);
         _IDisplay->display("STOPED CHARGING");
         result = State::STATE_STOPPED_CHARGING;
         break;
@@ -229,6 +233,7 @@ State ChargingStation::HandleStoppedChargingState(Event ev)
     switch (ev)
     {
     case Event::EV_START:
+        _IPLB->supplyPowerToStation(_id);
         _IDisplay->display("WAITING FOR POWER");
         result = State::STATE_WAITING_FOR_POWER;
         break;
@@ -250,6 +255,7 @@ State ChargingStation::HandleStoppedChargingState(Event ev)
 
 State ChargingStation::HandleErrorState(Event ev)
 {
+    _IPLB->stopSupplyToStation(_id);
     return State::STATE_STOPPED_CHARGING;
 }
 

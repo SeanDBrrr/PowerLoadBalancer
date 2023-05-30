@@ -9,7 +9,7 @@ enum class BuildingEvents {NoEvent,
 class IPLB
 {
     public:
-    virtual void supplyPowerToBuilding() = 0;
+    virtual void supplyPowerToBuilding(int power) = 0;
 };
 
 #endif

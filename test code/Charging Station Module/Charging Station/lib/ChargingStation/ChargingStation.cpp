@@ -12,7 +12,7 @@ State ChargingStation::HandleIdleState(Event ev)
         result = State::STATE_PLUGGED;
         break;
     case Event::EV_RFID_DIRECTOR_DETECTED:
-        _IDisplay->display("VERIFYING DIR"); // should display director status
+        _IDisplay->display("idl VERIFYING DIR"); // should display director status
         result = State::STATE_VERIFYING_DIRECTOR;
         break;
     case Event::EV_ERROR:
@@ -115,7 +115,7 @@ State ChargingStation::HandlePluggedState(Event ev)
         result = State::STATE_IDLE;
         break;
     case Event::EV_RFID_DIRECTOR_DETECTED:
-        _IDisplay->display("VERIFYING DIR");
+        _IDisplay->display("plg VERIFYING DIR");
         result = State::STATE_VERIFYING_DIRECTOR;
         break;
     case Event::EV_START:
@@ -275,6 +275,9 @@ void ChargingStation::HandleEvent(Event ev)
     {
     case State::STATE_IDLE:
         _currentState = HandleIdleState(ev);
+        break;
+    case State::STATE_VERIFYING_DIRECTOR:
+        _currentState = HandleVerifyingDirectorState(ev);
         break;
     case State::STATE_IDLE_DIRECTOR:
         _currentState = HandleIdleDirectorState(ev);

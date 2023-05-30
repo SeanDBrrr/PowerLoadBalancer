@@ -48,25 +48,25 @@ State ChargingStation::HandleVerifyingDirectorState(Event ev)
     case Event::EV_RFID_INVALID:
         if (_isPluggedFlag)
         {
-            _IDisplay->display("inval IDLE");
+            _IDisplay->display("inval PLUGGED");
             result = State::STATE_PLUGGED;
         }
         else if (!_isPluggedFlag)
         {
-            _IDisplay->display("inval PLUGGED");
+            _IDisplay->display("inval IDLE");
             result = State::STATE_IDLE;
         }
         break;
     case Event::EV_RFID_TIMED_OUT:
         if (_isPluggedFlag)
         {
-            _IDisplay->display("timed out IDLE");
+            _IDisplay->display("timed out PLUGGED");
             result = State::STATE_PLUGGED;
         }
         else if (!_isPluggedFlag)
         {
-            _IDisplay->display("timed out PLUGGED");
-            result = State::STATE_PLUGGED;
+            _IDisplay->display("timed out IDLE");
+            result = State::STATE_IDLE;
         }
         break;
     case Event::EV_ERROR:
@@ -115,8 +115,8 @@ State ChargingStation::HandlePluggedState(Event ev)
         result = State::STATE_IDLE;
         break;
     case Event::EV_RFID_DIRECTOR_DETECTED:
-        _IDisplay->display("PLUGGED DIR");
-        result = State::STATE_PLUGGED_DIRECTOR;
+        _IDisplay->display("VERIFYING DIR");
+        result = State::STATE_VERIFYING_DIRECTOR;
         break;
     case Event::EV_START:
         _IDisplay->display("WAITING FOR POWER");

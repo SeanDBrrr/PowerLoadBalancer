@@ -45,7 +45,7 @@ public:
     float getPowerReceived();
     void supplyPowerToStation(int id);
     void stopSupplyToStation(int id);
-    void checkDirector(int id);
+    void checkDirector(uint32_t id);
     void send(String topic, String message);
     void receive();
     void onConnectionSubscribe();

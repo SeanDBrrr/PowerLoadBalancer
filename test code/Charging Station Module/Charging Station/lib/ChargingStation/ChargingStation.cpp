@@ -345,6 +345,7 @@ void ChargingStation::loop()
     _directorId = _IDirector->getID();
     if (_directorId != 0)
     {
+        //_IDisplay->display(String(_directorId));
         _IPLB->checkDirector(_directorId);
         _currentEvent = Event::EV_RFID_DIRECTOR_DETECTED;
     }

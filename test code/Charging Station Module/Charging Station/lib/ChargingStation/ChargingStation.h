@@ -29,6 +29,7 @@ private:
     IStart* _IStart;
 public:
     ChargingStation(
+        int id,
         IStart *Start,
         IPlug *Plug,
         IDirector *Director,

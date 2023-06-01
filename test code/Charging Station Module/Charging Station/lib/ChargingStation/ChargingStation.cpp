@@ -120,7 +120,7 @@ State ChargingStation::HandlePluggedState(Event ev)
         break;
     case Event::EV_START:
         _IPLB->supplyPowerToStation(_id);
-        _IDisplay->display("WAITING FOR POWER");
+        _IDisplay->display("plg WAITING POWER");
         result = State::STATE_WAITING_FOR_POWER;
         break;
     case Event::EV_ERROR:
@@ -152,7 +152,7 @@ State ChargingStation::HandlePluggedDirectorState(Event ev)
         break;
     case Event::EV_START:
         _IPLB->supplyPowerToStation(_id);
-        _IDisplay->display("WAITING FOR POWER");
+        _IDisplay->display("plgDir WAITING POWER");
         result = State::STATE_WAITING_FOR_POWER;
         break;
     case Event::EV_ERROR:
@@ -234,7 +234,7 @@ State ChargingStation::HandleStoppedChargingState(Event ev)
     {
     case Event::EV_START:
         _IPLB->supplyPowerToStation(_id);
-        _IDisplay->display("WAITING FOR POWER");
+        _IDisplay->display("stp WAITING POWER");
         result = State::STATE_WAITING_FOR_POWER;
         break;
     case Event::EV_UNPLUGGED:
@@ -351,9 +351,10 @@ void ChargingStation::loop()
     _directorId = _IDirector->getID();
     if (_directorId != 0)
     {
-        //_IDisplay->display(String(_directorId));
+        //_IDisplay->display(static_cast<String>(_directorId));
         _IPLB->checkDirector(_directorId);
-        _currentEvent = Event::EV_RFID_DIRECTOR_DETECTED;
+        _IPLB->directorTimeout(5000);
+        //_currentEvent = Event::EV_RFID_DIRECTOR_DETECTED;
     }
 
     try
@@ -367,13 +368,14 @@ void ChargingStation::loop()
 }
 
 ChargingStation::ChargingStation(
+    int id,
     IStart *Start,
     IPlug *Plug,
     IDirector *Director,
     IDisplay *Display,
     IPLB *PLB)
     : _directorId(0),
-      _id(0),
+      _id(id),
       _isStartedFlag(0),
       _isPluggedFlag(0),
       _busy(0),

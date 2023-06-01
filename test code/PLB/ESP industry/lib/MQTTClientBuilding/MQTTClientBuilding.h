@@ -11,15 +11,15 @@ class MQTTClientBuilding : public IBuilding
 {
 private:
     bool _isSolarPowerArrivedFlag;
-    int _totalSolarPower;
+    float _totalSolarPower;
 
     String mqtt_topic_solarPower = "group4/powerProduced";
     String mqtt_topic_calculateSolarPower= "group4/calculateSolarPower";
     String mqtt_topic_charge_building = "group4/chargeBuilding";
-    String name = "Kiwy";
-    String password = "aquamagic23";
+    String name = "S21 FE J";
+    String password = "yo koaster";
     String mqtt_module = "Group4-PLB-Building";
-    String broker_ip = "192.168.140.23";
+    String broker_ip = "192.168.137.132";
     short port = 1883;
     EspMQTTClient _client = EspMQTTClient(
         name.c_str(),
@@ -38,7 +38,7 @@ public:
     void receive();
     void onConnectionSubscribe();
 
-    int calculateSolarPower();
+    float calculateSolarPower();
     void charge(float power);
 };
 

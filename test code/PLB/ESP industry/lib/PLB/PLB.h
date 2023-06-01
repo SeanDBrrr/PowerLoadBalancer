@@ -25,9 +25,9 @@ private:
     std::vector<uint32_t> _validDirectorIds = {2267176004, 432104642, 1518206872, 40, 50}; //maybe make this and directorIds uint32_t? It implies other changes so be careful
 
     /* PLB Private Functions */
-    void _distributePower(int power);
+    void _distributePower(float solarPower);
     void _supplyPowerToStation(IStation* station);
-    void _supplyPowerToBuilding(int solarPower);
+    void _supplyPowerToBuilding(float solarPower);
     int _stopSupply(IStation* station);
 
 public:
@@ -67,6 +67,4 @@ public:
     changeMode(PLBModes mode) { _mode = mode; }
 
 };
-
-
 #endif /* _PLB_HPP */

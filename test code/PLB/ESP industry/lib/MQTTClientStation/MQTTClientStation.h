@@ -4,11 +4,14 @@
 #include "IStation.h"
 #include "EspMQTTClient.h"
 #include "Enums.h"
+#include <vector>
+
 
 using namespace std;
 
 class MQTTClientStation : public IStation
 {
+
 private:
     PLBEvents _event;
     bool _isRequestSupplyFlag;
@@ -16,7 +19,6 @@ private:
     bool _isDirectorDetectedFlag;
     uint32_t _directorId;
     int _stationId;
-    std::string _topicAndIdName;
     void _setStationId();
 
     String mqtt_topic_mode = "group4/stationMode";
@@ -26,10 +28,10 @@ private:
     String mqtt_topic_stopSupply = "group4/stopPowerSupply";
     String mqtt_topic_charge_station = "group4/chargeStation";
     String mqtt_topic_directorValidate = "group4/directorResponse";
-    String name = "Kiwy";
-    String password = "aquamagic23";
+    String name = "S21 FE J";
+    String password = "yo koaster";
     String mqtt_module = "Group4-PLB-Station";
-    String broker_ip = "192.168.140.23";
+    String broker_ip = "192.168.137.132";
     short port = 1883;
     EspMQTTClient _client = EspMQTTClient(
         name.c_str(),

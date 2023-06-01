@@ -9,7 +9,8 @@ PLB::PLB(
     )
     : _state(PLBStates::ST_Idle),
       _mode(PLBModes::MO_Auto),
-      _building(building)
+      _building(building),
+      busyStations(0)
 {
     _stations.emplace_back(station1);
     _stations.emplace_back(station2);
@@ -25,23 +26,19 @@ void PLB::addStation(IStation *station)
 PLBStates PLB::handleIdleState(PLBEvents ev)
 {
     _state = PLBStates::ST_Idle;
-    int solarPower;
+    float solarPower = 0;
     switch (ev)
     {
     case PLBEvents::EV_Timeout:
+        Serial.println("handleIdleState: EV_Timeout");
         solarPower = _building->calculateSolarPower();
         _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
         break;
     case PLBEvents::EV_Supply1:
-        Serial.println("event received");
+        Serial.println("handleIdleState: EV_Supply1");
         if (_directorIds.size() == 0)
         {
             _state = PLBStates::ST_NoDir;
-            if(_state == PLBStates::ST_NoDir)
-            {
-                Serial.println("no director state");
-            }
         }
         _supplyPowerToStation(_stations.at(0));
         break;
@@ -67,7 +64,7 @@ PLBStates PLB::handleIdleState(PLBEvents ev)
         _supplyPowerToStation(_stations.at(3));
         break;
     case PLBEvents::EV_Director1:
-        Serial.println("Idle State");
+        Serial.println("handleIdleState: EV_Director1");
         if(checkDirector(_stations.at(0)) == 1)
         {
             _state = PLBStates::ST_Dir1;
@@ -98,13 +95,12 @@ PLBStates PLB::handleIdleState(PLBEvents ev)
 PLBStates PLB::handleNoDirState(PLBEvents ev)
 {
     _state = PLBStates::ST_NoDir;
-    int solarPower;
+    float solarPower = 0;
     switch (ev)
     {
     case PLBEvents::EV_Timeout:
         solarPower = _building->calculateSolarPower();
         _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
         break;
     case PLBEvents::EV_Supply1:
         if (_directorIds.size() == 0)
@@ -135,7 +131,6 @@ PLBStates PLB::handleNoDirState(PLBEvents ev)
         _supplyPowerToStation(_stations.at(3));
         break;
     case PLBEvents::EV_Director1:
-        Serial.println("No Dir State");
         if (checkDirector(_stations.at(0)) == 1)
             _state = PLBStates::ST_Dir1;
         break;
@@ -152,29 +147,26 @@ PLBStates PLB::handleNoDirState(PLBEvents ev)
             _state = PLBStates::ST_Dir1;
         break;
     case PLBEvents::EV_Stop1:
+        Serial.println("handleNoDirState: EV_Stop1");
         _stopSupply(_stations.at(0));
         _state = (_userStations.size() == 0) ? PLBStates::ST_Idle : PLBStates::ST_NoDir;
         solarPower = _building->calculateSolarPower();
         _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
     case PLBEvents::EV_Stop2:
         _stopSupply(_stations.at(1));
         _state = (_userStations.size() == 0) ? PLBStates::ST_Idle : PLBStates::ST_NoDir;
         solarPower = _building->calculateSolarPower();
         _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
     case PLBEvents::EV_Stop3:
         _stopSupply(_stations.at(2));
         _state = (_userStations.size() == 0) ? PLBStates::ST_Idle : PLBStates::ST_NoDir;
         solarPower = _building->calculateSolarPower();
         _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
     case PLBEvents::EV_Stop4:
         _stopSupply(_stations.at(3));
         _state = (_userStations.size() == 0) ? PLBStates::ST_Idle : PLBStates::ST_NoDir;
         solarPower = _building->calculateSolarPower();
         _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
         break;
     }
     return _state;
@@ -183,13 +175,12 @@ PLBStates PLB::handleNoDirState(PLBEvents ev)
 PLBStates PLB::handleDir1State(PLBEvents ev)
 {
     _state = PLBStates::ST_Dir1;
-    int solarPower;
+    float solarPower = 0;
     switch (ev)
     {
     case PLBEvents::EV_Timeout:
         solarPower = _building->calculateSolarPower();
         _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
         break;
     case PLBEvents::EV_Supply1:
         _state = (_directorIds.size() == 2) ? PLBStates::ST_Dir2 : PLBStates::ST_Dir1;
@@ -230,22 +221,18 @@ PLBStates PLB::handleDir1State(PLBEvents ev)
         _state = (_stopSupply(_stations.at(0))) ? PLBStates::ST_NoDir : PLBStates::ST_Dir1;
         solarPower = _building->calculateSolarPower();
         _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
     case PLBEvents::EV_Stop2:
         _state = (_stopSupply(_stations.at(1))) ? PLBStates::ST_NoDir : PLBStates::ST_Dir1;
         solarPower = _building->calculateSolarPower();
         _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
     case PLBEvents::EV_Stop3:
         _state = (_stopSupply(_stations.at(2))) ? PLBStates::ST_NoDir : PLBStates::ST_Dir1;
         solarPower = _building->calculateSolarPower();
         _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
     case PLBEvents::EV_Stop4:
         _state = (_stopSupply(_stations.at(3))) ? PLBStates::ST_NoDir : PLBStates::ST_Dir1;
         solarPower = _building->calculateSolarPower();
         _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
         break;
     }
     return _state;
@@ -254,13 +241,12 @@ PLBStates PLB::handleDir1State(PLBEvents ev)
 PLBStates PLB::handleDir2State(PLBEvents ev)
 {
     _state = PLBStates::ST_Dir2;
-    int solarPower;
+    float solarPower = 0;
     switch (ev)
     {
     case PLBEvents::EV_Timeout:
         solarPower = _building->calculateSolarPower();
         _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
         break;
     case PLBEvents::EV_Supply1:
         _state = (_directorIds.size() == 3 && _userStations.size() == 0) ? PLBStates::ST_Dir3Only : PLBStates::ST_Dir3;
@@ -299,22 +285,18 @@ PLBStates PLB::handleDir2State(PLBEvents ev)
         _state = (_stopSupply(_stations.at(0))) ? PLBStates::ST_Dir1 : PLBStates::ST_Dir2;
         solarPower = _building->calculateSolarPower();
         _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
     case PLBEvents::EV_Stop2:
         _state = (_stopSupply(_stations.at(1))) ? PLBStates::ST_Dir1 : PLBStates::ST_Dir2;
         solarPower = _building->calculateSolarPower();
         _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
     case PLBEvents::EV_Stop3:
         _state = (_stopSupply(_stations.at(2))) ? PLBStates::ST_Dir1 : PLBStates::ST_Dir2;
         solarPower = _building->calculateSolarPower();
         _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
     case PLBEvents::EV_Stop4:
         _state = (_stopSupply(_stations.at(3))) ? PLBStates::ST_Dir1 : PLBStates::ST_Dir2;
         solarPower = _building->calculateSolarPower();
         _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
         break;
     }
     return _state;
@@ -323,13 +305,12 @@ PLBStates PLB::handleDir2State(PLBEvents ev)
 PLBStates PLB::handleDir3OnlyState(PLBEvents ev)
 {
     _state = PLBStates::ST_Dir3;
-    int solarPower;
+    float solarPower = 0;
     switch (ev)
     {
     case PLBEvents::EV_Timeout:
         solarPower = _building->calculateSolarPower();
         _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
         break;
     case PLBEvents::EV_Supply1:
         _state = (_directorStations.size() == 3) ? PLBStates::ST_Dir3 : PLBStates::ST_Dir4;
@@ -369,25 +350,21 @@ PLBStates PLB::handleDir3OnlyState(PLBEvents ev)
         _state = PLBStates::ST_Dir2;
         solarPower = _building->calculateSolarPower();
         _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
     case PLBEvents::EV_Stop2:
         _stopSupply(_stations.at(1));
         _state = PLBStates::ST_Dir2;
         solarPower = _building->calculateSolarPower();
         _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
     case PLBEvents::EV_Stop3:
         _stopSupply(_stations.at(2));
         _state = PLBStates::ST_Dir2;
         solarPower = _building->calculateSolarPower();
         _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
     case PLBEvents::EV_Stop4:
         _stopSupply(_stations.at(3));
         _state = PLBStates::ST_Dir2;
         solarPower = _building->calculateSolarPower();
         _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
         break;
     }
     return _state;
@@ -395,11 +372,13 @@ PLBStates PLB::handleDir3OnlyState(PLBEvents ev)
 
 PLBStates PLB::handleDir3State(PLBEvents ev)
 {
+    float solarPower = 0;
     return _state;
 }
 
 PLBStates PLB::handleDir4State(PLBEvents ev)
 {
+    float solarPower = 0;
     return _state;
 }
 
@@ -440,7 +419,8 @@ void PLB::handleEvents(PLBEvents ev)
 void PLB::_supplyPowerToStation(IStation *station)
 {
     ++busyStations;
-    int solarPower = _building->calculateSolarPower();
+    Serial.print("busyStations = ");Serial.println(busyStations);
+    float solarPower = _building->calculateSolarPower();
     if (solarPower == -1)
     {
         // handle timeout error
@@ -448,27 +428,20 @@ void PLB::_supplyPowerToStation(IStation *station)
     if (busyStations > _directorIds.size())
     {
         _userStations.emplace_back(station->getId());
+        Serial.print("SupplyPowerToStation(): getStationId -> "); Serial.println(_userStations.at(0));
     }
-    Serial.print("SupplyPowerToStation: Current sollar power is: ");
-    Serial.println(solarPower);
-            if(_state == PLBStates::ST_NoDir)
-            {
-                Serial.println("no director state");
-            }
+    Serial.print("SupplyPowerToStation(): Current solar power is: "); Serial.println(solarPower);
     _distributePower(solarPower);
 }
 
-void PLB::_distributePower(int solarPower)
+void PLB::_distributePower(float solarPower)
 {
-    //_state = PLBStates::ST_NoDir;
-    static int prevSolarPower = 0;
-    if (solarPower == prevSolarPower)
-        return;
-    int availablePower = 20 + solarPower;
-    float directorPower, userPower, stationPower;
+    _supplyPowerToBuilding(solarPower);
+    float availablePower = 20 + solarPower;
+    float directorPower=0, userPower=0, stationPower=0;
     if(_state == PLBStates::ST_NoDir)
     {
-        Serial.println("State is righty");
+        Serial.println("_distributePower(): _state == PLBStates::ST_NoDir");
     }
     switch (_state)
     {
@@ -476,8 +449,10 @@ void PLB::_distributePower(int solarPower)
         // _stations.at(_userStations.at(0))->charge(11);
         break;
     case PLBStates::ST_NoDir:
-        Serial.println("DistributePower: no director state entered");
+        Serial.print("_distributePower(): charge with ");
         userPower = availablePower / busyStations;
+        if (userPower > 11) userPower = 11;        
+        Serial.println(userPower);
         for (size_t i = 0; i < _userStations.size(); i++)
         {
             _stations.at(_userStations.at(i))->charge(userPower);
@@ -545,15 +520,15 @@ void PLB::_distributePower(int solarPower)
         }
         break;
     }
-    prevSolarPower = solarPower;
 }
 
 /*
  * @brief This function sends power to the building
  * @return 0 (success) / 1 (failure)
  */
-void PLB::_supplyPowerToBuilding(int solarPower)
+void PLB::_supplyPowerToBuilding(float solarPower)
 {
+    Serial.print("_supplyPowerToBuilding() with ");Serial.println(80 - solarPower);
     _building->charge(80 - solarPower);
 }
 
@@ -564,6 +539,8 @@ void PLB::_supplyPowerToBuilding(int solarPower)
 int PLB::_stopSupply(IStation *station)
 {
     --busyStations;
+    if (busyStations<0) busyStations = 0;
+    Serial.print("busyStations = "); Serial.println(busyStations);
     for (size_t i = 0; i < _directorStations.size(); i++)
     {
         if (station->getId() == _directorStations.at(i))
@@ -617,7 +594,7 @@ int PLB::checkDirector(IStation *station)
 bool PLB::isTimeout()
 {
     static unsigned long _prev_millis = 0;
-    if (millis() - _prev_millis > 10000) {
+    if (millis() - _prev_millis > 6000) {
         _prev_millis = millis();
         return true;
     }
@@ -628,12 +605,6 @@ void PLB::loop()
 {
     if (isTimeout())
     {
-        int solarPower = _building->calculateSolarPower();
-        if (solarPower == -1)
-        {
-            // handle solar request timeout error
-            // maybe display sth on the Building screen
-        }
-        _distributePower(solarPower);
+        handleEvents(PLBEvents::EV_Timeout);
     }
 }

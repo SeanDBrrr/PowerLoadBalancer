@@ -27,11 +27,11 @@ void MQTTClientBuilding::onConnectionSubscribe()
   _client.subscribe(mqtt_topic_solarPower, [this](const String &topic, const String &payload)
   { 
     _isSolarPowerArrivedFlag = true;
-    _totalSolarPower = payload.toInt(); 
+    _totalSolarPower = payload.toFloat(); 
   });
 }
 
-int MQTTClientBuilding::calculateSolarPower()
+float MQTTClientBuilding::calculateSolarPower()
 {
   send(mqtt_topic_calculateSolarPower, "Calculate Solar Power");
   long lastTime = millis();

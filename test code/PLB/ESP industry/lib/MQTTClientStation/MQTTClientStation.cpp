@@ -4,8 +4,6 @@
 MQTTClientStation::MQTTClientStation(int Id)
 {
   _stationId = Id;
-  Serial.print("NEW OBJECT CREATED:");
-  Serial.println(Id);
   _setStationId();
   _client.setMqttClientName(mqtt_module.c_str());
 }
@@ -19,13 +17,13 @@ EspMQTTClient &MQTTClientStation::getClient()
 
 void MQTTClientStation::_setStationId()
 {
-  mqtt_topic_StationId += String(_stationId);
-  mqtt_topic_charge_station += String(_stationId);
-  mqtt_module += String(_stationId);
-  mqtt_topic_requestSupply += String(_stationId);
-  mqtt_topic_stopSupply += String(_stationId);
-  mqtt_topic_directorId += String(_stationId);
-  mqtt_topic_directorValidate += String(_stationId);
+  mqtt_topic_StationId += static_cast<String>(_stationId);
+  mqtt_topic_charge_station += static_cast<String>(_stationId);
+  mqtt_module += static_cast<String>(_stationId);
+  mqtt_topic_requestSupply += static_cast<String>(_stationId);
+  mqtt_topic_stopSupply += static_cast<String>(_stationId);
+  mqtt_topic_directorId += static_cast<String>(_stationId);
+  mqtt_topic_directorValidate += static_cast<String>(_stationId);
 }
 
 void MQTTClientStation::send(String topic, String message)
@@ -59,7 +57,7 @@ void MQTTClientStation::receive()
 
   if(_isRequestSupplyFlag)
   {
-    Serial.print("event supply");
+    Serial.print("_isRequestSupplyFlag == true: ");
     switch (_stationId)
     {
       case 1:
@@ -76,7 +74,7 @@ void MQTTClientStation::receive()
         break;
     }
     _isRequestSupplyFlag = 0;
-    Serial.println(String(_stationId));
+    Serial.println(static_cast<String>(_stationId));
   }
 
   if(_isStopSupplyFlag)
@@ -110,13 +108,11 @@ void MQTTClientStation::onConnectionSubscribe()
   _client.subscribe(mqtt_topic_requestSupply, [this](const String &topic, const String &payload)
   {
     _isRequestSupplyFlag = true;
-    // Serial.println("power requested");
-    //_stationId = payload.toInt();
-    charge(11);
+    Serial.print("onConnectionSubscribe: power requested from ");Serial.println(payload.toInt());
   });
   _client.subscribe(mqtt_topic_stopSupply, [this](const String &topic, const String &payload)
   {
-    charge(0);
+    _isStopSupplyFlag = true;
   });
 }
 
@@ -148,7 +144,7 @@ void MQTTClientStation::validateDirector(DirectorState directorState)
 
 void MQTTClientStation::charge(float power) //override
 {
-  Serial.println("Charge");
+  Serial.print("Charge Station with "); Serial.println(power);
   send(mqtt_topic_charge_station, String(power));
 }
 

@@ -21,8 +21,8 @@ private:
     std::vector<IStation *> _stations;
     std::vector<int> _directorStations;
     std::vector<int> _userStations;
-    std::vector<int> _directorIds;
-    std::vector<int> _validDirectorIds = {-1981517118, 20, 30, 40, 50}; //maybe make this and directorIds uint32_t? It implies other changes so be careful
+    std::vector<uint32_t> _directorIds;
+    std::vector<uint32_t> _validDirectorIds = {2267176004, 432104642, 1518206872, 40, 50}; //maybe make this and directorIds uint32_t? It implies other changes so be careful
 
     /* PLB Private Functions */
     void _distributePower(int power);

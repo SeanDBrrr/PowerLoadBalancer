@@ -14,7 +14,7 @@ private:
     bool _isRequestSupplyFlag;
     bool _isStopSupplyFlag;
     bool _isDirectorDetectedFlag;
-    int _directorId;
+    uint32_t _directorId;
     int _stationId;
     std::string _topicAndIdName;
     void _setStationId();
@@ -29,7 +29,7 @@ private:
     String name = "Kiwy";
     String password = "aquamagic23";
     String mqtt_module = "Group4-PLB-Station";
-    String broker_ip = "192.168.165.23";
+    String broker_ip = "192.168.140.23";
     short port = 1883;
     EspMQTTClient _client = EspMQTTClient(
         name.c_str(),
@@ -51,7 +51,7 @@ public:
 
     void validateDirector(DirectorState directorState);
     int getId();
-    int getDirectorId();
+    uint32_t getDirectorId();
     void charge(float power);
     void switchMode(StationModes mode);
 };

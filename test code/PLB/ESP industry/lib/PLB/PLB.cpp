@@ -34,9 +34,14 @@ PLBStates PLB::handleIdleState(PLBEvents ev)
         _supplyPowerToBuilding(solarPower);
         break;
     case PLBEvents::EV_Supply1:
+        Serial.println("event received");
         if (_directorIds.size() == 0)
         {
             _state = PLBStates::ST_NoDir;
+            if(_state == PLBStates::ST_NoDir)
+            {
+                Serial.println("no director state");
+            }
         }
         _supplyPowerToStation(_stations.at(0));
         break;
@@ -62,20 +67,29 @@ PLBStates PLB::handleIdleState(PLBEvents ev)
         _supplyPowerToStation(_stations.at(3));
         break;
     case PLBEvents::EV_Director1:
-        _state = PLBStates::ST_Dir1;
-        checkDirector(_stations.at(0));
+        Serial.println("Idle State");
+        if(checkDirector(_stations.at(0)) == 1)
+        {
+            _state = PLBStates::ST_Dir1;
+        }
         break;
     case PLBEvents::EV_Director2:
-        _state = PLBStates::ST_Dir1;
-        checkDirector(_stations.at(1));
+        if(checkDirector(_stations.at(1)) == 1)
+        {
+            _state = PLBStates::ST_Dir1;
+        }
         break;
     case PLBEvents::EV_Director3:
-        _state = PLBStates::ST_Dir1;
-        checkDirector(_stations.at(2));
+        if(checkDirector(_stations.at(2)) == 1)
+        {
+            _state = PLBStates::ST_Dir1;
+        }
         break;
     case PLBEvents::EV_Director4:
-        _state = PLBStates::ST_Dir1;
-        checkDirector(_stations.at(3));
+        if(checkDirector(_stations.at(3)) == 1)
+        {
+            _state = PLBStates::ST_Dir1;
+        }
         break;
     }
     return _state;
@@ -121,19 +135,20 @@ PLBStates PLB::handleNoDirState(PLBEvents ev)
         _supplyPowerToStation(_stations.at(3));
         break;
     case PLBEvents::EV_Director1:
-        if (checkDirector(_stations.at(0)))
+        Serial.println("No Dir State");
+        if (checkDirector(_stations.at(0)) == 1)
             _state = PLBStates::ST_Dir1;
         break;
     case PLBEvents::EV_Director2:
-        if (checkDirector(_stations.at(1)))
+        if (checkDirector(_stations.at(1)) == 1)
             _state = PLBStates::ST_Dir1;
         break;
     case PLBEvents::EV_Director3:
-        if (checkDirector(_stations.at(2)))
+        if (checkDirector(_stations.at(2)) == 1)
             _state = PLBStates::ST_Dir1;
         break;
     case PLBEvents::EV_Director4:
-        if (checkDirector(_stations.at(3)))
+        if (checkDirector(_stations.at(3)) == 1)
             _state = PLBStates::ST_Dir1;
         break;
     case PLBEvents::EV_Stop1:
@@ -179,6 +194,8 @@ PLBStates PLB::handleDir1State(PLBEvents ev)
     case PLBEvents::EV_Supply1:
         _state = (_directorIds.size() == 2) ? PLBStates::ST_Dir2 : PLBStates::ST_Dir1;
         _supplyPowerToStation(_stations.at(0));
+        Serial.println("hardcoded");
+        _stations.at(0)->charge(11);
         break;
     case PLBEvents::EV_Supply2:
         _state = (_directorIds.size() == 2) ? PLBStates::ST_Dir2 : PLBStates::ST_Dir1;
@@ -193,19 +210,20 @@ PLBStates PLB::handleDir1State(PLBEvents ev)
         _supplyPowerToStation(_stations.at(3));
         break;
     case PLBEvents::EV_Director1:
-        if (checkDirector(_stations.at(0)))
+        Serial.println("Dir1 State");
+        if (checkDirector(_stations.at(0)) == 1)
             _state = PLBStates::ST_Dir2;
         break;
     case PLBEvents::EV_Director2:
-        if (checkDirector(_stations.at(1)))
+        if (checkDirector(_stations.at(1)) == 1)
             _state = PLBStates::ST_Dir2;
         break;
     case PLBEvents::EV_Director3:
-        if (checkDirector(_stations.at(2)))
+        if (checkDirector(_stations.at(2)) == 1)
             _state = PLBStates::ST_Dir2;
         break;
     case PLBEvents::EV_Director4:
-        if (checkDirector(_stations.at(3)))
+        if (checkDirector(_stations.at(3)) == 1)
             _state = PLBStates::ST_Dir2;
         break;
     case PLBEvents::EV_Stop1:
@@ -261,19 +279,20 @@ PLBStates PLB::handleDir2State(PLBEvents ev)
         _supplyPowerToStation(_stations.at(3));
         break;
     case PLBEvents::EV_Director1:
-        if (checkDirector(_stations.at(0)))
+        Serial.println("Dir2 State");
+        if (checkDirector(_stations.at(0)) == 1)
             _state = PLBStates::ST_Dir3;
         break;
     case PLBEvents::EV_Director2:
-        if (checkDirector(_stations.at(1)))
+        if (checkDirector(_stations.at(1)) == 1)
             _state = PLBStates::ST_Dir3;
         break;
     case PLBEvents::EV_Director3:
-        if (checkDirector(_stations.at(2)))
+        if (checkDirector(_stations.at(2)) == 1)
             _state = PLBStates::ST_Dir3;
         break;
     case PLBEvents::EV_Director4:
-        if (checkDirector(_stations.at(3)))
+        if (checkDirector(_stations.at(3)) == 1)
             _state = PLBStates::ST_Dir3;
         break;
     case PLBEvents::EV_Stop1:
@@ -329,19 +348,20 @@ PLBStates PLB::handleDir3OnlyState(PLBEvents ev)
         _supplyPowerToStation(_stations.at(3));
         break;
     case PLBEvents::EV_Director1:
+        Serial.println("Dir3 State");
         if (checkDirector(_stations.at(0)) == 1)
             _state = PLBStates::ST_Dir4;
         break;
     case PLBEvents::EV_Director2:
-        if (checkDirector(_stations.at(1)))
+        if (checkDirector(_stations.at(1)) == 1)
             _state = PLBStates::ST_Dir4;
         break;
     case PLBEvents::EV_Director3:
-        if (checkDirector(_stations.at(2)))
+        if (checkDirector(_stations.at(2)) == 1)
             _state = PLBStates::ST_Dir4;
         break;
     case PLBEvents::EV_Director4:
-        if (checkDirector(_stations.at(3)))
+        if (checkDirector(_stations.at(3)) == 1)
             _state = PLBStates::ST_Dir4;
         break;
     case PLBEvents::EV_Stop1:
@@ -429,21 +449,34 @@ void PLB::_supplyPowerToStation(IStation *station)
     {
         _userStations.emplace_back(station->getId());
     }
+    Serial.print("SupplyPowerToStation: Current sollar power is: ");
+    Serial.println(solarPower);
+            if(_state == PLBStates::ST_NoDir)
+            {
+                Serial.println("no director state");
+            }
     _distributePower(solarPower);
 }
 
 void PLB::_distributePower(int solarPower)
 {
+    //_state = PLBStates::ST_NoDir;
     static int prevSolarPower = 0;
     if (solarPower == prevSolarPower)
         return;
     int availablePower = 20 + solarPower;
     float directorPower, userPower, stationPower;
+    if(_state == PLBStates::ST_NoDir)
+    {
+        Serial.println("State is righty");
+    }
     switch (_state)
     {
     case PLBStates::ST_Idle:
+        // _stations.at(_userStations.at(0))->charge(11);
         break;
     case PLBStates::ST_NoDir:
+        Serial.println("DistributePower: no director state entered");
         userPower = availablePower / busyStations;
         for (size_t i = 0; i < _userStations.size(); i++)
         {
@@ -559,7 +592,7 @@ int PLB::_stopSupply(IStation *station)
  */
 int PLB::checkDirector(IStation *station)
 {
-    int directorId = station->getDirectorId();
+    uint32_t directorId = station->getDirectorId();
     for (size_t i = 0; i < _directorIds.size(); i++)
     {
         /* return RFID state: failed(-1), checkedIn(1), notCheckedIn(0) */
@@ -583,10 +616,10 @@ int PLB::checkDirector(IStation *station)
 
 bool PLB::isTimeout()
 {
-    static unsigned long prev_millis = 0;
-    if (millis() - prev_millis > 10000) {
+    static unsigned long _prev_millis = 0;
+    if (millis() - _prev_millis > 10000) {
+        _prev_millis = millis();
         return true;
-        prev_millis = millis();
     }
     return false;
 }

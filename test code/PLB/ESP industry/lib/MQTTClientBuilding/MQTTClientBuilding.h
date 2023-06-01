@@ -19,7 +19,7 @@ private:
     String name = "Kiwy";
     String password = "aquamagic23";
     String mqtt_module = "Group4-PLB-Building";
-    String broker_ip = "192.168.4.23";
+    String broker_ip = "192.168.140.23";
     short port = 1883;
     EspMQTTClient _client = EspMQTTClient(
         name.c_str(),

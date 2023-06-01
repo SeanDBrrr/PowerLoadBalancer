@@ -5,33 +5,40 @@
 #include "SolarPanel.h"
 #include "MQTTClientPLB.h"
 
-MQTTClientPLB* mqttPLB;
-BuildingDisplay* buildingDisplay;
-SolarPanel* solarPanel1;
-SolarPanel* solarPanel2;
-SolarPanel* solarPanel3;
-SolarPanel* solarPanel4;
-OfficeBuilding* building;
+MQTTClientPLB *mqttPLB;
+BuildingDisplay *buildingDisplay;
+SolarPanel *solarPanel1;
+SolarPanel *solarPanel2;
+SolarPanel *solarPanel3;
+SolarPanel *solarPanel4;
+OfficeBuilding *building;
 
 int sdaPin = 21;
 int sclPin = 22;
-
-void onConnectionEstablished() {
+const int solarPanelPin1 = 32;
+const int solarPanelPin2 = 33;
+const int solarPanelPin3 = 34;
+const int solarPanelPin4 = 35;
+void onConnectionEstablished()
+{
   mqttPLB->onConnectionSubscribe();
 }
 
-void setup() {
+void setup()
+{
   Serial.begin(115200);
   mqttPLB = new MQTTClientPLB();
   buildingDisplay = new BuildingDisplay(sclPin, sdaPin);
-  solarPanel1 = new SolarPanel(1);
-  solarPanel2 = new SolarPanel(2);
-  solarPanel3 = new SolarPanel(3);
-  solarPanel4 = new SolarPanel(4);
+  solarPanel1 = new SolarPanel(solarPanelPin1);
+  solarPanel2 = new SolarPanel(solarPanelPin2);
+  solarPanel3 = new SolarPanel(solarPanelPin3);
+  solarPanel4 = new SolarPanel(solarPanelPin4);
   building = new OfficeBuilding(mqttPLB, buildingDisplay, solarPanel1, solarPanel2, solarPanel3, solarPanel4);
   mqttPLB->getClient().enableDebuggingMessages();
 }
 
-void loop() {
+void loop()
+{
   building->handleEvent(mqttPLB->receive());
+
 }

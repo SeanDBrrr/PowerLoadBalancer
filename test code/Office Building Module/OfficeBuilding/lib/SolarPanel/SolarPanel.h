@@ -9,12 +9,12 @@ class SolarPanel : public ISolarPanel
 {
 private:
     int _solarPower;
-    LDR _ldr;
-
+    const int _ldrPin;
+    double map(double power,double in_min, double in_max, double out_min, double out_max);
 public:
     SolarPanel(int pin);
     ~SolarPanel() {}
-    int getSolarPower();
+    double getSolarPower();
 };
 
 #endif

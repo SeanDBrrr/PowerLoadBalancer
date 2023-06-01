@@ -16,7 +16,7 @@ private:
     IDisplay *_display;
     std::vector<ISolarPanel *> _solarPanels;
 
-    int currentSolarPower;
+    double currentSolarPower;
 
 public:
     OfficeBuilding(IPLB *plb, 
@@ -29,8 +29,8 @@ public:
     
     void addSolarPanel(ISolarPanel *panel);
     void handleEvent(BuildingEvents ev); 
-    int calculateSolarPower();
-    void sendPower(int power);
+    double calculateSolarPower();
+    void sendSolarPower(int power);
     void loop();
 
 };

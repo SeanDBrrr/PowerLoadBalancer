@@ -32,11 +32,17 @@ MQTTClientPLB::onConnectionSubscribe()
     _client.subscribe(mqtt_topic_calculateSolarPower, [this](const String &topic, const String &payload)
     {
         _solarPowerRequested = true;
+        _powerFromPLB = payload.toDouble();
+        Serial.println("PowerPLB: " + static_cast<String>(payload.toFloat()));
     });
 }
 
-void 
-MQTTClientPLB::supplyPowerToBuilding(int power)
+void MQTTClientPLB::supplyPowerToBuilding(double power)  
 {
     send(mqtt_topic_send_power, (String)power);
+}
+
+double MQTTClientPLB::getPower() 
+{
+    return _powerFromPLB;
 }

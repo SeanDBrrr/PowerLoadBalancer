@@ -28,7 +28,7 @@ void setup()
   director = new DirectorScanner(SS_PIN, RST_PIN);
   startButton = new StartButton();
   plugButton = new PlugButton();
-  mqttPLB = new MQTTClientPLB(1);
+  mqttPLB = new MQTTClientPLB(4);
   mqttPLB->getClient().enableDebuggingMessages();
   chargingStation = new ChargingStation(
     startButton,

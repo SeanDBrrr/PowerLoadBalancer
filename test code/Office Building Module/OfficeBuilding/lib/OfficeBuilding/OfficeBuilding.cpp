@@ -25,15 +25,16 @@ OfficeBuilding::~OfficeBuilding()
     delete _plb;    
 }
 
-int 
-OfficeBuilding::calculateSolarPower()
+double OfficeBuilding::calculateSolarPower()
 {
     currentSolarPower = 0;
     for (const auto &sp: _solarPanels)
     {
+        
         currentSolarPower += sp->getSolarPower();
     }
     return currentSolarPower;
+
 }
 
 void 
@@ -47,21 +48,19 @@ void OfficeBuilding::handleEvent(BuildingEvents ev)
     switch (ev)
     {
     case BuildingEvents::EV_RequestSolarPower: 
-        int power = calculateSolarPower();
-        _display->display((String)power + "kW");
-        sendPower(power);
+        double solarPower = calculateSolarPower();
+        _display->display(static_cast<String>(_plb->getPower()));
+        sendSolarPower(solarPower);
         break;
     }
 }
 
-void 
-OfficeBuilding::sendPower(int power)
+void OfficeBuilding::sendSolarPower(int solarPower)
 {
-    _plb->supplyPowerToBuilding(power);
+    _plb->supplyPowerToBuilding(solarPower);
 }
 
-void
-OfficeBuilding::loop()
+void OfficeBuilding::loop()
 {
     // handleEvent();
 }

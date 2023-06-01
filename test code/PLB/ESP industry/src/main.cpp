@@ -27,7 +27,7 @@ void setup() {
   mqttStation3 = new MQTTClientStation(3);
   mqttStation4 = new MQTTClientStation(4);
   plb = new PLB(mqttBuilding, mqttStation1, mqttStation2, mqttStation3, mqttStation4);
-  mqttBuilding->getClient().enableDebuggingMessages();
+  //mqttBuilding->getClient().enableDebuggingMessages();
   mqttStation1->getClient().enableDebuggingMessages();
   mqttStation2->getClient().enableDebuggingMessages();
   mqttStation3->getClient().enableDebuggingMessages();

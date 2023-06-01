@@ -24,6 +24,8 @@ void MQTTClientStation::_setStationId()
   mqtt_module += String(_stationId);
   mqtt_topic_requestSupply += String(_stationId);
   mqtt_topic_stopSupply += String(_stationId);
+  mqtt_topic_directorId += String(_stationId);
+  mqtt_topic_directorValidate += String(_stationId);
 }
 
 void MQTTClientStation::send(String topic, String message)
@@ -57,6 +59,7 @@ void MQTTClientStation::receive()
 
   if(_isRequestSupplyFlag)
   {
+    Serial.print("event supply");
     switch (_stationId)
     {
       case 1:
@@ -73,6 +76,7 @@ void MQTTClientStation::receive()
         break;
     }
     _isRequestSupplyFlag = 0;
+    Serial.println(String(_stationId));
   }
 
   if(_isStopSupplyFlag)
@@ -106,7 +110,9 @@ void MQTTClientStation::onConnectionSubscribe()
   _client.subscribe(mqtt_topic_requestSupply, [this](const String &topic, const String &payload)
   {
     _isRequestSupplyFlag = true;
-    _stationId = payload.toInt();
+    // Serial.println("power requested");
+    //_stationId = payload.toInt();
+    charge(11);
   });
   _client.subscribe(mqtt_topic_stopSupply, [this](const String &topic, const String &payload)
   {
@@ -119,7 +125,7 @@ int MQTTClientStation::getId() //override
   return _stationId;
 }
 
-int MQTTClientStation::getDirectorId() //override
+uint32_t MQTTClientStation::getDirectorId() //override
 {
   return _directorId;
 }
@@ -142,6 +148,7 @@ void MQTTClientStation::validateDirector(DirectorState directorState)
 
 void MQTTClientStation::charge(float power) //override
 {
+  Serial.println("Charge");
   send(mqtt_topic_charge_station, String(power));
 }
 

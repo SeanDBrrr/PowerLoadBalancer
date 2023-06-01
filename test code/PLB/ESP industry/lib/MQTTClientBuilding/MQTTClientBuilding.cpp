@@ -37,7 +37,7 @@ int MQTTClientBuilding::calculateSolarPower()
   long lastTime = millis();
   while(!_isSolarPowerArrivedFlag)
   {
-    if(millis() - lastTime >= 5000)
+    if(millis() - lastTime >= 9000)
     {
       return -1;
     }

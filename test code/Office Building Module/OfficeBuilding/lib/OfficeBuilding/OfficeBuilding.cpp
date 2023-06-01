@@ -47,16 +47,15 @@ void OfficeBuilding::handleEvent(BuildingEvents ev)
     switch (ev)
     {
     case BuildingEvents::EV_RequestSolarPower: 
-        calculateSolarPower();
-        requestPower();
-        break;
-    default:
+        int power = calculateSolarPower();
+        _display->display((String)power + "kW");
+        sendPower(power);
         break;
     }
 }
 
 void 
-OfficeBuilding::requestPower()
+OfficeBuilding::sendPower(int power)
 {
-    _plb->supplyPowerToBuilding();
+    _plb->supplyPowerToBuilding(power);
 }

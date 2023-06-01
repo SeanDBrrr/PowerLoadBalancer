@@ -375,6 +375,7 @@ ChargingStation::ChargingStation(
     : _directorId(0),
       _id(0),
       _isStartedFlag(0),
+      _isPluggedFlag(0),
       _busy(0),
       _currentEvent(Event::noEvent),
       _currentState(State::STATE_IDLE),

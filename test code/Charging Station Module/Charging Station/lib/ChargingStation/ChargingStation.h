@@ -17,6 +17,7 @@ private:
     uint32_t _directorId;
     int _id;
     bool _isStartedFlag;
+    bool _isPluggedFlag;
     bool _busy;
     Event _currentEvent;
     State _currentState;
@@ -44,6 +45,7 @@ public:
 
     void HandleEvent(Event ev);
     State HandleIdleState(Event ev);
+    State HandleVerifyingDirectorState(Event ev);
     State HandleIdleDirectorState(Event ev);
     State HandlePluggedState(Event ev);
     State HandlePluggedDirectorState(Event ev);

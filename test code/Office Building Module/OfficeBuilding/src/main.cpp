@@ -6,15 +6,15 @@
 #include "MQTTClientPLB.h"
 
 MQTTClientPLB* mqttPLB;
-BuildingDisplay* buidlingDisplay;
+BuildingDisplay* buildingDisplay;
 SolarPanel* solarPanel1;
 SolarPanel* solarPanel2;
 SolarPanel* solarPanel3;
 SolarPanel* solarPanel4;
 OfficeBuilding* building;
 
-int sdaPin = 1;
-int sclPin = 2;
+int sdaPin = 21;
+int sclPin = 22;
 
 void onConnectionEstablished() {
   mqttPLB->onConnectionSubscribe();
@@ -23,12 +23,12 @@ void onConnectionEstablished() {
 void setup() {
   Serial.begin(115200);
   mqttPLB = new MQTTClientPLB();
-  buidlingDisplay = new BuildingDisplay(sclPin, sdaPin);
+  buildingDisplay = new BuildingDisplay(sclPin, sdaPin);
   solarPanel1 = new SolarPanel(1);
   solarPanel2 = new SolarPanel(2);
   solarPanel3 = new SolarPanel(3);
   solarPanel4 = new SolarPanel(4);
-  building = new OfficeBuilding(mqttPLB, buidlingDisplay, solarPanel1, solarPanel2, solarPanel3, solarPanel4);
+  building = new OfficeBuilding(mqttPLB, buildingDisplay, solarPanel1, solarPanel2, solarPanel3, solarPanel4);
   mqttPLB->getClient().enableDebuggingMessages();
 }
 

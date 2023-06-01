@@ -97,7 +97,7 @@ void MQTTClientPLB::onConnectionSubscribe()
   });
 }
 
-void MQTTClientPLB::checkDirector(int id)
+void MQTTClientPLB::checkDirector(uint32_t id)
 {
     send(mqtt_topic_directorId, String(id));
 }

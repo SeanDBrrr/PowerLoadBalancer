@@ -12,9 +12,65 @@ State ChargingStation::HandleIdleState(Event ev)
         result = State::STATE_PLUGGED;
         break;
     case Event::EV_RFID_DIRECTOR_DETECTED:
-        result = State::STATE_IDLE_DIRECTOR;
+        _IDisplay->display("idl VERIFYING DIR"); // should display director status
+        result = State::STATE_VERIFYING_DIRECTOR;
         break;
     case Event::EV_ERROR:
+        _IDisplay->display("ERROR");
+        result = State::STATE_ERROR;
+        break;
+    default:
+        // ignored event, nothing to do here
+        break;
+    }
+
+    return result;
+}
+
+State ChargingStation::HandleVerifyingDirectorState(Event ev)
+{
+    State result = State::STATE_VERIFYING_DIRECTOR;
+
+    switch (ev)
+    {
+    case Event::EV_RFID_VALID:
+        if (_isPluggedFlag)
+        {
+            _IDisplay->display("valid PLUGGED DIR");
+            result = State::STATE_PLUGGED_DIRECTOR;
+        }
+        else if (!_isPluggedFlag)
+        {
+            _IDisplay->display("valid IDLE_DIR");
+            result = State::STATE_IDLE_DIRECTOR;
+        }
+        break;
+    case Event::EV_RFID_INVALID:
+        if (_isPluggedFlag)
+        {
+            _IDisplay->display("inval PLUGGED");
+            result = State::STATE_PLUGGED;
+        }
+        else if (!_isPluggedFlag)
+        {
+            _IDisplay->display("inval IDLE");
+            result = State::STATE_IDLE;
+        }
+        break;
+    case Event::EV_RFID_TIMED_OUT:
+        if (_isPluggedFlag)
+        {
+            _IDisplay->display("timed out PLUGGED");
+            result = State::STATE_PLUGGED;
+        }
+        else if (!_isPluggedFlag)
+        {
+            _IDisplay->display("timed out IDLE");
+            result = State::STATE_IDLE;
+        }
+        break;
+    case Event::EV_ERROR:
+        _IDisplay->display("ERROR");
         result = State::STATE_ERROR;
         break;
     default:
@@ -27,21 +83,16 @@ State ChargingStation::HandleIdleState(Event ev)
 
 State ChargingStation::HandleIdleDirectorState(Event ev)
 {
-
     State result = State::STATE_IDLE_DIRECTOR;
-
-    //_IDisplay->display("verifying RFID");
 
     switch (ev)
     {
     case Event::EV_PLUGGED:
-        result = State::STATE_PLUGGED;
-        break;
-    case Event::EV_UNPLUGGED: // needs to be deleted after state machine
-    case Event::EV_RFID_INVALID:
-        result = State::STATE_IDLE;
+        _IDisplay->display("PLUGGED DIR");
+        result = State::STATE_PLUGGED_DIRECTOR;
         break;
     case Event::EV_ERROR:
+        _IDisplay->display("ERROR");
         result = State::STATE_ERROR;
         break;
     default:
@@ -60,16 +111,20 @@ State ChargingStation::HandlePluggedState(Event ev)
     switch (ev)
     {
     case Event::EV_UNPLUGGED:
+        _IDisplay->display("unplug IDLE");
         result = State::STATE_IDLE;
         break;
     case Event::EV_RFID_DIRECTOR_DETECTED:
-        _IDisplay->display("PLUGGED DIR");
-        result = State::STATE_PLUGGED_DIRECTOR;
+        _IDisplay->display("plg VERIFYING DIR");
+        result = State::STATE_VERIFYING_DIRECTOR;
         break;
     case Event::EV_START:
-        result = State::STATE_CHARGING;
+        _IPLB->supplyPowerToStation(_id);
+        _IDisplay->display("WAITING FOR POWER");
+        result = State::STATE_WAITING_FOR_POWER;
         break;
     case Event::EV_ERROR:
+        _IDisplay->display("ERROR");
         result = State::STATE_ERROR;
         break;
     default:
@@ -88,15 +143,20 @@ State ChargingStation::HandlePluggedDirectorState(Event ev)
     switch (ev)
     {
     case Event::EV_UNPLUGGED:
+        _IDisplay->display("unplug IDLE DIR");
         result = State::STATE_IDLE_DIRECTOR;
         break;
     case Event::EV_RFID_INVALID:
+        _IDisplay->display("rfid inval PLUGGED");
         result = State::STATE_PLUGGED;
         break;
     case Event::EV_START:
+        _IPLB->supplyPowerToStation(_id);
+        _IDisplay->display("WAITING FOR POWER");
         result = State::STATE_WAITING_FOR_POWER;
         break;
     case Event::EV_ERROR:
+        _IDisplay->display("ERROR");
         result = State::STATE_ERROR;
         break;
     default:
@@ -114,12 +174,16 @@ State ChargingStation::HandleWaitingForPowerState(Event ev)
     switch (ev)
     {
     case Event::EV_CHARGING:
+        _IDisplay->display("CHARGING");
         result = State::STATE_CHARGING;
         break;
     case Event::EV_STOP:
+        _IPLB->stopSupplyToStation(_id);
+        _IDisplay->display("STOPED CHARGING");
         result = State::STATE_STOPPED_CHARGING;
         break;
     case Event::EV_ERROR:
+        _IDisplay->display("ERROR");
         result = State::STATE_ERROR;
         break;
     default:
@@ -137,9 +201,12 @@ State ChargingStation::HandleChargingState(Event ev)
     switch (ev)
     {
     case Event::EV_STOP:
+        _IPLB->stopSupplyToStation(_id);
+        _IDisplay->display("STOPED CHARGING");
         result = State::STATE_STOPPED_CHARGING;
         break;
     case Event::EV_ERROR:
+        _IDisplay->display("ERROR");
         result = State::STATE_ERROR;
         break;
     case Event::EV_MODE_CHANGED_DIRECTOR:
@@ -166,12 +233,16 @@ State ChargingStation::HandleStoppedChargingState(Event ev)
     switch (ev)
     {
     case Event::EV_START:
+        _IPLB->supplyPowerToStation(_id);
+        _IDisplay->display("WAITING FOR POWER");
         result = State::STATE_WAITING_FOR_POWER;
         break;
     case Event::EV_UNPLUGGED:
+        _IDisplay->display("unplugged IDLE");
         result = State::STATE_IDLE;
         break;
     case Event::EV_ERROR:
+        _IDisplay->display("ERROR");
         result = State::STATE_ERROR;
         break;
     default:
@@ -184,6 +255,7 @@ State ChargingStation::HandleStoppedChargingState(Event ev)
 
 State ChargingStation::HandleErrorState(Event ev)
 {
+    _IPLB->stopSupplyToStation(_id);
     return State::STATE_STOPPED_CHARGING;
 }
 
@@ -209,6 +281,9 @@ void ChargingStation::HandleEvent(Event ev)
     {
     case State::STATE_IDLE:
         _currentState = HandleIdleState(ev);
+        break;
+    case State::STATE_VERIFYING_DIRECTOR:
+        _currentState = HandleVerifyingDirectorState(ev);
         break;
     case State::STATE_IDLE_DIRECTOR:
         _currentState = HandleIdleDirectorState(ev);
@@ -239,28 +314,46 @@ void ChargingStation::HandleEvent(Event ev)
 
 void ChargingStation::loop()
 {
-
-    if (_IPlug->isPlugged())
+    if (!_isStartedFlag)
     {
-        _currentEvent = Event::EV_PLUGGED;
+        if (_IStart->isStarted())
+        {
+            _isStartedFlag = true;
+            _currentEvent = Event::EV_START;
+        }
+    }
+    else if (_isStartedFlag)
+    {
+        if (_IStart->isStarted())
+        {
+            _isStartedFlag = false;
+            _currentEvent = Event::EV_STOP;
+        }
+    }
+
+    if (!_isPluggedFlag)
+    {
+        if (_IPlug->isPlugged())
+        {
+            _isPluggedFlag = true;
+            _currentEvent = Event::EV_PLUGGED;
+        }
+    }
+    else if (_isPluggedFlag)
+    {
+        if (_IPlug->isPlugged())
+        {
+            _isPluggedFlag = false;
+            _currentEvent = Event::EV_UNPLUGGED;
+        }
     }
 
     _directorId = _IDirector->getID();
     if (_directorId != 0)
     {
+        //_IDisplay->display(String(_directorId));
         _IPLB->checkDirector(_directorId);
         _currentEvent = Event::EV_RFID_DIRECTOR_DETECTED;
-    }
-
-    if (_IStart->isStarted() && !_isStartedFlag)
-    {
-        _isStartedFlag = true;
-        _currentEvent = Event::EV_START;
-    }
-    else if (_IStart->isStarted() && _isStartedFlag) // Should be correct
-    {
-        _isStartedFlag = false;
-        _currentEvent = Event::EV_STOP;
     }
 
     try
@@ -282,6 +375,7 @@ ChargingStation::ChargingStation(
     : _directorId(0),
       _id(0),
       _isStartedFlag(0),
+      _isPluggedFlag(0),
       _busy(0),
       _currentEvent(Event::noEvent),
       _currentState(State::STATE_IDLE),

@@ -99,17 +99,17 @@ void MQTTClientPLB::onConnectionSubscribe()
 
 void MQTTClientPLB::checkDirector(uint32_t id)
 {
-    send(mqtt_topic_directorId, String(id));
+    send(mqtt_topic_directorId, static_cast<String>(id));
 }
 
 void MQTTClientPLB::supplyPowerToStation(int id)
 {
-    send(mqtt_topic_requestPower, String(id));
+    send(mqtt_topic_requestPower, static_cast<String>(id));
 }
 
 void MQTTClientPLB::stopSupplyToStation(int id)
 {
-    send(mqtt_topic_stopSupply, String(id));
+    send(mqtt_topic_stopSupply, static_cast<String>(id));
 }
 
 float MQTTClientPLB::getPowerReceived()
@@ -124,7 +124,7 @@ Event MQTTClientPLB::getEvent()
 
 // DirectorState MQTTClientPLB::waitingForPlb(int waitingTime)
 // {
-//     long lastTime = millis();
+//     unsigned long lastTime = millis();
 //     while(!_isDirectorResponseFlag)
 //     {
 //         if(millis() - lastTime >= waitingTime)
@@ -134,4 +134,9 @@ Event MQTTClientPLB::getEvent()
 //     }
 //     _isDirectorResponseFlag = 0;
 //     return _directorState;
+// }
+
+// DirectorState MQTTClientPLB::directorTimeout(int waitingTime)
+// {
+//   return waitingForPlb(waitingTime);
 // }

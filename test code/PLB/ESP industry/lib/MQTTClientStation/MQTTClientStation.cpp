@@ -1,10 +1,16 @@
 #include "MQTTClientStation.h"
 #include <string>
 
-MQTTClientStation::MQTTClientStation(int Id)
+std::queue<int> MQTTClientStation::supplyRequestEvents;
+std::queue<int> MQTTClientStation::stopSupplyEvents;
+std::queue<int> MQTTClientStation::directorEvents;
+std::vector<PLBEvents> MQTTClientStation::events;
+
+MQTTClientStation::MQTTClientStation(int id) : 
+_stationId(id), 
+_directorId(0)
 {
-  _stationId = Id;
-  _setStationId();
+  _setStationTopics();
   _client.setMqttClientName(mqtt_module.c_str());
 }
 
@@ -15,7 +21,7 @@ EspMQTTClient &MQTTClientStation::getClient()
   return _client;
 }
 
-void MQTTClientStation::_setStationId()
+void MQTTClientStation::_setStationTopics()
 {
   mqtt_topic_StationId += static_cast<String>(_stationId);
   mqtt_topic_charge_station += static_cast<String>(_stationId);
@@ -34,94 +40,48 @@ void MQTTClientStation::send(String topic, String message)
 void MQTTClientStation::receive()
 {
   _client.loop();
-  _event = PLBEvents::noEvent;
-  if(_isDirectorDetectedFlag)
-  {
-    switch (_stationId) 
-    {
-      case 1:
-        _event = PLBEvents::EV_Director1;
-        break;
-      case 2:
-        _event = PLBEvents::EV_Director2;
-        break;
-      case 3:
-        _event = PLBEvents::EV_Director3;
-        break;
-      case 4:
-        _event = PLBEvents::EV_Director4;
-        break;
-    }
-    _isDirectorDetectedFlag = 0;
-  }
-
-  if(_isRequestSupplyFlag)
-  {
-    Serial.print("_isRequestSupplyFlag == true: ");
-    switch (_stationId)
-    {
-      case 1:
-        _event = PLBEvents::EV_Supply1;
-        break;
-      case 2:
-        _event = PLBEvents::EV_Supply2;
-        break;
-      case 3:
-        _event = PLBEvents::EV_Supply3;
-        break;
-      case 4:
-        _event = PLBEvents::EV_Supply4;
-        break;
-    }
-    _isRequestSupplyFlag = 0;
-    Serial.println(static_cast<String>(_stationId));
-  }
-
-  if(_isStopSupplyFlag)
-  {
-    switch (_stationId)
-    {
-      case 1:
-        _event = PLBEvents::EV_Stop1;
-        break;
-      case 2:
-        _event = PLBEvents::EV_Stop2;
-        break;
-      case 3:
-        _event = PLBEvents::EV_Stop3;
-        break;
-      case 4:
-        _event = PLBEvents::EV_Stop4;
-        break;
-    }
-    _isStopSupplyFlag = 0;
-  }
 }
 
+/*
+ * Each station is subscribed to its own topics (in relation to their ID), 
+ * but every event is registered in global containers (one per event) 
+*/
 void MQTTClientStation::onConnectionSubscribe()
 {
   _client.subscribe(mqtt_topic_directorId, [this](const String &topic, const String &payload)
   {
-    _isDirectorDetectedFlag = true;
-    _directorId = payload.toInt(); 
+    /* A director tapped its RFID */
+    events.emplace_back(PLBEvents::EV_Director);
+    directorEvents.push(_stationId);
+    /* -> We store the director's ID */
+    _directorId = payload.toInt();
   });
   _client.subscribe(mqtt_topic_requestSupply, [this](const String &topic, const String &payload)
   {
-    _isRequestSupplyFlag = true;
-    Serial.print("onConnectionSubscribe: power requested from ");Serial.println(payload.toInt());
+    /* _stationId requested power */
+    events.emplace_back(PLBEvents::EV_Supply);
+    /* -> We add its ID to the supplyRequest queue */
+    supplyRequestEvents.push(_stationId);
+    Serial.print("MQTTClientStation: EV_Supply -> ID = "); Serial.println(supplyRequestEvents.front());
   });
   _client.subscribe(mqtt_topic_stopSupply, [this](const String &topic, const String &payload)
   {
-    _isStopSupplyFlag = true;
+    /* _stationId requested a stop */
+    events.emplace_back(PLBEvents::EV_Stop);
+    /* -> We add its ID to the stopSupply queue */
+    stopSupplyEvents.push(_stationId);
+    Serial.print("MQTTClientStation: EV_Supply -> ID = "); Serial.println(stopSupplyEvents.front());
+    /* Remove the previous director's ID if there is one */
+    if (_directorId) _directorId = 0;
   });
 }
 
-int MQTTClientStation::getId() //override
+int MQTTClientStation::getId()
 {
   return _stationId;
 }
 
-uint32_t MQTTClientStation::getDirectorId() //override
+uint32_t MQTTClientStation::getDirectorId()
 {
   return _directorId;
 }
@@ -142,13 +102,13 @@ void MQTTClientStation::validateDirector(DirectorState directorState)
   }
 }
 
-void MQTTClientStation::charge(float power) //override
+void MQTTClientStation::charge(float power)
 {
   Serial.print("Charge Station with "); Serial.println(power);
   send(mqtt_topic_charge_station, String(power));
 }
 
-void MQTTClientStation::switchMode(StationModes mode) //override
+void MQTTClientStation::switchMode(StationModes mode)
 {
   if(mode == StationModes::MO_Director)
   {
@@ -164,7 +124,23 @@ void MQTTClientStation::switchMode(StationModes mode) //override
   }
 }
 
-PLBEvents MQTTClientStation::getEvent()
+/* ----------- Events Getters */
+std::vector<PLBEvents>& MQTTClientStation::getEvents()
 {
-  return _event;
+  return events;
+}
+
+std::queue<int>& MQTTClientStation::getSupplyEvents()
+{
+  return supplyRequestEvents;
+}
+
+std::queue<int>& MQTTClientStation::getStopEvents()
+{
+  return stopSupplyEvents;
+}
+
+std::queue<int>& MQTTClientStation::getDirectorEvents()
+{
+  return directorEvents;
 }

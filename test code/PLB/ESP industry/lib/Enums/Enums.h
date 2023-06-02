@@ -3,18 +3,9 @@
 enum class PLBEvents {
     noEvent = 0, 
     EV_Timeout, 
-    EV_Supply1, 
-    EV_Supply2, 
-    EV_Supply3, 
-    EV_Supply4,
-    EV_Stop1,
-    EV_Stop2,
-    EV_Stop3,
-    EV_Stop4, 
-    EV_Director1,
-    EV_Director2,
-    EV_Director3,
-    EV_Director4
+    EV_Supply,
+    EV_Stop, 
+    EV_Director
 };
 
 enum class PLBStates {

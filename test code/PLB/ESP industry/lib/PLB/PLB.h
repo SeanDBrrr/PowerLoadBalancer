@@ -2,6 +2,9 @@
 #define _PLB_HPP
 
 #include <vector>
+#include <queue>
+#include <map>
+#include <string>
 #include <utility>
 #include <functional>
 #include <Arduino.h>
@@ -16,7 +19,10 @@ class PLB
 private:
     PLBStates _state;
     PLBModes _mode;
-    PLBEvents _event;
+    std::queue<int> _supplyRequestStationIdEvents;
+    std::queue<int> _stopStationIdEvents;
+    std::queue<int> _directorEvents;
+
     IBuilding *_building;
     std::vector<IStation *> _stations;
     std::vector<int> _directorStations;
@@ -42,10 +48,10 @@ public:
 
     /* PLB Public Functions */
     void addStation(IStation* station);
-    
     int checkDirector(IStation* station);
+    void setEvents(std::queue<int>& supply, std::queue<int>& stop, std::queue<int>& directors);
     bool isTimeout();
-    void loop();
+    void loop(std::vector<PLBEvents>& events);
 
     void handleEvents(PLBEvents ev);
     PLBStates handleIdleState(PLBEvents ev);

@@ -12,6 +12,8 @@ public:
     MOCK_METHOD(int, getId, ());
     MOCK_METHOD(void, charge, (float));
     MOCK_METHOD(void, switchMode, (StationModes));
+    MOCK_METHOD(uint32_t, getDirectorId, ());
+    MOCK_METHOD(void, validateDirector, (DirectorState));
 };
 
 #endif

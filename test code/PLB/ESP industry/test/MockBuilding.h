@@ -9,7 +9,7 @@
 class MockBuilding : public IBuilding
 {
 public:
-    MOCK_METHOD(int, calculateSolarPower, ());
+    MOCK_METHOD(float, calculateSolarPower, ());
     MOCK_METHOD(void, charge, (float));
 };
 

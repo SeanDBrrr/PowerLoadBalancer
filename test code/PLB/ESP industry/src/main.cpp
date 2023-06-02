@@ -27,7 +27,7 @@ void setup() {
   mqttStation3 = new MQTTClientStation(3);
   mqttStation4 = new MQTTClientStation(4);
   plb = new PLB(mqttBuilding, mqttStation1, mqttStation2, mqttStation3, mqttStation4);
-  //mqttBuilding->getClient().enableDebuggingMessages();
+  mqttBuilding->getClient().enableDebuggingMessages();
   mqttStation1->getClient().enableDebuggingMessages();
   mqttStation2->getClient().enableDebuggingMessages();
   mqttStation3->getClient().enableDebuggingMessages();
@@ -35,14 +35,18 @@ void setup() {
 }
 
 void loop() {
+  /* Check for any events */
   mqttBuilding->receive();
   mqttStation1->receive();
-  // mqttStation2->receive();
-  // mqttStation3->receive();
-  // mqttStation4->receive();
-  plb->handleEvents(mqttStation1->getEvent());
-  // plb->handleEvents(mqttStation2->getEvent());
-  // plb->handleEvents(mqttStation3->getEvent());
-  // plb->handleEvents(mqttStation4->getEvent());
-  plb->loop();
+  mqttStation2->receive();
+  mqttStation3->receive();
+  mqttStation4->receive();
+
+  /* Pass all events to the PLB */
+  plb->setEvents(MQTTClientStation::supplyRequestEvents,
+                 MQTTClientStation::stopSupplyEvents,
+                 MQTTClientStation::directorEvents);
+                
+  /* PLB handles events */
+  plb->loop(MQTTClientStation::events);
 }

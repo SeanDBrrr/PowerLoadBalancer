@@ -35,14 +35,14 @@ float MQTTClientBuilding::calculateSolarPower()
 {
   send(mqtt_topic_calculateSolarPower, "Calculate Solar Power");
   long lastTime = millis();
-  while(!_isSolarPowerArrivedFlag)
-  {
-    if(millis() - lastTime >= 9000)
-    {
-      return -1;
-    }
-  }
-  _isSolarPowerArrivedFlag = 0;
+  // while(!_isSolarPowerArrivedFlag)
+  // {
+  //   if(millis() - lastTime >= 9000)
+  //   {
+  //     return -1;
+  //   }
+  // }
+  _isSolarPowerArrivedFlag = false;
   return _totalSolarPower;
 }
 

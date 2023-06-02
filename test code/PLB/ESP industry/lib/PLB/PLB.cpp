@@ -44,10 +44,6 @@ PLBStates PLB::handleIdleState(PLBEvents ev)
         break;
     case PLBEvents::EV_Supply:
         Serial.print("handleIdleState: EV_Supply -> "); Serial.println(_supplyRequestStationIdEvents.front());
-        // Serial.print("_stations.at(0) -> ");Serial.println(_stations.at(0)->getId());
-        // Serial.print("_stations.at(1) -> ");Serial.println(_stations.at(1)->getId());
-        // Serial.print("_stations.at(2) -> ");Serial.println(_stations.at(2)->getId());
-        // Serial.print("_stations.at(3) -> ");Serial.println(_stations.at(3)->getId());
         if (_directorIds.size() == 0) _state = PLBStates::ST_NoDir;
         _supplyPowerToStation(_stations.at(_supplyRequestStationIdEvents.front()));
         _supplyRequestStationIdEvents.pop();
@@ -68,6 +64,7 @@ PLBStates PLB::handleNoDirState(PLBEvents ev)
     {
     case PLBEvents::EV_Timeout:
         Serial.println("handleNoDirState: EV_Timeout");
+        Serial.print("_building->calculateSolarPower() = "); Serial.println(solarPower);
         solarPower = _building->calculateSolarPower();
         _distributePower(solarPower);
         break;
@@ -101,6 +98,7 @@ PLBStates PLB::handleDir1State(PLBEvents ev)
     {
     case PLBEvents::EV_Timeout:
         solarPower = _building->calculateSolarPower();
+        Serial.print("_building->calculateSolarPower() = "); Serial.println(solarPower);
         _distributePower(solarPower);
         break;
     case PLBEvents::EV_Supply:
@@ -132,6 +130,7 @@ PLBStates PLB::handleDir2State(PLBEvents ev)
     {
     case PLBEvents::EV_Timeout:
         solarPower = _building->calculateSolarPower();
+        Serial.print("_building->calculateSolarPower() = "); Serial.println(solarPower);
         _distributePower(solarPower);
         break;
     case PLBEvents::EV_Supply:
@@ -161,6 +160,7 @@ PLBStates PLB::handleDir3OnlyState(PLBEvents ev)
     {
     case PLBEvents::EV_Timeout:
         solarPower = _building->calculateSolarPower();
+        Serial.print("_building->calculateSolarPower() = "); Serial.println(solarPower);
         _distributePower(solarPower);
         break;
     case PLBEvents::EV_Supply:
@@ -191,6 +191,7 @@ PLBStates PLB::handleDir3State(PLBEvents ev)
     {
     case PLBEvents::EV_Timeout:
         solarPower = _building->calculateSolarPower();
+        Serial.print("_building->calculateSolarPower() = "); Serial.println(solarPower);
         _distributePower(solarPower);
     case PLBEvents::EV_Stop:
         _state = _stopSupply(_stations.at(_stopStationIdEvents.front())) ? PLBStates::ST_Dir2 : PLBStates::ST_Dir3Only;

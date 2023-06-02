@@ -47,10 +47,11 @@ void OfficeBuilding::handleEvent(BuildingEvents ev)
 {
     switch (ev)
     {
-    case BuildingEvents::EV_RequestSolarPower: 
-        double solarPower = calculateSolarPower();
+    case BuildingEvents::EV_SendSolarPower: 
+        sendSolarPower(calculateSolarPower());
+        break;
+    case BuildingEvents::EV_ChargeBuilding:
         _display->display(static_cast<String>(_plb->getPower()));
-        sendSolarPower(solarPower);
         break;
     }
 }

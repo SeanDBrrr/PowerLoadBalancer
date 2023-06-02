@@ -112,14 +112,14 @@ void MQTTClientPLB::stopSupplyToStation(int id)
     send(mqtt_topic_stopSupply, static_cast<String>(id));
 }
 
-float MQTTClientPLB::getPowerReceived()
-{
-    return _powerReceived;
-}
-
 Event MQTTClientPLB::getEvent()
 {
   return _event;
+}
+
+float MQTTClientPLB::getPowerReceived()
+{
+  return _powerReceived;
 }
 
 // DirectorState MQTTClientPLB::waitingForPlb(int waitingTime)

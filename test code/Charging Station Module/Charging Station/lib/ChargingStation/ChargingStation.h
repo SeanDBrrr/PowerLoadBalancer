@@ -16,9 +16,11 @@ class ChargingStation
 private:
     uint32_t _directorId;
     int _id;
+    float _powerRecieved;
     bool _isStartedFlag;
     bool _isPluggedFlag;
     bool _isRfidAvailable;
+    bool _isCharging;
     Event _currentEvent;
     State _currentState;
 

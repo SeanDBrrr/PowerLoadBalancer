@@ -174,7 +174,6 @@ State ChargingStation::HandleWaitingForPowerState(Event ev)
     switch (ev)
     {
     case Event::EV_CHARGING:
-        _IDisplay->display("CHARGING");
         result = State::STATE_CHARGING;
         break;
     case Event::EV_STOP:
@@ -357,6 +356,16 @@ void ChargingStation::loop()
         //_currentEvent = Event::EV_RFID_DIRECTOR_DETECTED;
     }
 
+    static float lastPower = 0; 
+    _powerRecieved = _IPLB->getPowerReceived();
+    if (_powerRecieved != lastPower)
+    {
+        _IDisplay->display(static_cast<String>(_powerRecieved));
+        lastPower = _powerRecieved;
+        _currentEvent = Event::EV_CHARGING;
+    }
+    
+
     try
     {
         HandleEvent(_currentEvent);
@@ -376,6 +385,7 @@ ChargingStation::ChargingStation(
     IPLB *PLB)
     : _directorId(0),
       _id(id),
+      _powerRecieved(0),
       _isStartedFlag(0),
       _isPluggedFlag(0),
       _isRfidAvailable(0),

@@ -51,6 +51,7 @@ public:
     void onConnectionSubscribe();
     DirectorState waitingForPlb(int waitingTime);
     DirectorState directorTimeout (int waitingTime);
+    
     Event getEvent();
     ~MQTTClientPLB() = default;
 };

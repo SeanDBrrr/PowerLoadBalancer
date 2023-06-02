@@ -1,7 +1,7 @@
 #pragma once
 
 enum class PLBEvents {
-    noEvent = 0, 
+    noEvent, 
     EV_Timeout, 
     EV_Supply,
     EV_Stop, 
@@ -9,7 +9,7 @@ enum class PLBEvents {
 };
 
 enum class PLBStates {
-    ST_Idle = 1, 
+    ST_Idle, 
     ST_NoDir, 
     ST_Dir1, 
     ST_Dir2, 
@@ -19,6 +19,6 @@ enum class PLBStates {
 };
 
 enum class PLBModes {
-    MO_Auto = 1, 
+    MO_Auto, 
     MO_Manual
 };

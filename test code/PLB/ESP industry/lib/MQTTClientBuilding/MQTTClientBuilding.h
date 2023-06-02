@@ -40,6 +40,7 @@ public:
 
     float calculateSolarPower();
     void charge(float power);
+    float getCurrentSolarPower();
 };
 
 #endif

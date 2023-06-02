@@ -7,6 +7,7 @@ public:
     virtual ~IBuilding() = default;
     virtual float calculateSolarPower() = 0;
     virtual void charge(float power) = 0;
+    virtual float getCurrentSolarPower() = 0;
 };
 
 

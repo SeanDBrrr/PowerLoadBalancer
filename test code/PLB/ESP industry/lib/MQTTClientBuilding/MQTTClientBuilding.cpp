@@ -35,13 +35,13 @@ float MQTTClientBuilding::calculateSolarPower()
 {
   send(mqtt_topic_calculateSolarPower, "Calculate Solar Power");
   long lastTime = millis();
-  // while(!_isSolarPowerArrivedFlag)
-  // {
-  //   if(millis() - lastTime >= 9000)
-  //   {
-  //     return -1;
-  //   }
-  // }
+  while(!_isSolarPowerArrivedFlag)
+  {
+    if(millis() - lastTime >= 1000)
+    {
+      return 0;
+    }
+  }
   _isSolarPowerArrivedFlag = false;
   return _totalSolarPower;
 }
@@ -49,4 +49,9 @@ float MQTTClientBuilding::calculateSolarPower()
 void MQTTClientBuilding::charge(float power)
 {
   send(mqtt_topic_charge_building, (String)power);
+}
+
+float MQTTClientBuilding::getCurrentSolarPower()
+{
+  return _totalSolarPower;
 }

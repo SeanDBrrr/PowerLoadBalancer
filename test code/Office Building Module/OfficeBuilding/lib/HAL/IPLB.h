@@ -4,7 +4,8 @@
 #include <string.h>
 
 enum class BuildingEvents {NoEvent,
-                          EV_RequestSolarPower};
+                          EV_SendSolarPower,
+                          EV_ChargeBuilding};
 
 class IPLB
 {

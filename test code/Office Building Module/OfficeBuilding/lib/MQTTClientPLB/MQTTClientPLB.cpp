@@ -1,6 +1,6 @@
 #include "MQTTClientPLB.h"
 
-MQTTClientPLB::MQTTClientPLB() : _isBeingCharged{false}, _solarPowerRequested{false} {}
+MQTTClientPLB::MQTTClientPLB() : _isStartedCharging{false}, _solarPowerRequested{false} {}
 
 EspMQTTClient& 
 MQTTClientPLB::getClient() 
@@ -21,7 +21,13 @@ MQTTClientPLB::receive()
     if (_solarPowerRequested)
     {
         _solarPowerRequested = false;
-        return BuildingEvents::EV_RequestSolarPower;
+        return BuildingEvents::EV_SendSolarPower;
+    }
+
+    if (_isStartedCharging)
+    {
+        _isStartedCharging = false;
+        return BuildingEvents::EV_ChargeBuilding;
     }
     return BuildingEvents::NoEvent;
 }
@@ -33,7 +39,11 @@ MQTTClientPLB::onConnectionSubscribe()
     {
         _solarPowerRequested = true;
         _powerFromPLB = payload.toDouble();
-        Serial.println("PowerPLB: " + static_cast<String>(payload.toFloat()));
+    });
+    _client.subscribe(mqtt_topic_charge_building, [this](const String &topic, const String &payload)
+    {
+        _isStartedCharging = true;
+        _powerFromPLB = payload.toDouble();
     });
 }
 

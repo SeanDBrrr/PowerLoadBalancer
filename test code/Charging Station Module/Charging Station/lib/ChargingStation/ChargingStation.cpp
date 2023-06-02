@@ -353,7 +353,7 @@ void ChargingStation::loop()
     {
         //_IDisplay->display(static_cast<String>(_directorId));
         _IPLB->checkDirector(_directorId);
-        _IPLB->directorTimeout(5000);
+        //_IPLB->directorTimeout(5000);
         //_currentEvent = Event::EV_RFID_DIRECTOR_DETECTED;
     }
 
@@ -378,7 +378,7 @@ ChargingStation::ChargingStation(
       _id(id),
       _isStartedFlag(0),
       _isPluggedFlag(0),
-      _busy(0),
+      _isRfidAvailable(0),
       _currentEvent(Event::noEvent),
       _currentState(State::STATE_IDLE),
       _IPLB(PLB),

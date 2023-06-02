@@ -18,7 +18,7 @@ private:
     int _id;
     bool _isStartedFlag;
     bool _isPluggedFlag;
-    bool _busy;
+    bool _isRfidAvailable;
     Event _currentEvent;
     State _currentState;
 

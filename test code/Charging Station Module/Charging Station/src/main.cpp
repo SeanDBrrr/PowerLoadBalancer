@@ -9,6 +9,8 @@
 #include "DirectorScanner.h"
 #include "StationScreen.h"
 
+
+int stationId = 2;
 DirectorScanner *director;
 StationScreen *lcd;
 StartButton* startButton;
@@ -28,10 +30,10 @@ void setup()
   director = new DirectorScanner(SS_PIN, RST_PIN);
   startButton = new StartButton();
   plugButton = new PlugButton();
-  mqttPLB = new MQTTClientPLB(4);
+  mqttPLB = new MQTTClientPLB(stationId);
   mqttPLB->getClient().enableDebuggingMessages();
   chargingStation = new ChargingStation(
-    1,
+    stationId,
     startButton,
     plugButton,
     director,

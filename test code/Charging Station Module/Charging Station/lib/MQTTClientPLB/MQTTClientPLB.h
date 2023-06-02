@@ -23,7 +23,7 @@ private:
     String name = "S21 FE J";
     String password = "yo koaster";
     String mqtt_module = "Group4-Charger" + static_cast<String>(_id);
-    String broker_ip = "192.168.137.132";
+    String broker_ip = "192.168.206.132";
     String mqtt_topic_requestPower = "group4/requestPowerSupply" + static_cast<String>(_id);
     String mqtt_topic_stopSupply = "group4/stopPowerSupply" + static_cast<String>(_id);
     String mqtt_topic_receivePower = "group4/chargeStation" + static_cast<String>(_id);

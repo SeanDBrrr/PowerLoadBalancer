@@ -1,0 +1,32 @@
+design timeline evolution:
+
+- several mqttClientStation instances with separate events:
+	-> 1 set of unique topics per instance (lot of topics in the end)
+	-> call plb->handleEvents function as many times as the number of instances per loop
+
+- several mqttClientStation instances with shared events:
+	-> 1 set of unique topics per instance (lot of topics in the end) but distinguishable from one another 
+	-> call plb->handleEvents function one time per loop
+	-> vector to store events and queues for storing stations ID related to events (static variables)
+	-> removed flags in MQTTClientStation and process directly inside the subscribe() function
+	-> handleState functions much simpler + needs to pop() after an event was handled
+	-> use std::move() to transfer ownership
+	-> loop() function modified (expects a vector of PLBEvents) + vector cleared once the loop was iterated through.
+	-> more expandable (new station does not involve new PLBEvents) but probably needs to think of a new state design
+
+- one big mqttClientStation instance:
+	-> only 3 different topics
+	-> call plb->handleEvents function one time per loop
+	-> easy to deal with directorId (int)
+
+
+miscellaneous:
+	-> include namespaces?
+	-> don't supply building when disconnected and plb should charge a station to 0 when it is disconnected (show it on the dashboard)
+	-> reponse based disconnection error
+	-> the station must know if it is being supplied and therefore read RFID
+	-> think about edge cases
+	-> plb should only charge stations again if solarPower changed
+	-> delay in the communication between plb and building
+	
+

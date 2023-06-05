@@ -12,7 +12,6 @@ State ChargingStation::HandleIdleState(Event ev)
         result = State::STATE_PLUGGED;
         break;
     case Event::EV_RFID_DIRECTOR_DETECTED:
-        _IDisplay->display("idl VERIFYING DIR"); // should display director status
         result = State::STATE_VERIFYING_DIRECTOR;
         break;
     case Event::EV_ERROR:
@@ -30,9 +29,6 @@ State ChargingStation::HandleIdleState(Event ev)
 State ChargingStation::HandleVerifyingDirectorState(Event ev)
 {
     State result = State::STATE_VERIFYING_DIRECTOR;
-    Serial.println("call dir timeout");
-    _IPLB->directorTimeout(3000);
-    Serial.println("AFTER call dir timeout");
 
     switch (ev)
     {
@@ -122,7 +118,6 @@ State ChargingStation::HandlePluggedState(Event ev)
         result = State::STATE_IDLE;
         break;
     case Event::EV_RFID_DIRECTOR_DETECTED:
-        _IDisplay->display("plg VERIFYING DIR");
         result = State::STATE_VERIFYING_DIRECTOR;
         break;
     case Event::EV_START:
@@ -281,7 +276,7 @@ void ChargingStation::HandleMainEvent(Event ev) // Technically might not be need
     }
 }
 
-void ChargingStation::HandleEvent(Event ev)// can technically just call private variable _currentEvent, avoided for now in fear of issues.
+void ChargingStation::HandleEvent(Event ev) // can technically just call private variable _currentEvent, avoided for now in fear of issues.
 {
     switch (_currentState)
     {
@@ -320,8 +315,8 @@ void ChargingStation::HandleEvent(Event ev)// can technically just call private 
 
 void ChargingStation::loop(Event ev)
 {
-    _currentEvent = ev;// needed for the events recieved from the PLB
-    
+    _currentEvent = ev; // needed for the events recieved from the PLB
+
     if (!_isStartedFlag)
     {
         if (_IStart->isStarted())
@@ -359,12 +354,15 @@ void ChargingStation::loop(Event ev)
     _directorId = _IDirector->getID();
     if (_directorId != 0)
     {
-        //_IDisplay->display(static_cast<String>(_directorId));
         _IPLB->checkDirector(_directorId);
+        _IDisplay->display("idl VERIFYING DIR");
+        Serial.println("call dir timeout");
+        _IPLB->directorTimeout(3000);
+        Serial.println("AFTER call dir timeout");
         _currentEvent = Event::EV_RFID_DIRECTOR_DETECTED;
     }
 
-    static float lastPower = 0; 
+    static float lastPower = 0;
     _powerRecieved = _IPLB->getPowerReceived();
     if (_powerRecieved != lastPower)
     {
@@ -372,7 +370,7 @@ void ChargingStation::loop(Event ev)
         lastPower = _powerRecieved;
         _currentEvent = Event::EV_CHARGING;
     }
-    
+
     try
     {
         HandleEvent(_currentEvent);

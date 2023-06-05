@@ -24,12 +24,20 @@ Miscellaneous:
 	-> include namespaces?
 	-> don't supply building when disconnected and plb should charge a station to 0 when it is disconnected (show it on the dashboard)
 	-> reponse error based disconnection
-	-> the station must know if it is being supplied and therefore read RFID
-	-> think about edge cases
+	-> the station must know if it is being supplied and therefore read RFID (isCharging needs impelemented to make sure that the RFID is not read when being charged + display)
+	-> think about edge cases: plb disconnects, station disconnects, network off, what happens when we change the PLB mode?, 
 	-> plb should only charge stations again if solarPower changed
 	-> delay in the communication between plb and building
 	-> why every object is allocated on the heap?
+	-> when station goes off (hardware limitation)
+	-> keeps sending supply request so long as a station do not receive power from PLB
 
 Code Changes:
-	-> new _prevSolarPower variable
+	-> new _prevSolarPower variable & prevBusyStations
 
+Manual mode:
+	-> the maintainer should be able to control the stations state from the dashboard
+	-> when he presses one of the mode:
+		-> Dynamic: all stations go to dynamic mode (
+		-> Director:
+		-> FCFS:

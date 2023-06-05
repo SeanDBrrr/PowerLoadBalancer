@@ -29,6 +29,7 @@ private:
     String mqtt_topic_receivePower = "group4/chargeStation" + static_cast<String>(_id);
     String mqtt_topic_directorId = "group4/directorId" + static_cast<String>(_id);
     String mqtt_topic_directorResponse = "group4/directorResponse" + static_cast<String>(_id);
+    String mqtt_topic_stationHeartbeat = "group4/stationHeartbeat" + static_cast<String>(_id);
     String mqtt_topic_mode = "group4/stationMode";
     short port = 1883;
     EspMQTTClient _client = EspMQTTClient(
@@ -49,8 +50,7 @@ public:
     void send(String topic, String message);
     void receive();
     void onConnectionSubscribe();
-    DirectorState waitingForPlb(int waitingTime);
-    DirectorState directorTimeout (int waitingTime);
+    void directorTimeout (int waitingTime);
     
     Event getEvent();
     ~MQTTClientPLB() = default;

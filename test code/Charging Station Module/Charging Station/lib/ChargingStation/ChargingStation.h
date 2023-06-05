@@ -41,7 +41,7 @@ public:
 
     ~ChargingStation();
 
-    void loop();
+    void loop(Event ev);
     void HandleMainEvent(Event ev);
     State HandleMainWorkingState(Event ev);
     State HandleMainErrorState(Event ev);

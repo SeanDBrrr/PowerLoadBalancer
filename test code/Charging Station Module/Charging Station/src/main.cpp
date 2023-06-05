@@ -10,7 +10,7 @@
 #include "StationScreen.h"
 
 
-int stationId = 0;
+int stationId = 2;
 DirectorScanner *director;
 StationScreen *lcd;
 StartButton* startButton;
@@ -43,7 +43,7 @@ void setup()
 }
 
 void loop() {
-  chargingStation->loop();
+  
+  chargingStation->loop(mqttPLB->getEvent());
   mqttPLB->receive();
-  chargingStation->HandleEvent(mqttPLB->getEvent());
 }

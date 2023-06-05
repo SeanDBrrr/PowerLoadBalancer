@@ -30,6 +30,9 @@ State ChargingStation::HandleIdleState(Event ev)
 State ChargingStation::HandleVerifyingDirectorState(Event ev)
 {
     State result = State::STATE_VERIFYING_DIRECTOR;
+    Serial.println("call dir timeout");
+    _IPLB->directorTimeout(3000);
+    Serial.println("AFTER call dir timeout");
 
     switch (ev)
     {
@@ -58,13 +61,17 @@ State ChargingStation::HandleVerifyingDirectorState(Event ev)
         }
         break;
     case Event::EV_RFID_TIMED_OUT:
+        Serial.println("IN EV TIMED OUT");
+        Serial.println(_isPluggedFlag);
         if (_isPluggedFlag)
         {
+            Serial.println("TIMED OUT PLUGGED");
             _IDisplay->display("timed out PLUGGED");
             result = State::STATE_PLUGGED;
         }
         else if (!_isPluggedFlag)
         {
+            Serial.println("TIMED OUT IDLE");
             _IDisplay->display("timed out IDLE");
             result = State::STATE_IDLE;
         }
@@ -274,7 +281,7 @@ void ChargingStation::HandleMainEvent(Event ev) // Technically might not be need
     }
 }
 
-void ChargingStation::HandleEvent(Event ev)
+void ChargingStation::HandleEvent(Event ev)// can technically just call private variable _currentEvent, avoided for now in fear of issues.
 {
     switch (_currentState)
     {
@@ -311,8 +318,10 @@ void ChargingStation::HandleEvent(Event ev)
     }
 }
 
-void ChargingStation::loop()
+void ChargingStation::loop(Event ev)
 {
+    _currentEvent = ev;// needed for the events recieved from the PLB
+    
     if (!_isStartedFlag)
     {
         if (_IStart->isStarted())
@@ -352,8 +361,7 @@ void ChargingStation::loop()
     {
         //_IDisplay->display(static_cast<String>(_directorId));
         _IPLB->checkDirector(_directorId);
-        //_IPLB->directorTimeout(5000);
-        //_currentEvent = Event::EV_RFID_DIRECTOR_DETECTED;
+        _currentEvent = Event::EV_RFID_DIRECTOR_DETECTED;
     }
 
     static float lastPower = 0; 
@@ -365,7 +373,6 @@ void ChargingStation::loop()
         _currentEvent = Event::EV_CHARGING;
     }
     
-
     try
     {
         HandleEvent(_currentEvent);

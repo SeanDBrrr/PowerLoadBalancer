@@ -10,5 +10,5 @@ public:
     virtual void supplyPowerToStation(int id) = 0;
     virtual void stopSupplyToStation(int id) = 0;
     virtual void checkDirector(uint32_t id) = 0;
-    //virtual DirectorState directorTimeout (int waitingTime) = 0;
+    virtual void directorTimeout(int waitingTime) = 0;
 };

@@ -38,6 +38,7 @@ enum class State
 
 enum class DirectorState
 {
+    noState,
     VALID,
     INVALID,
     ALREADY_CHECKED_IN,

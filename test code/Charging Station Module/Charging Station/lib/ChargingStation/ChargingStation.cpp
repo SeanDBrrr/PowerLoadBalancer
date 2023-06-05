@@ -12,6 +12,7 @@ State ChargingStation::HandleIdleState(Event ev)
         result = State::STATE_PLUGGED;
         break;
     case Event::EV_RFID_DIRECTOR_DETECTED:
+        _isRfidAvailable = false;
         result = State::STATE_VERIFYING_DIRECTOR;
         break;
     case Event::EV_ERROR:
@@ -45,6 +46,7 @@ State ChargingStation::HandleVerifyingDirectorState(Event ev)
         }
         break;
     case Event::EV_RFID_INVALID:
+        _isRfidAvailable = true;
         if (_isPluggedFlag)
         {
             _IDisplay->display("inval PLUGGED");
@@ -57,6 +59,7 @@ State ChargingStation::HandleVerifyingDirectorState(Event ev)
         }
         break;
     case Event::EV_RFID_TIMED_OUT:
+        _isRfidAvailable = true;
         Serial.println("IN EV TIMED OUT");
         Serial.println(_isPluggedFlag);
         if (_isPluggedFlag)
@@ -118,10 +121,11 @@ State ChargingStation::HandlePluggedState(Event ev)
         result = State::STATE_IDLE;
         break;
     case Event::EV_RFID_DIRECTOR_DETECTED:
+        _isRfidAvailable = false;
         result = State::STATE_VERIFYING_DIRECTOR;
         break;
     case Event::EV_START:
-        _isBusy = true;
+        //_isBusy = true;
         _IPLB->supplyPowerToStation(_id);
         _IDisplay->display("plg WAITING POWER");
         result = State::STATE_WAITING_FOR_POWER;
@@ -154,7 +158,7 @@ State ChargingStation::HandlePluggedDirectorState(Event ev)
         result = State::STATE_PLUGGED;
         break;
     case Event::EV_START:
-        _isBusy = true;
+        //_isBusy = true;
         _IPLB->supplyPowerToStation(_id);
         _IDisplay->display("plgDir WAITING POWER");
         result = State::STATE_WAITING_FOR_POWER;
@@ -206,7 +210,7 @@ State ChargingStation::HandleChargingState(Event ev)
     switch (ev)
     {
     case Event::EV_STOP:
-        _isBusy = false;
+        //_isBusy = false;
         _IPLB->stopSupplyToStation(_id);
         _IDisplay->display("STOPED CHARGING");
         result = State::STATE_STOPPED_CHARGING;
@@ -244,7 +248,7 @@ State ChargingStation::HandleStoppedChargingState(Event ev)
         result = State::STATE_WAITING_FOR_POWER;
         break;
     case Event::EV_UNPLUGGED:
-        _isBusy = false;
+        _isRfidAvailable = true;
         _IDisplay->display("unplugged IDLE");
         result = State::STATE_IDLE;
         break;
@@ -357,7 +361,7 @@ void ChargingStation::loop(Event ev)
         }
     }
 
-    if (!_isBusy)
+    if (_isRfidAvailable)
     {
         _directorId = _IDirector->getID();
     }
@@ -365,7 +369,7 @@ void ChargingStation::loop(Event ev)
     if (_directorId != 0)
     {
         _IPLB->checkDirector(_directorId);
-        _IDisplay->display("idl VERIFYING DIR");
+        _IDisplay->display("VERIFYING DIR");
         Serial.println("call dir timeout");
         _IPLB->directorTimeout(3000);
         Serial.println("AFTER call dir timeout");
@@ -403,7 +407,7 @@ ChargingStation::ChargingStation(
       _powerRecieved(0),
       _isStartedFlag(0),
       _isPluggedFlag(0),
-      _isRfidAvailable(0),
+      _isRfidAvailable(1),
       _isBusy(false),
       _currentEvent(Event::noEvent),
       _currentState(State::STATE_IDLE),

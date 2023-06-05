@@ -5,7 +5,9 @@ enum class PLBEvents {
     EV_Timeout, 
     EV_Supply,
     EV_Stop, 
-    EV_Director
+    EV_Director,
+    EV_Disconnected,
+    EV_Connected
 };
 
 enum class PLBStates {

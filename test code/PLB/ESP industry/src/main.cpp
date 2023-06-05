@@ -45,7 +45,8 @@ void loop() {
   /* Pass all events to the PLB */
   plb->setEvents(MQTTClientStation::supplyRequestEvents,
                  MQTTClientStation::stopSupplyEvents,
-                 MQTTClientStation::directorEvents);
+                 MQTTClientStation::directorEvents,
+                 MQTTClientStation::connectionEvents);
                 
   /* PLB handles events */
   plb->loop(MQTTClientStation::events);

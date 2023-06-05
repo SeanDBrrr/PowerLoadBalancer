@@ -27,6 +27,8 @@ public:
     static std::queue<int> stopSupplyEvents;
     /* Stores stations ID where a director swiped his card (the corresponding ID is already stored in _directorId) */
     static std::queue<int> directorEvents;
+    /* Stores connection related events like disconnect or connect */
+    static std::queue<int> connectionEvents;
     /* Stores all PLBEvents that occured over loop */
     static std::vector<PLBEvents> events;
 
@@ -35,6 +37,7 @@ public:
     void send(String topic, String message);
     void receive();
     void onConnectionSubscribe();
+    void checkConnection(int disconnectionTimeout);
 
     /* Events Getters */
     std::vector<PLBEvents>& getEvents();
@@ -52,7 +55,11 @@ public:
 private:
     uint32_t _directorId;
     int _stationId;
+    unsigned long _lastHeartbeat = 0;
+    bool _stationConnected = true;
+    bool _stationConnectedLast = true;
     void _setStationTopics();
+    void notifyDashboard(String message);
 
     String mqtt_topic_mode = "group4/stationMode";
     String mqtt_topic_StationId = "group4/StationId";
@@ -61,6 +68,8 @@ private:
     String mqtt_topic_stopSupply = "group4/stopPowerSupply";
     String mqtt_topic_charge_station = "group4/chargeStation";
     String mqtt_topic_directorValidate = "group4/directorResponse";
+    String mqtt_topic_stationHeartbeat = "group4/stationHeartbeat";
+    String mqtt_topic_notifyDashboard = "group4/notifyDashboard";
     String name = "S21 FE J";
     String password = "yo koaster";
     String mqtt_module = "Group4-PLB-Station";

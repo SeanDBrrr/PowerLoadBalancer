@@ -2,7 +2,7 @@
 
 MQTTClientBuilding::MQTTClientBuilding() : _isSolarPowerArrivedFlag(false), _totalSolarPower(0)
 {
-  Serial.println("OBJECT CREATED: BUILDING");
+  
 }
 
 MQTTClientBuilding::~MQTTClientBuilding() {}

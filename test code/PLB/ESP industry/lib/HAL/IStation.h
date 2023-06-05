@@ -2,6 +2,7 @@
 #define _IStation_HPP
 
 #include "stdint.h"
+#include <Arduino.h>
 
 enum class StationModes {
     MO_Dynamic = 1,
@@ -25,6 +26,7 @@ public:
     virtual void validateDirector(DirectorState directorState) = 0;
     virtual void charge(float power) = 0;
     virtual void switchMode(StationModes mode) = 0;
+    virtual void notifyDashboard(String message) = 0;
 };
 
 #endif

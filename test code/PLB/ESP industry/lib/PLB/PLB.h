@@ -22,13 +22,14 @@ private:
     std::queue<int> _supplyRequestStationIdEvents;
     std::queue<int> _stopStationIdEvents;
     std::queue<int> _directorEvents;
+    std::queue<int> _connectionEvents;
 
     IBuilding *_building;
     std::vector<IStation *> _stations;
     std::vector<int> _directorStations;
     std::vector<int> _userStations;
     std::vector<uint32_t> _directorIds;
-    std::vector<uint32_t> _validDirectorIds = {2267176004, 432104642, 1518206872, 40, 50}; //maybe make this and directorIds uint32_t? It implies other changes so be careful
+    std::vector<uint32_t> _validDirectorIds = {2267176004, 432104642, 1518206872, 40, 50};
     float _prevSolarPower;
 
     /* PLB Private Functions */
@@ -50,7 +51,7 @@ public:
     /* PLB Public Functions */
     void addStation(IStation* station);
     int checkDirector(IStation* station);
-    void setEvents(std::queue<int>& supply, std::queue<int>& stop, std::queue<int>& directors);
+    void setEvents(std::queue<int>& supply, std::queue<int>& stop, std::queue<int>& directors, std::queue<int>& connection);
     bool isTimeout();
     void loop(std::vector<PLBEvents>& events);
 

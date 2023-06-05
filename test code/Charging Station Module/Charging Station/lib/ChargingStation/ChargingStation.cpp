@@ -121,6 +121,7 @@ State ChargingStation::HandlePluggedState(Event ev)
         result = State::STATE_VERIFYING_DIRECTOR;
         break;
     case Event::EV_START:
+        _isBusy = true;
         _IPLB->supplyPowerToStation(_id);
         _IDisplay->display("plg WAITING POWER");
         result = State::STATE_WAITING_FOR_POWER;
@@ -153,6 +154,7 @@ State ChargingStation::HandlePluggedDirectorState(Event ev)
         result = State::STATE_PLUGGED;
         break;
     case Event::EV_START:
+        _isBusy = true;
         _IPLB->supplyPowerToStation(_id);
         _IDisplay->display("plgDir WAITING POWER");
         result = State::STATE_WAITING_FOR_POWER;
@@ -176,9 +178,11 @@ State ChargingStation::HandleWaitingForPowerState(Event ev)
     switch (ev)
     {
     case Event::EV_CHARGING:
+        //_isBusy = true;
         result = State::STATE_CHARGING;
         break;
     case Event::EV_STOP:
+        //_isBusy = true;
         _IPLB->stopSupplyToStation(_id);
         _IDisplay->display("STOPED CHARGING");
         result = State::STATE_STOPPED_CHARGING;
@@ -202,6 +206,7 @@ State ChargingStation::HandleChargingState(Event ev)
     switch (ev)
     {
     case Event::EV_STOP:
+        _isBusy = false;
         _IPLB->stopSupplyToStation(_id);
         _IDisplay->display("STOPED CHARGING");
         result = State::STATE_STOPPED_CHARGING;
@@ -239,6 +244,7 @@ State ChargingStation::HandleStoppedChargingState(Event ev)
         result = State::STATE_WAITING_FOR_POWER;
         break;
     case Event::EV_UNPLUGGED:
+        _isBusy = false;
         _IDisplay->display("unplugged IDLE");
         result = State::STATE_IDLE;
         break;
@@ -351,7 +357,11 @@ void ChargingStation::loop(Event ev)
         }
     }
 
-    _directorId = _IDirector->getID();
+    if (!_isBusy)
+    {
+        _directorId = _IDirector->getID();
+    }
+
     if (_directorId != 0)
     {
         _IPLB->checkDirector(_directorId);
@@ -394,6 +404,7 @@ ChargingStation::ChargingStation(
       _isStartedFlag(0),
       _isPluggedFlag(0),
       _isRfidAvailable(0),
+      _isBusy(false),
       _currentEvent(Event::noEvent),
       _currentState(State::STATE_IDLE),
       _IPLB(PLB),

@@ -20,7 +20,7 @@ private:
     bool _isStartedFlag;
     bool _isPluggedFlag;
     bool _isRfidAvailable;
-    bool _isCharging;
+    bool _isBusy;
     Event _currentEvent;
     State _currentState;
 

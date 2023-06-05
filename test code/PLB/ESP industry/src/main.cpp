@@ -36,7 +36,7 @@ void setup() {
 
 void loop() {
   /* Check for any events */
-
+  mqttBuilding->receive();
   mqttStation0->receive();
   mqttStation1->receive();
   mqttStation2->receive();
@@ -49,5 +49,4 @@ void loop() {
                 
   /* PLB handles events */
   plb->loop(MQTTClientStation::events);
-  mqttBuilding->receive();
 }

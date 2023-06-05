@@ -1,4 +1,4 @@
-design timeline evolution:
+Design timeline evolution:
 
 - several mqttClientStation instances with separate events:
 	-> 1 set of unique topics per instance (lot of topics in the end)
@@ -20,13 +20,16 @@ design timeline evolution:
 	-> easy to deal with directorId (int)
 
 
-miscellaneous:
+Miscellaneous:
 	-> include namespaces?
 	-> don't supply building when disconnected and plb should charge a station to 0 when it is disconnected (show it on the dashboard)
-	-> reponse based disconnection error
+	-> reponse error based disconnection
 	-> the station must know if it is being supplied and therefore read RFID
 	-> think about edge cases
 	-> plb should only charge stations again if solarPower changed
 	-> delay in the communication between plb and building
-	
+	-> why every object is allocated on the heap?
+
+Code Changes:
+	-> new _prevSolarPower variable
 

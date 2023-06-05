@@ -35,7 +35,6 @@ float MQTTClientBuilding::calculateSolarPower()
 {
   send(mqtt_topic_calculateSolarPower, "Calculate Solar Power");
   long lastTime = millis();
-  Serial.print("_isSolarPowerArrivedFlag = "); Serial.println(_isSolarPowerArrivedFlag);
   while(!_isSolarPowerArrivedFlag)
   {
     if(millis() - lastTime >= 1000)
@@ -43,7 +42,6 @@ float MQTTClientBuilding::calculateSolarPower()
       return 0;
     }
   }
-  Serial.print("_isSolarPowerArrivedFlag = "); Serial.println(_isSolarPowerArrivedFlag);
   _isSolarPowerArrivedFlag = false;
   return _totalSolarPower;
 }

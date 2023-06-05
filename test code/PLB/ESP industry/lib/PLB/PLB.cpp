@@ -7,10 +7,11 @@ PLB::PLB(
     IStation *station3,
     IStation *station4
     )
-    : _state(PLBStates::ST_Idle),
+    : busyStations(0),
+      _state(PLBStates::ST_Idle),
       _mode(PLBModes::MO_Auto),
       _building(building),
-      busyStations(0)
+      _prevSolarPower(0)
 {
     _stations.emplace_back(station1);
     _stations.emplace_back(station2);
@@ -26,9 +27,9 @@ void PLB::addStation(IStation *station)
 void PLB::setEvents(std::queue<int>& supplyEvents, std::queue<int>& stopEvents, std::queue<int>& directorEvents)
 {
     /* using std::move() avoids unnecessary copy by tranfersing the ownership of these containers to the PLB */
-    _supplyRequestStationIdEvents = std::move(supplyEvents);
-    _stopStationIdEvents = std::move(stopEvents);
-    _directorEvents = std::move(directorEvents);
+    if (supplyEvents.size()>0) _supplyRequestStationIdEvents = std::move(supplyEvents);
+    if (stopEvents.size()>0) _stopStationIdEvents = std::move(stopEvents);
+    if (directorEvents.size()>0) _directorEvents = std::move(directorEvents);
 }
 
 PLBStates PLB::handleIdleState(PLBEvents ev)
@@ -83,8 +84,7 @@ PLBStates PLB::handleNoDirState(PLBEvents ev)
         _stopSupply(_stations.at(_stopStationIdEvents.front()));
         _stopStationIdEvents.pop();
         _state = (_userStations.size() == 0) ? PLBStates::ST_Idle : PLBStates::ST_NoDir;
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
+        _distributePower(_building->getCurrentSolarPower());
         break;
     }
     return _state;
@@ -115,8 +115,7 @@ PLBStates PLB::handleDir1State(PLBEvents ev)
         _stopSupply(_stations.at(_stopStationIdEvents.front()));
         _stopStationIdEvents.pop();
         _state = (_userStations.size() == 0) ? PLBStates::ST_NoDir : PLBStates::ST_Dir1;
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
+        _distributePower(_building->getCurrentSolarPower());
         break;
     }
     return _state;
@@ -145,8 +144,7 @@ PLBStates PLB::handleDir2State(PLBEvents ev)
     case PLBEvents::EV_Stop:
         _state = (_stopSupply(_stations.at(_stopStationIdEvents.front()))) ? PLBStates::ST_Dir1 : PLBStates::ST_Dir2;
         _stopStationIdEvents.pop();
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
+        _distributePower(_building->getCurrentSolarPower());
         break;
     }
     return _state;
@@ -176,8 +174,7 @@ PLBStates PLB::handleDir3OnlyState(PLBEvents ev)
         _stopSupply(_stations.at(_stopStationIdEvents.front()));
         _state = PLBStates::ST_Dir2;
         _stopStationIdEvents.pop();
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
+        _distributePower(_building->getCurrentSolarPower());
         break;
     }
     return _state;
@@ -196,8 +193,7 @@ PLBStates PLB::handleDir3State(PLBEvents ev)
     case PLBEvents::EV_Stop:
         _state = _stopSupply(_stations.at(_stopStationIdEvents.front())) ? PLBStates::ST_Dir2 : PLBStates::ST_Dir3Only;
         _stopStationIdEvents.pop();
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
+        _distributePower(_building->getCurrentSolarPower());
         break;
     }
     return _state;
@@ -216,8 +212,7 @@ PLBStates PLB::handleDir4State(PLBEvents ev)
         _stopSupply(_stations.at(_stopStationIdEvents.front()));
         _stopStationIdEvents.pop();
         _state = PLBStates::ST_Dir3Only;
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
+        _distributePower(_building->getCurrentSolarPower());
         break;
     }
     return _state;
@@ -260,7 +255,7 @@ void PLB::handleEvents(PLBEvents ev)
 void PLB::_supplyPowerToStation(IStation *station)
 {
     ++busyStations;
-    Serial.print("busyStations = ");Serial.println(busyStations);
+    Serial.print("_supplyPowerToStation: busyStations = ");Serial.println(busyStations);
     if (busyStations > _directorIds.size())
     {
         _userStations.emplace_back(station->getId());
@@ -275,83 +270,93 @@ void PLB::_supplyPowerToStation(IStation *station)
 */
 void PLB::_distributePower(float solarPower)
 {
-    _supplyPowerToBuilding(solarPower);
-    float availablePower = 20 + solarPower;
-    float directorPower=0, userPower=0, stationPower=0;
-    switch (_state)
-    {
-    case PLBStates::ST_Idle:
-        break;
-    case PLBStates::ST_NoDir:
-        userPower = availablePower / busyStations;
-        if (userPower > 11) userPower = 11;        
-        for (size_t i = 0; i < _userStations.size(); i++)
+    static int prevBusyStations = -1;
+    Serial.print("_distributePower: prevBusyStations = ");Serial.println(prevBusyStations);
+    Serial.print("_distributePower: busyStations = ");Serial.println(busyStations);
+    if (solarPower != _prevSolarPower && busyStations != prevBusyStations) {
+
+        _prevSolarPower = solarPower;
+        if (busyStations==0) { prevBusyStations = -1; }
+        else { prevBusyStations = busyStations; }
+
+        _supplyPowerToBuilding(solarPower);
+        float availablePower = 20 + solarPower;
+        float directorPower=0, userPower=0, stationPower=0;
+        switch (_state)
         {
-            Serial.print("_userStations.at(i) -> ");Serial.println(_userStations.at(i));
-            _stations.at(_userStations.at(i))->charge(userPower);
-        }
-        break;
-    case PLBStates::ST_Dir1:
-        directorPower = 11;
-        userPower = busyStations > 1 ? (availablePower - directorPower) / (busyStations - 1) : 0;
-        _stations.at(_directorStations.at(0))->charge(directorPower);
-        for (size_t i = 0; i < _userStations.size(); i++)
-        {
-            _stations.at(_userStations.at(i))->charge(userPower);
-        }
-        break;
-    case PLBStates::ST_Dir2:
-        directorPower = (availablePower >= 22) ? 11 : availablePower / 2;
-        userPower = (busyStations > 2 && availablePower > 22) ? (availablePower - directorPower) / (busyStations - 2) : 0;
-        for (size_t i = 0; i < _directorStations.size(); i++)
-        {
-            int stationId = _directorStations.at(i);
-            _stations.at(stationId)->switchMode(StationModes::MO_Director);
-            _stations.at(stationId)->charge(directorPower);
-        }
-        for (size_t i = 0; i < _userStations.size(); i++)
-        {
-            int stationId = _directorStations.at(i);
-            _stations.at(stationId)->switchMode(StationModes::MO_Dynamic);
-            _stations.at(stationId)->charge(userPower);
-        }
-        break;
-    case PLBStates::ST_Dir3:
-        stationPower = availablePower / 4;
-        for (size_t i = 0; i < _stations.size(); i++)
-        {
-            _stations.at(i)->switchMode(StationModes::MO_Dynamic);
-            _stations.at(i)->charge(stationPower);
-        }
-        break;
-    case PLBStates::ST_Dir3Only:
-        if (availablePower > 22)
-        {
+        case PLBStates::ST_Idle:
+            break;
+        case PLBStates::ST_NoDir:
+            userPower = availablePower / busyStations;
+            if (userPower > 11) userPower = 11;        
+            for (size_t i = 0; i < _userStations.size(); i++)
+            {
+                Serial.print("_userStations.at(i) -> ");Serial.println(_userStations.at(i));
+                _stations.at(_userStations.at(i))->charge(userPower);
+            }
+            break;
+        case PLBStates::ST_Dir1:
+            directorPower = 11;
+            userPower = busyStations > 1 ? (availablePower - directorPower) / (busyStations - 1) : 0;
+            _stations.at(_directorStations.at(0))->charge(directorPower);
+            for (size_t i = 0; i < _userStations.size(); i++)
+            {
+                _stations.at(_userStations.at(i))->charge(userPower);
+            }
+            break;
+        case PLBStates::ST_Dir2:
+            directorPower = (availablePower >= 22) ? 11 : availablePower / 2;
+            userPower = (busyStations > 2 && availablePower > 22) ? (availablePower - directorPower) / (busyStations - 2) : 0;
             for (size_t i = 0; i < _directorStations.size(); i++)
             {
                 int stationId = _directorStations.at(i);
-                _stations.at(stationId)->switchMode(StationModes::MO_FCFS);
-                availablePower -= 11;
-                if (availablePower < 11)
-                {
-                    _stations.at(stationId)->charge(availablePower);
-                }
-                else
-                {
-                    _stations.at(stationId)->charge(11);
-                }
+                _stations.at(stationId)->switchMode(StationModes::MO_Director);
+                _stations.at(stationId)->charge(directorPower);
             }
-        }
-        else
-        {
-            for (size_t i = 0; i < _directorStations.size(); i++)
+            for (size_t i = 0; i < _userStations.size(); i++)
             {
                 int stationId = _directorStations.at(i);
                 _stations.at(stationId)->switchMode(StationModes::MO_Dynamic);
-                _stations.at(stationId)->charge(availablePower / 3);
+                _stations.at(stationId)->charge(userPower);
             }
+            break;
+        case PLBStates::ST_Dir3:
+            stationPower = availablePower / 4;
+            for (size_t i = 0; i < _stations.size(); i++)
+            {
+                _stations.at(i)->switchMode(StationModes::MO_Dynamic);
+                _stations.at(i)->charge(stationPower);
+            }
+            break;
+        case PLBStates::ST_Dir3Only:
+            if (availablePower > 22)
+            {
+                for (size_t i = 0; i < _directorStations.size(); i++)
+                {
+                    int stationId = _directorStations.at(i);
+                    _stations.at(stationId)->switchMode(StationModes::MO_FCFS);
+                    availablePower -= 11;
+                    if (availablePower < 11)
+                    {
+                        _stations.at(stationId)->charge(availablePower);
+                    }
+                    else
+                    {
+                        _stations.at(stationId)->charge(11);
+                    }
+                }
+            }
+            else
+            {
+                for (size_t i = 0; i < _directorStations.size(); i++)
+                {
+                    int stationId = _directorStations.at(i);
+                    _stations.at(stationId)->switchMode(StationModes::MO_Dynamic);
+                    _stations.at(stationId)->charge(availablePower / 3);
+                }
+            }
+            break;
         }
-        break;
     }
 }
 
@@ -372,7 +377,7 @@ int PLB::_stopSupply(IStation *station)
 {
     --busyStations;
     if (busyStations<0) busyStations = 0;
-    // Serial.print("busyStations = "); Serial.println(busyStations);
+    Serial.print("_stopSupply: busyStations = "); Serial.println(busyStations);
     for (size_t i = 0; i < _directorStations.size(); i++)
     {
         if (station->getId() == _directorStations.at(i))

@@ -29,6 +29,7 @@ private:
     std::vector<int> _userStations;
     std::vector<uint32_t> _directorIds;
     std::vector<uint32_t> _validDirectorIds = {2267176004, 432104642, 1518206872, 40, 50}; //maybe make this and directorIds uint32_t? It implies other changes so be careful
+    float _prevSolarPower;
 
     /* PLB Private Functions */
     void _distributePower(float solarPower);

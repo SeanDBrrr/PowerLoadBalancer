@@ -15,12 +15,16 @@ State ChargingStation::HandleIdleState(Event ev)
         _isRfidAvailable = false;
         result = State::STATE_VERIFYING_DIRECTOR;
         break;
-    case Event::EV_ERROR:
-        _IDisplay->display("ERROR");
+    case Event::EV_DISCONNECTED_WIFI:
+        _IDisplay->display("disc wifi ERR");
         result = State::STATE_ERROR;
         break;
-    default:
-        // ignored event, nothing to do here
+    case Event::EV_DISCONNECTED_MQTT:
+        _IDisplay->display("disc mqtt ERR");
+        result = State::STATE_ERROR;
+        break;
+    case Event::noEvent:
+        //do nothing
         break;
     }
 
@@ -75,12 +79,29 @@ State ChargingStation::HandleVerifyingDirectorState(Event ev)
             result = State::STATE_IDLE;
         }
         break;
-    case Event::EV_ERROR:
-        _IDisplay->display("ERROR");
+    case Event::EV_RFID_ALREADY_CHECKED_IN:
+        _isRfidAvailable = true;
+        if (_isPluggedFlag)
+        {
+            _IDisplay->display("alrdy in PLUGGED");
+            result = State::STATE_PLUGGED;
+        }
+        else if (!_isPluggedFlag)
+        {
+            _IDisplay->display("alrdy in IDLE");
+            result = State::STATE_IDLE;
+        }
+        break;
+    case Event::EV_DISCONNECTED_WIFI:
+        _IDisplay->display("disc wifi ERR");
         result = State::STATE_ERROR;
         break;
-    default:
-        // ignored event, nothing to do here
+    case Event::EV_DISCONNECTED_MQTT:
+        _IDisplay->display("disc mqtt ERR");
+        result = State::STATE_ERROR;
+        break;
+    case Event::noEvent:
+        //do nothing
         break;
     }
 
@@ -97,12 +118,16 @@ State ChargingStation::HandleIdleDirectorState(Event ev)
         _IDisplay->display("PLUGGED DIR");
         result = State::STATE_PLUGGED_DIRECTOR;
         break;
-    case Event::EV_ERROR:
-        _IDisplay->display("ERROR");
+    case Event::EV_DISCONNECTED_WIFI:
+        _IDisplay->display("disc wifi ERR");
         result = State::STATE_ERROR;
         break;
-    default:
-        // ignored event, nothing to do here
+    case Event::EV_DISCONNECTED_MQTT:
+        _IDisplay->display("disc mqtt ERR");
+        result = State::STATE_ERROR;
+        break;
+    case Event::noEvent:
+        //do nothing
         break;
     }
 
@@ -125,17 +150,21 @@ State ChargingStation::HandlePluggedState(Event ev)
         result = State::STATE_VERIFYING_DIRECTOR;
         break;
     case Event::EV_START:
-        //_isBusy = true;
+        _isRfidAvailable = false;
         _IPLB->supplyPowerToStation(_id);
         _IDisplay->display("plg WAITING POWER");
         result = State::STATE_WAITING_FOR_POWER;
         break;
-    case Event::EV_ERROR:
-        _IDisplay->display("ERROR");
+    case Event::EV_DISCONNECTED_WIFI:
+        _IDisplay->display("disc wifi ERR");
         result = State::STATE_ERROR;
         break;
-    default:
-        // ignored event, nothing to do here
+    case Event::EV_DISCONNECTED_MQTT:
+        _IDisplay->display("disc mqtt ERR");
+        result = State::STATE_ERROR;
+        break;
+    case Event::noEvent:
+        //do nothing
         break;
     }
 
@@ -144,7 +173,6 @@ State ChargingStation::HandlePluggedState(Event ev)
 
 State ChargingStation::HandlePluggedDirectorState(Event ev)
 {
-    //_IDisplay->display("Plugged Director");
     State result = State::STATE_PLUGGED_DIRECTOR;
 
     switch (ev)
@@ -158,17 +186,21 @@ State ChargingStation::HandlePluggedDirectorState(Event ev)
         result = State::STATE_PLUGGED;
         break;
     case Event::EV_START:
-        //_isBusy = true;
+        _isRfidAvailable = false;
         _IPLB->supplyPowerToStation(_id);
         _IDisplay->display("plgDir WAITING POWER");
         result = State::STATE_WAITING_FOR_POWER;
         break;
-    case Event::EV_ERROR:
-        _IDisplay->display("ERROR");
+    case Event::EV_DISCONNECTED_WIFI:
+        _IDisplay->display("disc wifi ERR");
         result = State::STATE_ERROR;
         break;
-    default:
-        // ignored event, nothing to do here
+    case Event::EV_DISCONNECTED_MQTT:
+        _IDisplay->display("disc mqtt ERR");
+        result = State::STATE_ERROR;
+        break;
+    case Event::noEvent:
+        //do nothing
         break;
     }
 
@@ -182,21 +214,23 @@ State ChargingStation::HandleWaitingForPowerState(Event ev)
     switch (ev)
     {
     case Event::EV_CHARGING:
-        //_isBusy = true;
         result = State::STATE_CHARGING;
         break;
     case Event::EV_STOP:
-        //_isBusy = true;
         _IPLB->stopSupplyToStation(_id);
         _IDisplay->display("STOPED CHARGING");
         result = State::STATE_STOPPED_CHARGING;
         break;
-    case Event::EV_ERROR:
-        _IDisplay->display("ERROR");
+    case Event::EV_DISCONNECTED_WIFI:
+        _IDisplay->display("disc wifi ERR");
         result = State::STATE_ERROR;
         break;
-    default:
-        // ignored event, nothing to do here
+    case Event::EV_DISCONNECTED_MQTT:
+        _IDisplay->display("disc mqtt ERR");
+        result = State::STATE_ERROR;
+        break;
+    case Event::noEvent:
+        //do nothing
         break;
     }
 
@@ -210,7 +244,6 @@ State ChargingStation::HandleChargingState(Event ev)
     switch (ev)
     {
     case Event::EV_STOP:
-        //_isBusy = false;
         _IPLB->stopSupplyToStation(_id);
         _IDisplay->display("STOPED CHARGING");
         result = State::STATE_STOPPED_CHARGING;
@@ -228,8 +261,16 @@ State ChargingStation::HandleChargingState(Event ev)
     case Event::EV_MODE_CHANGED_DYNAMIC:
         _IDisplay->display("Mode: Dynamic");
         break;
-    default:
-        // ignored event, nothing to do here
+    case Event::EV_DISCONNECTED_WIFI:
+        _IDisplay->display("disc wifi ERR");
+        result = State::STATE_ERROR;
+        break;
+    case Event::EV_DISCONNECTED_MQTT:
+        _IDisplay->display("disc mqtt ERR");
+        result = State::STATE_ERROR;
+        break;
+    case Event::noEvent:
+        //do nothing
         break;
     }
 
@@ -243,6 +284,7 @@ State ChargingStation::HandleStoppedChargingState(Event ev)
     switch (ev)
     {
     case Event::EV_START:
+        _isRfidAvailable = false;
         _IPLB->supplyPowerToStation(_id);
         _IDisplay->display("stp WAITING POWER");
         result = State::STATE_WAITING_FOR_POWER;
@@ -252,12 +294,16 @@ State ChargingStation::HandleStoppedChargingState(Event ev)
         _IDisplay->display("unplugged IDLE");
         result = State::STATE_IDLE;
         break;
-    case Event::EV_ERROR:
-        _IDisplay->display("ERROR");
+    case Event::EV_DISCONNECTED_WIFI:
+        _IDisplay->display("disc wifi ERR");
         result = State::STATE_ERROR;
         break;
-    default:
-        // ignored event, nothing to do here
+    case Event::EV_DISCONNECTED_MQTT:
+        _IDisplay->display("disc mqtt ERR");
+        result = State::STATE_ERROR;
+        break;
+    case Event::noEvent:
+        //do nothing
         break;
     }
 
@@ -365,6 +411,10 @@ void ChargingStation::loop(Event ev)
     {
         _directorId = _IDirector->getID();
     }
+    else
+    {
+        _directorId = 0;
+    }
 
     if (_directorId != 0)
     {
@@ -373,6 +423,7 @@ void ChargingStation::loop(Event ev)
         Serial.println("call dir timeout");
         _IPLB->directorTimeout(3000);
         Serial.println("AFTER call dir timeout");
+        _isRfidAvailable = false;
         _currentEvent = Event::EV_RFID_DIRECTOR_DETECTED;
     }
 
@@ -380,7 +431,7 @@ void ChargingStation::loop(Event ev)
     _powerRecieved = _IPLB->getPowerReceived();
     if (_powerRecieved != lastPower)
     {
-        _IDisplay->display(static_cast<String>(_powerRecieved));
+        _IDisplay->display("Charging: " + static_cast<String>(_powerRecieved));
         lastPower = _powerRecieved;
         _currentEvent = Event::EV_CHARGING;
     }

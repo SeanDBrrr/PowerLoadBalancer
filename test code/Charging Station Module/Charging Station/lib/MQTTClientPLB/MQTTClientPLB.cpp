@@ -7,10 +7,13 @@ MQTTClientPLB::MQTTClientPLB( // Few objects are not initialized yet.
       _isPowerReceivedFlag(0),
       _isDirectorResponseFlag(0),
       _isModeChangedFlag(0),
+      _wifiConnectedFlag(0),
+      _mqttConnectedFlag(0),
       _directorState(DirectorState::noState)
 {
   Serial.print("OBJECT CREATED: ");
   Serial.println(_id);
+  _client.enableDebuggingMessages();
 }
 
 EspMQTTClient &MQTTClientPLB::getClient()
@@ -29,10 +32,13 @@ void MQTTClientPLB::receive()
   static unsigned long lastTime = 0;
   if (millis() - lastTime >= 5000)
   {
-    send(mqtt_topic_stationHeartbeat, static_cast<String>(_id));
+    send(mqtt_topic_heartbeat, static_cast<String>(_id));
     lastTime = millis();
   }
+
   _event = Event::noEvent;
+  checkConnection();
+
   if (_directorState == DirectorState::TIMED_OUT)
   {
     Serial.println("SHOULD HAVE TIME FDOUT");
@@ -54,6 +60,7 @@ void MQTTClientPLB::receive()
       _event = Event::EV_RFID_ALREADY_CHECKED_IN;
     }
     _isDirectorResponseFlag = 0;
+    // rESET DIRECTORSTATE?
   }
 
   if (_isModeChangedFlag)
@@ -80,6 +87,7 @@ void MQTTClientPLB::onConnectionSubscribe()
                     {
     _isPowerReceivedFlag = true;
     _powerReceived = payload.toFloat(); });
+  _client.subscribe(mqtt_topic_heartbeat, [this](const String &topic, const String &payload){});
   _client.subscribe(mqtt_topic_directorResponse, [this](const String &topic, const String &payload)
                     {
     _isDirectorResponseFlag = true;
@@ -149,5 +157,30 @@ void MQTTClientPLB::directorTimeout(int waitingTime)
       _directorState = DirectorState::TIMED_OUT;
       break;
     }
+  }
+}
+
+void MQTTClientPLB::checkConnection()
+{
+  if (!_client.isWifiConnected() && !_wifiConnectedFlag)
+  {
+    _event = Event::EV_DISCONNECTED_WIFI;
+    _wifiConnectedFlag = true;
+  }
+  else if (_client.isWifiConnected() && _wifiConnectedFlag)
+  {
+    _event = Event::noEvent;
+    _wifiConnectedFlag = false;
+  }
+
+  if (!_client.isMqttConnected() && !_mqttConnectedFlag)
+  {
+    _event = Event::EV_DISCONNECTED_MQTT;
+    _mqttConnectedFlag = true;
+  }
+  else if (_client.isMqttConnected() && _mqttConnectedFlag)
+  {
+    _event = Event::noEvent;
+    _mqttConnectedFlag = false;
   }
 }

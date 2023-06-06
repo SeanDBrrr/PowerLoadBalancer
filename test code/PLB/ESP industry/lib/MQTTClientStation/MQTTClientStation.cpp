@@ -9,13 +9,11 @@ std::vector<PLBEvents> MQTTClientStation::events;
 
 MQTTClientStation::MQTTClientStation(int id) : 
 _stationId(id), 
-_directorId(0),
-_lastHeartbeat(millis()),
-_stationConnected(true),
-_stationConnectedLast(true)
+_directorId(0)
 {
   _setStationTopics();
   _client.setMqttClientName(mqtt_module.c_str());
+  _client.enableDebuggingMessages();
 }
 
 MQTTClientStation::~MQTTClientStation() {}
@@ -34,7 +32,6 @@ void MQTTClientStation::_setStationTopics()
   mqtt_topic_stopSupply += static_cast<String>(_stationId);
   mqtt_topic_directorId += static_cast<String>(_stationId);
   mqtt_topic_directorValidate += static_cast<String>(_stationId);
-  mqtt_topic_stationHeartbeat += static_cast<String>(_stationId);
 }
 
 void MQTTClientStation::send(String topic, String message)
@@ -45,33 +42,6 @@ void MQTTClientStation::send(String topic, String message)
 void MQTTClientStation::receive()
 {
   _client.loop();
-  checkConnection(7500);
-}
-
-void MQTTClientStation::checkConnection(int disconnectionTimeout)
-{
-  if(millis() - _lastHeartbeat >= disconnectionTimeout)
-  {
-    _stationConnected = false;
-  }
-  else
-  {
-    _stationConnected = true;
-  }
-
-  if(_stationConnectedLast != _stationConnected)
-  {
-    if(_stationConnected)
-    {
-      events.emplace_back(PLBEvents::EV_Connected);
-    }
-    else
-    {
-      events.emplace_back(PLBEvents::EV_Disconnected);
-    }
-    connectionEvents.push(_stationId);
-    _stationConnectedLast = _stationConnected;
-  }
 }
 
 /*
@@ -112,7 +82,19 @@ void MQTTClientStation::onConnectionSubscribe()
   });
   _client.subscribe(mqtt_topic_stationHeartbeat, [this](const String &topic, const String &payload)
   {
-    _lastHeartbeat = millis();
+    String online_payload = "ONLINE"+static_cast<String>(_stationId);
+    String offline_payload = "OFFLINE"+static_cast<String>(_stationId);
+
+    if (payload == online_payload)
+    { 
+      events.emplace_back(PLBEvents::EV_Connected);
+      connectionEvents.push(_stationId);
+    }
+    else if (payload == offline_payload) 
+    { 
+      events.emplace_back(PLBEvents::EV_Connected);
+      connectionEvents.push(_stationId);
+    }
   });
 }
 

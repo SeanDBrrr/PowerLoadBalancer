@@ -5,6 +5,7 @@ _isSolarPowerArrivedFlag(false),
 _totalSolarPower(0),
 _solarPowerTimeout(5000)
 {
+  _client.enableDebuggingMessages();
   calculateSolarPower();
 }
 

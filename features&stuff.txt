@@ -31,6 +31,14 @@ Miscellaneous:
 	-> why every object is allocated on the heap?
 	-> when station goes off (hardware limitation)
 	-> keeps sending supply request so long as a station do not receive power from PLB
+	-> Dorin's idea with ID in states as parameters
+	-> last will message
+
+Sioux support:
+	-> busy waiting for timeouts? : 
+	-> handle Events with only one big queue instead of 4 different queues
+	->
+int& 1- int &2
 
 Code Changes:
 	-> new _prevSolarPower variable & prevBusyStations

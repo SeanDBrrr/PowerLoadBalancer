@@ -37,7 +37,6 @@ public:
     void send(String topic, String message);
     void receive();
     void onConnectionSubscribe();
-    void checkConnection(int disconnectionTimeout);
 
     /* Events Getters */
     std::vector<PLBEvents>& getEvents();
@@ -55,9 +54,6 @@ public:
 private:
     uint32_t _directorId;
     int _stationId;
-    unsigned long _lastHeartbeat;
-    bool _stationConnected;
-    bool _stationConnectedLast;
     void _setStationTopics();
     void notifyDashboard(String message);
 
@@ -68,7 +64,7 @@ private:
     String mqtt_topic_stopSupply = "group4/stopPowerSupply";
     String mqtt_topic_charge_station = "group4/chargeStation";
     String mqtt_topic_directorValidate = "group4/directorResponse";
-    String mqtt_topic_stationHeartbeat = "group4/stationHeartbeat";
+    String mqtt_topic_stationHeartbeat = "group4/heartbeat";
     String mqtt_topic_notifyDashboard = "group4/notifyDashboard";
     String name = "Kiwy";
     String password = "aquamagic23";

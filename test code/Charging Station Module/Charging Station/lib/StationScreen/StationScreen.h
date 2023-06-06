@@ -28,5 +28,5 @@ private:
 
 public:
     StationScreen(int, int);
-    void display(String);
+    void display(String, String = "");
 };

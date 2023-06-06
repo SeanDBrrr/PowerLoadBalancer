@@ -6,5 +6,5 @@ class IDisplay
 public:
     virtual ~IDisplay() = default;
 
-    virtual void display(String) = 0;
+    virtual void display(String, String = "") = 0;
 };

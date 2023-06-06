@@ -39,6 +39,9 @@ void setup()
 
 void loop()
 {
+  //mqttPLB->checkConnection()
+  //buildingDisplay->display("Wifi connection", "Is success !");
+  //delay(1000);
   building->handleEvent(mqttPLB->receive());
 
 }

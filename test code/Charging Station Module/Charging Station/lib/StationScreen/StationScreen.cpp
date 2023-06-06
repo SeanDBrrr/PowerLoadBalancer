@@ -38,8 +38,11 @@ StationScreen::StationScreen(
  * @param message Input message to be displayed on StationScreen
  * @return int for future unit testing implementation
  */
-void StationScreen::display(String message)
+void StationScreen::display(String msg1, String msg2)
 {
     _lcd.clear();
-    _lcd.print(message);
+    _lcd.setCursor(0,0);
+    _lcd.print(msg1);
+    _lcd.setCursor(0,1);
+    _lcd.print(msg2);
 }

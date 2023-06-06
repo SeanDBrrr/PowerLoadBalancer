@@ -6,7 +6,7 @@ class IDisplay
 {
 public:
     virtual ~IDisplay() = default;
-    virtual void display(String message) = 0;
+    virtual void display(String msg1, String msg2 = "") = 0;
 };
 
 #endif

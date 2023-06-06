@@ -14,7 +14,7 @@ private:
 public:
     BuildingDisplay(int scl, int sda);
     ~BuildingDisplay() {}
-    void display(String);
+    void display(String,String = "");
 };
 
 #endif

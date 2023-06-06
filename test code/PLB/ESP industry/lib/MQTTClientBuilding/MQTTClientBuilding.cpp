@@ -44,8 +44,8 @@ float MQTTClientBuilding::calculateSolarPower()
   {
     if(millis() - lastTime >= _solarPowerTimeout)
     {
-      if ((_isConnected != lastConnectionState) && !_isConnected) notifyDashboard("Building failed to respond.");
       _isConnected = false;
+      if ((_isConnected == false)) notifyDashboard("Building failed to respond."); //make it not spam
       lastConnectionState = _isConnected;
       return 0;
     }

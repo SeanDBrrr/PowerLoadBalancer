@@ -1,4 +1,5 @@
 #include "PLB.h"
+#include <assert.h>
 
 PLB::PLB(
     IBuilding *building,
@@ -30,13 +31,7 @@ void PLB::setEvents(std::queue<int>& supplyEvents, std::queue<int>& stopEvents, 
     if (supplyEvents.size()>0) _supplyRequestStationIdEvents = std::move(supplyEvents);
     if (stopEvents.size()>0) _stopStationIdEvents = std::move(stopEvents);
     if (directorEvents.size()>0) _directorEvents = std::move(directorEvents);
-    #if COMMENTS
-    Serial.print("setEvents (connectionEvents): ");Serial.println(connectionEvents.front());
-    #endif
     if (connectionEvents.size()>0) _connectionEvents = std::move(connectionEvents);
-    #if COMMENTS
-    Serial.print("setEvents (connectionEvents): ");Serial.println(_connectionEvents.front());
-    #endif
 }
 
 PLBStates PLB::handleIdleState(PLBEvents ev)
@@ -62,22 +57,21 @@ PLBStates PLB::handleIdleState(PLBEvents ev)
         _directorEvents.pop();
         break;
     case PLBEvents::EV_Connected:
-        if (_connectionEvents.front() >= 0 && _connectionEvents.front() < 4)
-        {
-            Serial.print("_connectionEvents.front(): "); Serial.println(_connectionEvents.front());
-            _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " connected.");
-            _connectionEvents.pop();
-        }
+        #if COMMENTS
+        Serial.print("_connectionEvents.front(): "); Serial.println(_connectionEvents.front());
+        #endif
+        _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " connected.");
+        _connectionEvents.pop();
+
         break;
     case PLBEvents::EV_Disconnected:
-        if (_connectionEvents.front() >= 0 && _connectionEvents.front() < 4)
-        {
-            Serial.print("_connectionEvents.front(): "); Serial.println(_connectionEvents.front());
-            _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " disconnected.");
-            _stopSupply(_stations.at(_connectionEvents.front()));
-            _distributePower(_building->getCurrentSolarPower());
-            _connectionEvents.pop();
-        }
+        #if COMMENTS
+        Serial.print("_connectionEvents.front(): "); Serial.println(_connectionEvents.front());
+        #endif
+        _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " disconnected.");
+        _stopSupply(_stations.at(_connectionEvents.front()));
+        _distributePower(_building->getCurrentSolarPower());
+        _connectionEvents.pop();
         break;
     }
     return _state;
@@ -115,20 +109,14 @@ PLBStates PLB::handleNoDirState(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         break;
     case PLBEvents::EV_Connected:
-        if (_connectionEvents.front() >= 0 && _connectionEvents.front() < 4)
-        {
-            _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " connected.");
-            _connectionEvents.pop();
-        }
+        _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " connected.");
+        _connectionEvents.pop();
         break;
     case PLBEvents::EV_Disconnected:
-        if (_connectionEvents.front() >= 0 && _connectionEvents.front() < 4)
-        {
-            _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " disconnected.");
-            _stopSupply(_stations.at(_connectionEvents.front()));
-            _distributePower(_building->getCurrentSolarPower());
-            _connectionEvents.pop();
-        }
+        _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " disconnected.");
+        _stopSupply(_stations.at(_connectionEvents.front()));
+        _distributePower(_building->getCurrentSolarPower());
+        _connectionEvents.pop();
         break;
     }
     return _state;
@@ -164,20 +152,20 @@ PLBStates PLB::handleDir1State(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         break;
     case PLBEvents::EV_Connected:
-        if (_connectionEvents.front() >= 0 && _connectionEvents.front() < 4)
-        {
-            _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " connected.");
-            _connectionEvents.pop();
-        }
+        #if COMMENTS
+        Serial.print("_connectionEvents.front(): "); Serial.println(_connectionEvents.front());
+        #endif
+        _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " connected.");
+        _connectionEvents.pop();
         break;
     case PLBEvents::EV_Disconnected:
-        if (_connectionEvents.front() >= 0 && _connectionEvents.front() < 4)
-        {
-            _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " disconnected.");
-            _stopSupply(_stations.at(_connectionEvents.front()));
-            _distributePower(_building->getCurrentSolarPower());
-            _connectionEvents.pop();
-        }
+        #if COMMENTS
+        Serial.print("_connectionEvents.front(): "); Serial.println(_connectionEvents.front());
+        #endif
+        _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " disconnected.");
+        _stopSupply(_stations.at(_connectionEvents.front()));
+        _distributePower(_building->getCurrentSolarPower());
+        _connectionEvents.pop();
         break;
     }
     return _state;
@@ -211,20 +199,20 @@ PLBStates PLB::handleDir2State(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         break;
     case PLBEvents::EV_Connected:
-        if (_connectionEvents.front() >= 0 && _connectionEvents.front() < 4)
-        {
-            _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " connected.");
-            _connectionEvents.pop();
-        }
+        #if COMMENTS
+        Serial.print("_connectionEvents.front(): "); Serial.println(_connectionEvents.front());
+        #endif
+        _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " connected.");
+        _connectionEvents.pop();
         break;
     case PLBEvents::EV_Disconnected:
-        if (_connectionEvents.front() >= 0 && _connectionEvents.front() < 4)
-        {
-            _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " disconnected.");
-            _stopSupply(_stations.at(_connectionEvents.front()));
-            _distributePower(_building->getCurrentSolarPower());
-            _connectionEvents.pop();
-        }
+        #if COMMENTS
+        Serial.print("_connectionEvents.front(): "); Serial.println(_connectionEvents.front());
+        #endif
+        _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " disconnected.");
+        _stopSupply(_stations.at(_connectionEvents.front()));
+        _distributePower(_building->getCurrentSolarPower());
+        _connectionEvents.pop();
         break;
     }
     return _state;
@@ -259,24 +247,20 @@ PLBStates PLB::handleDir3OnlyState(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         break;
     case PLBEvents::EV_Connected:
-        if (_connectionEvents.front() >= 0 && _connectionEvents.front() < 4)
-        {
-            #if COMMENTS
-            _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " connected.");
-            #endif
-            _connectionEvents.pop();
-        }
+        #if COMMENTS
+        Serial.print("_connectionEvents.front(): "); Serial.println(_connectionEvents.front());
+        #endif
+        _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " connected.");
+        _connectionEvents.pop();
         break;
     case PLBEvents::EV_Disconnected:
-        if (_connectionEvents.front() >= 0 && _connectionEvents.front() < 4)
-        {
-            #if COMMENTS
-            _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " disconnected.");
-            #endif
-            _stopSupply(_stations.at(_connectionEvents.front()));
-            _distributePower(_building->getCurrentSolarPower());
-            _connectionEvents.pop();
-        }
+        #if COMMENTS
+        Serial.print("_connectionEvents.front(): "); Serial.println(_connectionEvents.front());
+        #endif
+        _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " disconnected.");
+        _stopSupply(_stations.at(_connectionEvents.front()));
+        _distributePower(_building->getCurrentSolarPower());
+        _connectionEvents.pop();
         break;
     }
     return _state;
@@ -300,24 +284,20 @@ PLBStates PLB::handleDir3State(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         break;
     case PLBEvents::EV_Connected:
-        if (_connectionEvents.front() >= 0 && _connectionEvents.front() < 4)
-        {
-            #if COMMENTS
-            _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " connected.");
-            #endif
-            _connectionEvents.pop();
-        }
+        #if COMMENTS
+        Serial.print("_connectionEvents.front(): "); Serial.println(_connectionEvents.front());
+        #endif
+        _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " connected.");
+        _connectionEvents.pop();
         break;
     case PLBEvents::EV_Disconnected:
-        if (_connectionEvents.front() >= 0 && _connectionEvents.front() < 4)
-        {
-            #if COMMENTS
-            _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " disconnected.");
-            #endif
-            _stopSupply(_stations.at(_connectionEvents.front()));
-            _distributePower(_building->getCurrentSolarPower());
-            _connectionEvents.pop();
-        }
+        #if COMMENTS
+        Serial.print("_connectionEvents.front(): "); Serial.println(_connectionEvents.front());
+        #endif
+        _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " disconnected.");
+        _stopSupply(_stations.at(_connectionEvents.front()));
+        _distributePower(_building->getCurrentSolarPower());
+        _connectionEvents.pop();
         break;
     }
     return _state;
@@ -339,20 +319,20 @@ PLBStates PLB::handleDir4State(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         break;
     case PLBEvents::EV_Connected:
-        if (_connectionEvents.front() >= 0 && _connectionEvents.front() < 4)
-        {
-            _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " connected.");
-            _connectionEvents.pop();
-        }
+        #if COMMENTS
+        Serial.print("_connectionEvents.front(): "); Serial.println(_connectionEvents.front());
+        #endif
+        _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " connected.");
+        _connectionEvents.pop();
         break;
     case PLBEvents::EV_Disconnected:
-        if (_connectionEvents.front() >= 0 && _connectionEvents.front() < 4)
-        {
-            _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " disconnected.");
-            _stopSupply(_stations.at(_connectionEvents.front()));
-            _distributePower(_building->getCurrentSolarPower());
-            _connectionEvents.pop();
-        }
+        #if COMMENTS
+        Serial.print("_connectionEvents.front(): "); Serial.println(_connectionEvents.front());
+        #endif
+        _stations.at(_connectionEvents.front())->notifyDashboard("Station " + String(_connectionEvents.front()) + " disconnected.");
+        _stopSupply(_stations.at(_connectionEvents.front()));
+        _distributePower(_building->getCurrentSolarPower());
+        _connectionEvents.pop();
         break;
     }
     return _state;
@@ -604,10 +584,7 @@ void PLB::loop(std::vector<PLBEvents>& events)
         handleEvents(ev);
     }
     /* Get rid of events once handled */
-    for (int i = 0; i < events.size(); ++i)
-    {
-        events.pop_back();
-    }
+    events.clear();
     if (isTimeout())
     {
         handleEvents(PLBEvents::EV_Timeout);

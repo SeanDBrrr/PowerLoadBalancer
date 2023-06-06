@@ -70,7 +70,6 @@ void MQTTClientStation::checkConnection(int disconnectionTimeout)
       events.emplace_back(PLBEvents::EV_Disconnected);
     }
     connectionEvents.push(_stationId);
-    Serial.print("checkConnection: "); Serial.println(connectionEvents.front());
     _stationConnectedLast = _stationConnected;
   }
 }

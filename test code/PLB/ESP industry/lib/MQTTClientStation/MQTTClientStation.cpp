@@ -4,6 +4,7 @@
 std::queue<int> MQTTClientStation::supplyRequestEvents;
 std::queue<int> MQTTClientStation::stopSupplyEvents;
 std::queue<int> MQTTClientStation::directorEvents;
+std::queue<int> MQTTClientStation::connectionEvents;
 std::vector<PLBEvents> MQTTClientStation::events;
 
 MQTTClientStation::MQTTClientStation(int id) : 
@@ -30,6 +31,7 @@ void MQTTClientStation::_setStationTopics()
   mqtt_topic_stopSupply += static_cast<String>(_stationId);
   mqtt_topic_directorId += static_cast<String>(_stationId);
   mqtt_topic_directorValidate += static_cast<String>(_stationId);
+  mqtt_topic_stationHeartbeat += static_cast<String>(_stationId);
 }
 
 void MQTTClientStation::send(String topic, String message)
@@ -40,6 +42,34 @@ void MQTTClientStation::send(String topic, String message)
 void MQTTClientStation::receive()
 {
   _client.loop();
+  checkConnection(7500);
+}
+
+void MQTTClientStation::checkConnection(int disconnectionTimeout)
+{
+  if(millis() - _lastHeartbeat >= disconnectionTimeout)
+  {
+    _stationConnected = false;
+  }
+  else
+  {
+    _stationConnected = true;
+  }
+
+  if(_stationConnectedLast != _stationConnected)
+  {
+    if(_stationConnected)
+    {
+      events.emplace_back(PLBEvents::EV_Connected);
+    }
+    else
+    {
+      events.emplace_back(PLBEvents::EV_Disconnected);
+    }
+    connectionEvents.push(_stationId);
+    Serial.println(_stationId);
+    _stationConnectedLast = _stationConnected;
+  }
 }
 
 /*
@@ -73,6 +103,10 @@ void MQTTClientStation::onConnectionSubscribe()
     Serial.print("MQTTClientStation: EV_Supply -> ID = "); Serial.println(stopSupplyEvents.front());
     /* Remove the previous director's ID if there is one */
     if (_directorId) _directorId = 0;
+  });
+  _client.subscribe(mqtt_topic_stationHeartbeat, [this](const String &topic, const String &payload)
+  {
+    _lastHeartbeat = millis();
   });
 }
 
@@ -122,6 +156,11 @@ void MQTTClientStation::switchMode(StationModes mode)
   {
     send(mqtt_topic_mode, "Dynamic Mode");
   }
+}
+
+void MQTTClientStation::notifyDashboard(String message)
+{
+  send(mqtt_topic_notifyDashboard, message);
 }
 
 /* ----------- Events Getters */

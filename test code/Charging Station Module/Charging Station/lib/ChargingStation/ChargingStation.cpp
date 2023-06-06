@@ -14,6 +14,7 @@ State ChargingStation::HandleIdleState(Event ev)
     case Event::EV_RFID_DIRECTOR_DETECTED:
         _isRfidAvailable = false;
         result = State::STATE_VERIFYING_DIRECTOR;
+        _isBusy = true;
         break;
     case Event::EV_ERROR:
         _IDisplay->display("ERROR");

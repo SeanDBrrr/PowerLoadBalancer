@@ -12,9 +12,11 @@ BuildingDisplay::BuildingDisplay(int scl, int sda):
     _lcd.setCursor(0, 0);
 }
 
-void 
-BuildingDisplay::display(String message)
+void BuildingDisplay::display(String msg1, String msg2)
 {
     _lcd.clear();
-    _lcd.print(message);
+    _lcd.setCursor(0,0);
+    _lcd.print(msg1);
+    _lcd.setCursor(0,1);
+    _lcd.print(msg2);
 }

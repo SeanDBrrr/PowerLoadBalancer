@@ -63,5 +63,5 @@ void OfficeBuilding::sendSolarPower(int solarPower)
 
 void OfficeBuilding::loop()
 {
-    // handleEvent();
+
 }

@@ -13,6 +13,7 @@ private:
     bool _isSolarPowerArrivedFlag;
     float _totalSolarPower;
     bool _isConnected;
+    bool _lastConnectionState;
     int _solarPowerTimeout;
 
     String mqtt_topic_solarPower = "group4/powerProduced";

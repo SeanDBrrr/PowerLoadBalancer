@@ -3,7 +3,9 @@
 MQTTClientBuilding::MQTTClientBuilding() : 
 _isSolarPowerArrivedFlag(false), 
 _totalSolarPower(0),
-_solarPowerTimeout(5000)
+_solarPowerTimeout(5000),
+_isConnected(true),
+_lastConnectionState(true)
 {
   _client.enableDebuggingMessages();
   calculateSolarPower();
@@ -39,22 +41,21 @@ float MQTTClientBuilding::calculateSolarPower()
 {
   send(mqtt_topic_calculateSolarPower, "Calculate Solar Power");
 
-  static bool lastConnectionState = _isConnected;
   long lastTime = millis();
   while(!_isSolarPowerArrivedFlag)
   {
     if(millis() - lastTime >= _solarPowerTimeout)
     {
       _isConnected = false;
-      if ((_isConnected == false)) notifyDashboard("Building failed to respond."); //make it not spam
-      lastConnectionState = _isConnected;
+      if ((_isConnected != _lastConnectionState) && !_isConnected) notifyDashboard("Building failed to respond."); //This works but it pushes it before the mqtt is able to subscribe or connect. Try serial print to see.
+      _lastConnectionState = _isConnected;
       return 0;
     }
   }
   _isConnected = true;
-  if ((_isConnected != lastConnectionState) && _isConnected)
+  if ((_isConnected != _lastConnectionState) && _isConnected)
   {
-    lastConnectionState = _isConnected;
+    _lastConnectionState = _isConnected;
     notifyDashboard("Building is online again.");
   }
   _isSolarPowerArrivedFlag = false;

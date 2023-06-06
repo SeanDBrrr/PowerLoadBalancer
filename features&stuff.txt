@@ -37,8 +37,7 @@ Miscellaneous:
 Sioux support:
 	-> busy waiting for timeouts? : 
 	-> handle Events with only one big queue instead of 4 different queues
-	->
-int& 1- int &2
+	-> int& 1- int &2 //modify this so it is consistent through all the code
 
 Code Changes:
 	-> new _prevSolarPower variable & prevBusyStations
@@ -46,6 +45,15 @@ Code Changes:
 Manual mode:
 	-> the maintainer should be able to control the stations state from the dashboard
 	-> when he presses one of the mode:
-		-> Dynamic: all stations go to dynamic mode (
+		-> Dynamic: all stations go to dynamic mode
 		-> Director:
 		-> FCFS:
+
+Notes from Dorin from Tuesday:
+	-> My idea with id in states as parameters.
+	-> Fixed heartbeat problems and added for building (done)
+	-> Making only one topic instead of multiple topic per station. Also implement one instance of mqtt instead of multiple?
+	-> Make building fail message not spam (done)
+	-> Fix delay of building receive power and everything
+	-> Think of maybe implementing what Tom said with one queue only.
+	-> Implement last will messages heartbeat (50%)

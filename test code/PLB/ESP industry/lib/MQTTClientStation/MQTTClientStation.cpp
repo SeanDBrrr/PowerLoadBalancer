@@ -92,7 +92,7 @@ void MQTTClientStation::onConnectionSubscribe()
     }
     else if (payload == offline_payload) 
     { 
-      events.emplace_back(PLBEvents::EV_Connected);
+      events.emplace_back(PLBEvents::EV_Disconnected);
       connectionEvents.push(_stationId);
     }
   });

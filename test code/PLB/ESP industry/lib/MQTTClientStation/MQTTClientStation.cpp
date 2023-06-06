@@ -9,7 +9,10 @@ std::vector<PLBEvents> MQTTClientStation::events;
 
 MQTTClientStation::MQTTClientStation(int id) : 
 _stationId(id), 
-_directorId(0)
+_directorId(0),
+_lastHeartbeat(millis()),
+_stationConnected(true),
+_stationConnectedLast(true)
 {
   _setStationTopics();
   _client.setMqttClientName(mqtt_module.c_str());
@@ -67,7 +70,7 @@ void MQTTClientStation::checkConnection(int disconnectionTimeout)
       events.emplace_back(PLBEvents::EV_Disconnected);
     }
     connectionEvents.push(_stationId);
-    Serial.println(_stationId);
+    Serial.print("checkConnection: "); Serial.println(connectionEvents.front());
     _stationConnectedLast = _stationConnected;
   }
 }
@@ -92,7 +95,9 @@ void MQTTClientStation::onConnectionSubscribe()
     events.emplace_back(PLBEvents::EV_Supply);
     /* -> We add its ID to the supplyRequest queue */
     supplyRequestEvents.push(_stationId);
+    #if COMMENTS
     Serial.print("MQTTClientStation: EV_Supply -> ID = "); Serial.println(supplyRequestEvents.front());
+    #endif
   });
   _client.subscribe(mqtt_topic_stopSupply, [this](const String &topic, const String &payload)
   {
@@ -100,7 +105,9 @@ void MQTTClientStation::onConnectionSubscribe()
     events.emplace_back(PLBEvents::EV_Stop);
     /* -> We add its ID to the stopSupply queue */
     stopSupplyEvents.push(_stationId);
+    #if COMMENTS
     Serial.print("MQTTClientStation: EV_Supply -> ID = "); Serial.println(stopSupplyEvents.front());
+    #endif
     /* Remove the previous director's ID if there is one */
     if (_directorId) _directorId = 0;
   });
@@ -138,7 +145,9 @@ void MQTTClientStation::validateDirector(DirectorState directorState)
 
 void MQTTClientStation::charge(float power)
 {
+  #if COMMENTS
   Serial.print("Charge Station with "); Serial.println(power);
+  #endif
   send(mqtt_topic_charge_station, String(power));
 }
 

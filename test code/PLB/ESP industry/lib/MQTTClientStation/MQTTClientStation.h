@@ -55,9 +55,9 @@ public:
 private:
     uint32_t _directorId;
     int _stationId;
-    unsigned long _lastHeartbeat = 0;
-    bool _stationConnected = true;
-    bool _stationConnectedLast = true;
+    unsigned long _lastHeartbeat;
+    bool _stationConnected;
+    bool _stationConnectedLast;
     void _setStationTopics();
     void notifyDashboard(String message);
 
@@ -70,10 +70,10 @@ private:
     String mqtt_topic_directorValidate = "group4/directorResponse";
     String mqtt_topic_stationHeartbeat = "group4/stationHeartbeat";
     String mqtt_topic_notifyDashboard = "group4/notifyDashboard";
-    String name = "S21 FE J";
-    String password = "yo koaster";
-    String mqtt_module = "Group4-PLB-Station";
-    String broker_ip = "192.168.206.132";
+    String name = "Kiwy";
+    String password = "aquamagic23";
+    String mqtt_module = "Group4-PLB-Building";
+    String broker_ip = "192.168.140.23";
     short port = 1883;
     EspMQTTClient _client = EspMQTTClient(
         name.c_str(),

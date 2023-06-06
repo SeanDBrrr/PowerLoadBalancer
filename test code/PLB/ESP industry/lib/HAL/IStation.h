@@ -3,19 +3,7 @@
 
 #include "stdint.h"
 #include <Arduino.h>
-
-enum class StationModes {
-    MO_Dynamic = 1,
-    MO_FCFS,
-    MO_Director,
-};
-
-enum class DirectorState
-{
-    VALID = 1,
-    INVALID = 0,
-    ALREADY_CHECKED_IN = -1,
-};
+#include "Enums.h"
 
 class IStation
 {

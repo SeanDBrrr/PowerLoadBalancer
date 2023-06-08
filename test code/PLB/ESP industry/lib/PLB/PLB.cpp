@@ -348,52 +348,6 @@ PLBStates PLB::handleDir4State(PLBEvents ev)
     return _state;
 }
 
-void PLB::handleManualMode(StationModes mo)
-{
-    switch (mo)
-    {
-    case StationModes::MO_Dynamic:
-        handleDynamicMode();
-        break;
-    case StationModes::MO_Director:
-        handleDirectorMode();
-        break;
-    case StationModes::MO_FCFS:
-        handleFCFSMode();
-        break;
-    
-    default:
-        break;
-    }
-}
-
-void PLB::handleDynamicMode()
-{
-    float availablePower = 20 + _building->getCurrentSolarPower();
-    for (size_t i = 0; i < _directorStations.size(); i++)
-    {
-        _stations.at(_directorStations.at(i))->charge(availablePower/busyStations);
-    }
-    for (size_t i = 0; i < _userStations.size(); i++)
-    {
-        _stations.at(_userStations.at(i))->charge(availablePower/busyStations);
-    }
-}
-
-void PLB::handleDirectorMode()
-{
-    /* supply directors first (FCFS among directors) and users afterwards (dynamic) */
-    float availablePower = 20 + _building->getCurrentSolarPower();
-    float powerLeftover = supplyDirectors(availablePower);
-    supplyUsers(powerLeftover);
-}
-
-void PLB::handleFCFSMode()
-{
-    /* supply people regarding the time they arrived */
-
-}
-
 void PLB::handleEvents(PLBEvents ev)
 {
     switch (_state)
@@ -520,24 +474,6 @@ void PLB::_initialiseStations()
         st->charge(0);
     }
 }
-/*
-float PLB::_supplyDirectors(float availablePower)
-{
-    for (size_t i = 0; i < _directorStations.size(); i++)
-    {
-        
-    }
-    
-    return 0.0f;
-}
-
-float PLB::_supplyUsers(float availablePower)
-{
-    return 0.0f;
-}
-*/
-
-/* ----------------- Private Functions (Auto Mode) */
 
 /*
  *@brief Distribute power over the 4 chargers and the building (only the calculation) 
@@ -639,75 +575,66 @@ void PLB::_distributePower(float solarPower)
     }
 }
 
-/*
- * @brief This function sends power to the building
- * @return 0 (success) / 1 (failure)
- */
-void PLB::_supplyPowerToBuilding(float solarPower)
-{
-    _building->charge(80 - solarPower);
-}
+/* ----------------- Functions (Manual Mode) */
 
-/*
- * @brief This function is called only when a user press the stop button
- * @return int : 1 (--director) / 0 (--user) / -1 (else)
- */
-int PLB::_stopSupply(IStation *station)
+float PLB::_supplyDirectors(float availablePower)
 {
-    if (busyStations<0) busyStations = 0;
-    #if COMMENTS
-    Serial.print("_stopSupply: busyStations = "); Serial.println(busyStations);
-    #endif
     for (size_t i = 0; i < _directorStations.size(); i++)
     {
-        if (station->getId() == _directorStations.at(i))
-        {
-            _directorStations.erase(_directorStations.begin() + i);
-            _directorIds.erase(_directorIds.begin() + i);
-            --busyStations;
-            station->charge(0);
-            return 1;
-        }
+        
+    }
+    
+    return 0.0f;
+}
+
+float PLB::_supplyUsers(float availablePower)
+{
+    return 0.0f;
+}
+
+void PLB::handleDynamicMode()
+{
+    float availablePower = 20 + _building->getCurrentSolarPower();
+    for (size_t i = 0; i < _directorStations.size(); i++)
+    {
+        _stations.at(_directorStations.at(i))->charge(availablePower/busyStations);
     }
     for (size_t i = 0; i < _userStations.size(); i++)
     {
-        if (station->getId() == _userStations.at(i))
-        {
-            _userStations.erase(_userStations.begin() + i);
-            --busyStations;
-            station->charge(0);
-            return 0;
-        }
+        _stations.at(_userStations.at(i))->charge(availablePower/busyStations);
     }
-    return -1;
 }
 
-/*
- * @brief This function is called when a director swipes his RFID card
- * @return true (success) / false (failure)
- */
-int PLB::checkDirector(IStation *station)
+void PLB::handleDirectorMode()
 {
-    uint32_t directorId = station->getDirectorId();
-    for (size_t i = 0; i < _directorIds.size(); i++)
+    /* supply directors first (FCFS among directors) and users afterwards (dynamic) */
+    float availablePower = 20 + _building->getCurrentSolarPower();
+    float powerLeftover = _supplyDirectors(availablePower);
+    _supplyUsers(powerLeftover);
+}
+
+void PLB::handleFCFSMode()
+{
+    /* supply people regarding the time they arrived */
+}
+
+void PLB::handleManualMode(StationModes mo)
+{
+    switch (mo)
     {
-        /* return RFID state: failed(-1), checkedIn(1), notCheckedIn(0) */
-        if (_directorIds.at(i) == directorId)
-            station->validateDirector(DirectorState::ALREADY_CHECKED_IN);
-            return -1;
+    case StationModes::MO_Dynamic:
+        handleDynamicMode();
+        break;
+    case StationModes::MO_Director:
+        handleDirectorMode();
+        break;
+    case StationModes::MO_FCFS:
+        handleFCFSMode();
+        break;
+    
+    default:
+        break;
     }
-    for(size_t i = 0; i < _validDirectorIds.size(); i++)
-    {
-        if(_validDirectorIds.at(i) == directorId)
-        {
-            _directorIds.emplace_back(directorId);
-            _directorStations.emplace_back(station->getId());
-            station->validateDirector(DirectorState::VALID);
-            return 1;
-        }
-    }
-    station->validateDirector(DirectorState::INVALID);
-    return 0;
 }
 
 bool PLB::isTimeout()

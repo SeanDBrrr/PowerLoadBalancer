@@ -17,6 +17,8 @@ private:
     bool _isPowerReceivedFlag;
     bool _isDirectorResponseFlag;
     bool _isModeChangedFlag;
+    bool _wifiConnectedFlag;
+    bool _mqttConnectedFlag;
     DirectorState _directorState;
     StationMode _stationMode;
 
@@ -29,7 +31,7 @@ private:
     String mqtt_topic_receivePower = "group4/chargeStation" + static_cast<String>(_id);
     String mqtt_topic_directorId = "group4/directorId" + static_cast<String>(_id);
     String mqtt_topic_directorResponse = "group4/directorResponse" + static_cast<String>(_id);
-    String mqtt_topic_stationHeartbeat = "group4/stationHeartbeat" + static_cast<String>(_id);
+    String mqtt_topic_heartbeat = "group4/heartbeat";
     String mqtt_topic_mode = "group4/stationMode";
     short port = 1883;
     EspMQTTClient _client = EspMQTTClient(
@@ -51,6 +53,7 @@ public:
     void receive();
     void onConnectionSubscribe();
     void directorTimeout (int waitingTime);
+    void checkConnection();
     
     Event getEvent();
     ~MQTTClientPLB() = default;

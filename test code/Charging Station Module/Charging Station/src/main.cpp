@@ -10,7 +10,7 @@
 #include "StationScreen.h"
 
 
-int stationId = 3;
+int stationId = 2;
 DirectorScanner *director;
 StationScreen *lcd;
 StartButton* startButton;

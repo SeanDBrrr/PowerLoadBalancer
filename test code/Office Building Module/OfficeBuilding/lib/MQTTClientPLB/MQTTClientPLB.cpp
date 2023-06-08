@@ -1,6 +1,15 @@
 #include "MQTTClientPLB.h"
 
-MQTTClientPLB::MQTTClientPLB() : _isStartedCharging{false}, _solarPowerRequested{false} {}
+MQTTClientPLB::MQTTClientPLB() : _isStartedCharging(false),
+                                 _solarPowerRequested(false),
+                                 _powerFromPLB(0),
+                                 _wifiConnected(false),
+                                 _mqttConnected(false),
+                                 _wifiTrials(false),
+                                 _mqttTrials(false),
+                                 _previousErrTime(0)
+{
+}
 
 EspMQTTClient &MQTTClientPLB::getClient()
 {
@@ -14,27 +23,65 @@ void MQTTClientPLB::send(String topic, String message)
 
 BuildingEvents MQTTClientPLB::receive()
 {
+    BuildingEvents buildingEvents;
     _client.loop();
+    buildingEvents = BuildingEvents::NoEvent;
 
-    static unsigned long lastTime = 0;
-    if (millis() - lastTime >= 5000)
+    if (millis() - _previousErrTime >= INTERVAL)
     {
-        send(mqtt_topic_buildingHeartbeat, "Building_heartbeat");
-        lastTime = millis();
+        _previousErrTime = millis();
+
+        if (!_client.isWifiConnected() && _wifiTrials < TRIALS)
+        {
+            _wifiTrials++;
+            buildingEvents = BuildingEvents::EV_WIFI_TRIALS;
+            _wifiConnected = false;
+        }
+        else if (!_client.isWifiConnected() && _wifiTrials == TRIALS)
+        {
+            _wifiTrials++;
+            buildingEvents = BuildingEvents::EV_WIFI_NOT_CONNECTED;
+        }
+        if (!_client.isMqttConnected() && _wifiConnected && _mqttTrials < TRIALS)
+        {
+            _mqttTrials++;
+            _mqttConnected = false;
+            buildingEvents = BuildingEvents::EV_MQTT_TRIALS;
+        }
+        else if (!_client.isMqttConnected() && _wifiConnected && _mqttTrials == TRIALS)
+        {
+            _mqttTrials++;
+            buildingEvents = BuildingEvents::EV_MQTT_NOT_CONNECTED;
+        }
+    }
+
+    if (_client.isWifiConnected() && _wifiTrials > 0 && _wifiTrials < TRIALS)
+    {
+        _wifiTrials = 0;
+        _mqttTrials = 0;
+        buildingEvents = BuildingEvents::EV_WIFI_CONNECTED;
+        _wifiConnected = true;
+    }
+
+    if (_client.isMqttConnected() && _wifiConnected && _mqttTrials > 0 && _mqttTrials < TRIALS)
+    {
+        _mqttTrials = 0;
+        _mqttConnected = true;
+        buildingEvents = BuildingEvents::EV_MQTT_CONNECTED;
     }
 
     if (_solarPowerRequested)
     {
         _solarPowerRequested = false;
-        return BuildingEvents::EV_SendSolarPower;
+        buildingEvents = BuildingEvents::EV_SendSolarPower;
     }
 
     if (_isStartedCharging)
     {
         _isStartedCharging = false;
-        return BuildingEvents::EV_ChargeBuilding;
+        buildingEvents = BuildingEvents::EV_ChargeBuilding;
     }
-    return BuildingEvents::NoEvent;
+    return buildingEvents;
 }
 
 void MQTTClientPLB::onConnectionSubscribe()
@@ -52,35 +99,6 @@ void MQTTClientPLB::onConnectionSubscribe()
 void MQTTClientPLB::supplyPowerToBuilding(double power)
 {
     send(mqtt_topic_send_power, (String)power);
-}
-
-String MQTTClientPLB::checkConnection()
-{
-    String message;
-    int connectionCase = 0;
-    if (!_client.isWifiConnected() && connectionCase == 0)
-    {
-        for (size_t i = 0; i < 10; i++)
-        {
-            message = "Connecting WiFi attempt: " + static_cast<String>(i);
-            delay(1000);
-        }
-        message = "WiFi connection Failed";
-        connectionCase = 1;
-    }
-
-    if (!_client.isMqttConnected() && connectionCase == -1)
-    {
-        for (size_t i = 0; i < 10; i++)
-        {
-            message = "Connecting Mqtt attempt: " + static_cast<String>(i);
-            delay(1000);
-        }
-        message = "Mqtt connection Failed";
-        connectionCase = 1;
-    }
-
-    return message;
 }
 
 double MQTTClientPLB::getPower()

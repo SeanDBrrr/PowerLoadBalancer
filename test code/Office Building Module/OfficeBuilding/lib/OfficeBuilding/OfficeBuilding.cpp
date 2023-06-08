@@ -9,7 +9,7 @@ OfficeBuilding::OfficeBuilding(IPLB *plb,
                                                       _display(display),
                                                       _wifiTrials(0),
                                                       _mqttTrials(0),
-                                                      _previousErrTime(0),
+                                                      _previousTime(0),
                                                       _currentSolarPower(0)
 {
     _solarPanels.emplace_back(panel1);
@@ -51,49 +51,36 @@ void OfficeBuilding::handleEvent(BuildingEvents ev)
     {
     case BuildingEvents::EV_SendSolarPower:
         sendSolarPower(calculateSolarPower());
-        Serial.println("EV_SendSolarPower");
         break;
     case BuildingEvents::EV_ChargeBuilding:
         _display->display(static_cast<String>(_plb->getPower()));
         break;
     case BuildingEvents::EV_WIFI_TRIALS:
-        Serial.println("EV_WIFI_TRIALS");
-        // if (_wifiTrials < TRIALS)
-        // {
-            _wifiTrials++;
-            _display->display("Connecting WiFi:", "Attempts: " + static_cast<String>(_wifiTrials));
-        // }
+        _wifiTrials++;
+        _display->display("Connecting WiFi:", "Attempts: " + static_cast<String>(_wifiTrials));
         break;
     case BuildingEvents::EV_MQTT_TRIALS:
-        Serial.println("EV_MQTT_TRIALS");
-        // if (_mqttTrials < TRIALS)
-        // {
-            _mqttTrials++;
-            _display->display("Connecting MQTT:", "Attempts: " + static_cast<String>(_mqttTrials));
-        // }
+        _mqttTrials++;
+        _display->display("Connecting MQTT:", "Attempts: " + static_cast<String>(_mqttTrials));
         break;
     case BuildingEvents::EV_WIFI_NOT_CONNECTED:
-        Serial.println("EV_WIFI_NOT_CONNECTED");
         _display->display("ERROR:", "WiFi Connection");
         break;
     case BuildingEvents::EV_MQTT_NOT_CONNECTED:
-        Serial.println("EV_MQTT_NOT_CONNECTED");
         _display->display("ERROR:", "MQTT Connection");
         break;
     case BuildingEvents::EV_WIFI_CONNECTED:
         _wifiTrials = 0;
         _mqttTrials = 0;
-        Serial.println("EV_WIFI_CONNECTED");
         _display->display("WIFI:", "Connected!");
         break;
     case BuildingEvents::EV_MQTT_CONNECTED:
         _mqttTrials = 0;
-        Serial.println("EV_MQTT_CONNECTED");
         _display->display("MQTT:", "Connected");
         break;
     }
 }
-void OfficeBuilding::sendSolarPower(int solarPower)
+void OfficeBuilding::sendSolarPower(double solarPower)
 {
     _plb->supplyPowerToBuilding(solarPower);
 }

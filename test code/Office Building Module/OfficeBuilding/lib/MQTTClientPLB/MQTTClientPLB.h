@@ -14,17 +14,17 @@ private:
     bool _mqttConnected;
     int _wifiTrials;
     int _mqttTrials;
-    unsigned long _previousErrTime = 0;
-    const int INTERVAL = 1000;
-    const int TRIALS = 40;
+    unsigned long _previousTime;
+    const int _INTERVAL = 1000;
+    const int _TRIALS = 40;
 
     BuildingEvents _event;
     String mqtt_topic_calculateSolarPower = "group4/calculateSolarPower";
     String mqtt_topic_charge_building = "group4/chargeBuilding";
     String mqtt_topic_send_power = "group4/powerProduced";
     String mqtt_topic_buildingHeartbeat = "group4/buildingHeartbeat";
-    String name = "SeanIOS";
-    String password = "cashsins69";
+    String name = "Kiwy";
+    String password = "aquamagic23";
     String mqtt_module = "Group4-Building";
     String broker_ip = "192.168.140.23";
     short port = 1883;
@@ -36,9 +36,9 @@ public:
     EspMQTTClient &getClient();
     void send(String topic, String message);
     BuildingEvents receive();
+    BuildingEvents connectionStatusEvent();
     void onConnectionSubscribe();
     void supplyPowerToBuilding(double power);
-    BuildingEvents getEvent() { return _event; }
     double getPower();
 };
 

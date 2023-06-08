@@ -5,9 +5,9 @@ MQTTClientPLB::MQTTClientPLB() : _isStartedCharging(false),
                                  _powerFromPLB(0),
                                  _wifiConnected(false),
                                  _mqttConnected(false),
-                                 _wifiTrials(false),
-                                 _mqttTrials(false),
-                                 _previousErrTime(0)
+                                 _wifiTrials(0),
+                                 _mqttTrials(0),
+                                 _previousTime(0)
 {
 }
 
@@ -21,41 +21,39 @@ void MQTTClientPLB::send(String topic, String message)
     _client.publish(topic, message);
 }
 
-BuildingEvents MQTTClientPLB::receive()
+BuildingEvents MQTTClientPLB::connectionStatusEvent()
 {
-    BuildingEvents buildingEvents;
-    _client.loop();
-    buildingEvents = BuildingEvents::NoEvent;
+    BuildingEvents buildingEvents = BuildingEvents::NoEvent;
 
-    if (millis() - _previousErrTime >= INTERVAL)
+    if (millis() - _previousTime >= _INTERVAL)
     {
-        _previousErrTime = millis();
+        _previousTime = millis();
 
-        if (!_client.isWifiConnected() && _wifiTrials < TRIALS)
+        if (!_client.isWifiConnected() && _wifiTrials < _TRIALS)
         {
             _wifiTrials++;
             buildingEvents = BuildingEvents::EV_WIFI_TRIALS;
             _wifiConnected = false;
         }
-        else if (!_client.isWifiConnected() && _wifiTrials == TRIALS)
+        else if (!_client.isWifiConnected() && _wifiTrials == _TRIALS)
         {
             _wifiTrials++;
             buildingEvents = BuildingEvents::EV_WIFI_NOT_CONNECTED;
         }
-        if (!_client.isMqttConnected() && _wifiConnected && _mqttTrials < TRIALS)
+        if (!_client.isMqttConnected() && _wifiConnected && _mqttTrials < _TRIALS)
         {
             _mqttTrials++;
             _mqttConnected = false;
             buildingEvents = BuildingEvents::EV_MQTT_TRIALS;
         }
-        else if (!_client.isMqttConnected() && _wifiConnected && _mqttTrials == TRIALS)
+        else if (!_client.isMqttConnected() && _wifiConnected && _mqttTrials == _TRIALS)
         {
             _mqttTrials++;
             buildingEvents = BuildingEvents::EV_MQTT_NOT_CONNECTED;
         }
     }
 
-    if (_client.isWifiConnected() && _wifiTrials > 0 && _wifiTrials < TRIALS)
+    if (_client.isWifiConnected() && _wifiTrials > 0 && _wifiTrials < _TRIALS)
     {
         _wifiTrials = 0;
         _mqttTrials = 0;
@@ -63,12 +61,34 @@ BuildingEvents MQTTClientPLB::receive()
         _wifiConnected = true;
     }
 
-    if (_client.isMqttConnected() && _wifiConnected && _mqttTrials > 0 && _mqttTrials < TRIALS)
+    if (_client.isMqttConnected() && _wifiConnected && _mqttTrials > 0 && _mqttTrials < _TRIALS)
     {
         _mqttTrials = 0;
         _mqttConnected = true;
         buildingEvents = BuildingEvents::EV_MQTT_CONNECTED;
     }
+
+    if (_solarPowerRequested)
+    {
+        _solarPowerRequested = false;
+        buildingEvents = BuildingEvents::EV_SendSolarPower;
+    }
+
+    if (_isStartedCharging)
+    {
+        _isStartedCharging = false;
+        buildingEvents = BuildingEvents::EV_ChargeBuilding;
+    }
+    return buildingEvents;
+}
+
+BuildingEvents MQTTClientPLB::receive()
+{
+    BuildingEvents buildingEvents;
+    _client.loop();
+    buildingEvents = BuildingEvents::NoEvent;
+
+    buildingEvents = connectionStatusEvent();
 
     if (_solarPowerRequested)
     {
@@ -98,7 +118,7 @@ void MQTTClientPLB::onConnectionSubscribe()
 
 void MQTTClientPLB::supplyPowerToBuilding(double power)
 {
-    send(mqtt_topic_send_power, (String)power);
+    send(mqtt_topic_send_power, static_cast<String>(power));
 }
 
 double MQTTClientPLB::getPower()

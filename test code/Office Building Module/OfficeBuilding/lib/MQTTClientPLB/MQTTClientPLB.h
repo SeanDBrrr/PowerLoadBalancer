@@ -36,7 +36,7 @@ public:
     EspMQTTClient &getClient();
     void send(String topic, String message);
     BuildingEvents receive();
-    BuildingEvents connectionStatusEvent();
+    BuildingEvents getConnectionStatusEvent();
     void onConnectionSubscribe();
     void supplyPowerToBuilding(double power);
     double getPower();

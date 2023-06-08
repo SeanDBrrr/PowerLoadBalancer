@@ -21,7 +21,7 @@ void MQTTClientPLB::send(String topic, String message)
     _client.publish(topic, message);
 }
 
-BuildingEvents MQTTClientPLB::connectionStatusEvent()
+BuildingEvents MQTTClientPLB::getConnectionStatusEvent()
 {
     BuildingEvents buildingEvents = BuildingEvents::NoEvent;
 
@@ -68,17 +68,6 @@ BuildingEvents MQTTClientPLB::connectionStatusEvent()
         buildingEvents = BuildingEvents::EV_MQTT_CONNECTED;
     }
 
-    if (_solarPowerRequested)
-    {
-        _solarPowerRequested = false;
-        buildingEvents = BuildingEvents::EV_SendSolarPower;
-    }
-
-    if (_isStartedCharging)
-    {
-        _isStartedCharging = false;
-        buildingEvents = BuildingEvents::EV_ChargeBuilding;
-    }
     return buildingEvents;
 }
 
@@ -88,7 +77,7 @@ BuildingEvents MQTTClientPLB::receive()
     _client.loop();
     buildingEvents = BuildingEvents::NoEvent;
 
-    buildingEvents = connectionStatusEvent();
+    buildingEvents = getConnectionStatusEvent();
 
     if (_solarPowerRequested)
     {

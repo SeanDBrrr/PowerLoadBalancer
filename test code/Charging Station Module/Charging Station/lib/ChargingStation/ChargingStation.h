@@ -20,14 +20,16 @@ private:
     bool _isStartedFlag;
     bool _isPluggedFlag;
     bool _isRfidAvailable;
-    bool _isBusy;
+    //bool _isBusy;
     Event _currentEvent;
     State _currentState;
+    int _wifiTrials;
+    int _mqttTrials;
 
     IPLB* _IPLB;
     IPlug* _IPlug;
     IDirector* _IDirector;
-    IDisplay* _IDisplay;
+    IDisplay* _display;
     IStart* _IStart;
 public:
     ChargingStation(

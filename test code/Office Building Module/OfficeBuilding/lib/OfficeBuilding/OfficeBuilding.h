@@ -15,8 +15,12 @@ private:
     IPLB *_plb;
     IDisplay *_display;
     std::vector<ISolarPanel *> _solarPanels;
-
-    double currentSolarPower;
+    int _wifiTrials;
+    int _mqttTrials;
+    unsigned long _previousErrTime = 0;
+    const int INTERVAL = 1000;
+     const int TRIALS = 40;
+    double _currentSolarPower;
 
 public:
     OfficeBuilding(IPLB *plb, 
@@ -31,7 +35,7 @@ public:
     void handleEvent(BuildingEvents ev); 
     double calculateSolarPower();
     void sendSolarPower(int power);
-    void loop();
+    void loop(BuildingEvents ev);
 
 };
 

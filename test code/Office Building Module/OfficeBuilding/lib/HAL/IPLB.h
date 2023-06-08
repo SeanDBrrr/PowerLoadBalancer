@@ -5,7 +5,13 @@
 
 enum class BuildingEvents {NoEvent,
                           EV_SendSolarPower,
-                          EV_ChargeBuilding};
+                          EV_ChargeBuilding,
+                          EV_WIFI_TRIALS,
+                          EV_MQTT_TRIALS,
+                          EV_WIFI_NOT_CONNECTED,
+                          EV_WIFI_CONNECTED,
+                          EV_MQTT_NOT_CONNECTED,
+                          EV_MQTT_CONNECTED};
 
 class IPLB
 {

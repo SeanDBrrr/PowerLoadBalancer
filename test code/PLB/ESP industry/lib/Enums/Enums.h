@@ -26,14 +26,14 @@ enum class PLBModes {
 };
 
 enum class StationModes {
-    MO_Dynamic = 1,
+    MO_Dynamic,
     MO_FCFS,
     MO_Director,
 };
 
 enum class DirectorState
 {
-    VALID = 1,
-    INVALID = 0,
-    ALREADY_CHECKED_IN = -1,
+    VALID ,
+    INVALID,
+    ALREADY_CHECKED_IN,
 };

@@ -37,6 +37,9 @@ private:
     void _supplyPowerToStation(IStation* station);
     void _supplyPowerToBuilding(float solarPower);
     int _stopSupply(IStation* station);
+    void _initialiseStations();
+    float _supplyDirectors(float availablePower);
+    float _supplyUsers(float availablePower);
 
 public:
     PLB(IBuilding *building,
@@ -63,6 +66,11 @@ public:
     PLBStates handleDir3State(PLBEvents ev);
     PLBStates handleDir3OnlyState(PLBEvents ev);
     PLBStates handleDir4State(PLBEvents ev);
+
+    void handleManualMode(StationModes mo);
+    void handleDynamicMode();
+    void handleDirectorMode();
+    void handleFCFSMode();
 
     /* Getters & Setters */
     inline const IBuilding *

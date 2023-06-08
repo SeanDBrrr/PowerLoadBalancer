@@ -18,6 +18,9 @@ PLB::PLB(
     _stations.emplace_back(station2);
     _stations.emplace_back(station3);
     _stations.emplace_back(station4);
+
+    _initialiseStations();
+    
 }
 
 void PLB::addStation(IStation *station)
@@ -42,6 +45,9 @@ PLBStates PLB::handleIdleState(PLBEvents ev)
     {
     case PLBEvents::EV_Timeout:
         solarPower = _building->calculateSolarPower();
+        #if COMMENTS
+        Serial.print("_building->calculateSolarPower() = "); Serial.println(solarPower);
+        #endif
         _distributePower(solarPower);
         break;
     case PLBEvents::EV_Supply:
@@ -84,6 +90,10 @@ PLBStates PLB::handleNoDirState(PLBEvents ev)
     switch (ev)
     {
     case PLBEvents::EV_Timeout:
+        #if COMMENTS
+        Serial.println("handleNoDirState: EV_Timeout");
+        Serial.print("_building->calculateSolarPower() = "); Serial.println(solarPower);
+        #endif
         solarPower = _building->calculateSolarPower();
         _distributePower(solarPower);
         break;
@@ -338,6 +348,52 @@ PLBStates PLB::handleDir4State(PLBEvents ev)
     return _state;
 }
 
+void PLB::handleManualMode(StationModes mo)
+{
+    switch (mo)
+    {
+    case StationModes::MO_Dynamic:
+        handleDynamicMode();
+        break;
+    case StationModes::MO_Director:
+        handleDirectorMode();
+        break;
+    case StationModes::MO_FCFS:
+        handleFCFSMode();
+        break;
+    
+    default:
+        break;
+    }
+}
+
+void PLB::handleDynamicMode()
+{
+    float availablePower = 20 + _building->getCurrentSolarPower();
+    for (size_t i = 0; i < _directorStations.size(); i++)
+    {
+        _stations.at(_directorStations.at(i))->charge(availablePower/busyStations);
+    }
+    for (size_t i = 0; i < _userStations.size(); i++)
+    {
+        _stations.at(_userStations.at(i))->charge(availablePower/busyStations);
+    }
+}
+
+void PLB::handleDirectorMode()
+{
+    /* supply directors first (FCFS among directors) and users afterwards (dynamic) */
+    float availablePower = 20 + _building->getCurrentSolarPower();
+    float powerLeftover = supplyDirectors(availablePower);
+    supplyUsers(powerLeftover);
+}
+
+void PLB::handleFCFSMode()
+{
+    /* supply people regarding the time they arrived */
+
+}
+
 void PLB::handleEvents(PLBEvents ev)
 {
     switch (_state)
@@ -387,6 +443,101 @@ void PLB::_supplyPowerToStation(IStation *station)
     }
     _distributePower(_building->getCurrentSolarPower());
 }
+
+/*
+ * @brief This function sends power to the building
+ * @return 0 (success) / 1 (failure)
+ */
+void PLB::_supplyPowerToBuilding(float solarPower)
+{
+    _building->charge(80 - solarPower);
+}
+
+/*
+ * @brief This function is called only when a user press the stop button
+ * @return int : 1 (--director) / 0 (--user) / -1 (else)
+ */
+int PLB::_stopSupply(IStation *station)
+{
+    --busyStations;
+    if (busyStations<0) busyStations = 0;
+    #if COMMENTS
+    Serial.print("_stopSupply: busyStations = "); Serial.println(busyStations);
+    #endif
+    for (size_t i = 0; i < _directorStations.size(); i++)
+    {
+        if (station->getId() == _directorStations.at(i))
+        {
+            _directorStations.erase(_directorStations.begin() + i);
+            _directorIds.erase(_directorIds.begin() + i);
+            station->charge(0);
+            return 1;
+        }
+    }
+    for (size_t i = 0; i < _userStations.size(); i++)
+    {
+        if (station->getId() == _userStations.at(i))
+        {
+            _userStations.erase(_userStations.begin() + i);
+            station->charge(0);
+            return 0;
+        }
+    }
+    return -1;
+}
+
+/*
+ * @brief This function is called when a director swipes his RFID card
+ * @return RFID state: failed(-1), checkedIn(1), notCheckedIn(0)
+ */
+int PLB::checkDirector(IStation *station)
+{
+    uint32_t directorId = station->getDirectorId();
+    for (size_t i = 0; i < _directorIds.size(); i++)
+    {
+        if (_directorIds.at(i) == directorId)
+            station->validateDirector(DirectorState::ALREADY_CHECKED_IN);
+            return -1;
+    }
+    for(size_t i = 0; i < _validDirectorIds.size(); i++)
+    {
+        if(_validDirectorIds.at(i) == directorId)
+        {
+            _directorIds.emplace_back(directorId);
+            _directorStations.emplace_back(station->getId());
+            station->validateDirector(DirectorState::VALID);
+            return 1;
+        }
+    }
+    station->validateDirector(DirectorState::INVALID);
+    return 0;
+}
+
+void PLB::_initialiseStations()
+{
+    for (auto &st: _stations)
+    {
+        st->charge(0);
+    }
+}
+/*
+float PLB::_supplyDirectors(float availablePower)
+{
+    for (size_t i = 0; i < _directorStations.size(); i++)
+    {
+        
+    }
+    
+    return 0.0f;
+}
+
+float PLB::_supplyUsers(float availablePower)
+{
+    return 0.0f;
+}
+*/
+
+/* ----------------- Private Functions (Auto Mode) */
 
 /*
  *@brief Distribute power over the 4 chargers and the building (only the calculation) 

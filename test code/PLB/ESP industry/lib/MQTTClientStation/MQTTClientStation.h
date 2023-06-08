@@ -50,10 +50,13 @@ public:
     uint32_t getDirectorId();
     void charge(float power);
     void switchMode(StationModes mode);
+    unsigned long getArrivedTime();
 
 private:
     uint32_t _directorId;
     int _stationId;
+    unsigned long _arrivedTime;
+
     void _setStationTopics();
     void notifyDashboard(String message);
 

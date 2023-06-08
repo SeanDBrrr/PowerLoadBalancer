@@ -60,6 +60,7 @@ void MQTTClientStation::onConnectionSubscribe()
   });
   _client.subscribe(mqtt_topic_requestSupply, [this](const String &topic, const String &payload)
   {
+    _arrivedTime = millis();
     /* _stationId requested power */
     events.emplace_back(PLBEvents::EV_Supply);
     /* -> We add its ID to the supplyRequest queue */
@@ -70,6 +71,7 @@ void MQTTClientStation::onConnectionSubscribe()
   });
   _client.subscribe(mqtt_topic_stopSupply, [this](const String &topic, const String &payload)
   {
+    _arrivedTime = 0;
     /* _stationId requested a stop */
     events.emplace_back(PLBEvents::EV_Stop);
     /* -> We add its ID to the stopSupply queue */
@@ -106,6 +108,11 @@ int MQTTClientStation::getId()
 uint32_t MQTTClientStation::getDirectorId()
 {
   return _directorId;
+}
+
+unsigned long MQTTClientStation::getArrivedTime()
+{
+  return _arrivedTime;
 }
 
 void MQTTClientStation::validateDirector(DirectorState directorState)

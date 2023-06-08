@@ -22,13 +22,7 @@ public:
         every time a event is triggered, they are updated */
 
     /* Stores stations ID that requested power */
-    static std::queue<int> supplyRequestEvents;
-    /* Stores stations ID that requested to stop the supply */
-    static std::queue<int> stopSupplyEvents;
-    /* Stores stations ID where a director swiped his card (the corresponding ID is already stored in _directorId) */
-    static std::queue<int> directorEvents;
-    /* Stores connection related events like disconnect or connect */
-    static std::queue<int> connectionEvents;
+    static std::queue<int> idEvents;
     /* Stores all PLBEvents that occured over loop */
     static std::vector<PLBEvents> events;
 
@@ -40,9 +34,7 @@ public:
 
     /* Events Getters */
     std::vector<PLBEvents>& getEvents();
-    std::queue<int>& getSupplyEvents();
-    std::queue<int>& getStopEvents();
-    std::queue<int>& getDirectorEvents();
+    std::queue<int>& getIdEvents();
 
     /* Interface functions */
     void validateDirector(DirectorState directorState);

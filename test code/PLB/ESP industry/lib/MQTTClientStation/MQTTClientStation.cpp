@@ -1,10 +1,7 @@
 #include "MQTTClientStation.h"
 #include <string>
 
-std::queue<int> MQTTClientStation::supplyRequestEvents;
-std::queue<int> MQTTClientStation::stopSupplyEvents;
-std::queue<int> MQTTClientStation::directorEvents;
-std::queue<int> MQTTClientStation::connectionEvents;
+std::queue<int> MQTTClientStation::idEvents;
 std::vector<PLBEvents> MQTTClientStation::events;
 
 MQTTClientStation::MQTTClientStation(int id) : 
@@ -54,7 +51,7 @@ void MQTTClientStation::onConnectionSubscribe()
   {
     /* A director tapped its RFID */
     events.emplace_back(PLBEvents::EV_Director);
-    directorEvents.push(_stationId);
+    idEvents.push(_stationId);
     /* -> We store the director's ID */
     _directorId = payload.toInt();
   });
@@ -64,7 +61,7 @@ void MQTTClientStation::onConnectionSubscribe()
     /* _stationId requested power */
     events.emplace_back(PLBEvents::EV_Supply);
     /* -> We add its ID to the supplyRequest queue */
-    supplyRequestEvents.push(_stationId);
+    idEvents.push(_stationId);
     #if COMMENTS
     Serial.print("MQTTClientStation: EV_Supply -> ID = "); Serial.println(supplyRequestEvents.front());
     #endif
@@ -75,7 +72,7 @@ void MQTTClientStation::onConnectionSubscribe()
     /* _stationId requested a stop */
     events.emplace_back(PLBEvents::EV_Stop);
     /* -> We add its ID to the stopSupply queue */
-    stopSupplyEvents.push(_stationId);
+    idEvents.push(_stationId);
     #if COMMENTS
     Serial.print("MQTTClientStation: EV_Supply -> ID = "); Serial.println(stopSupplyEvents.front());
     #endif
@@ -90,12 +87,12 @@ void MQTTClientStation::onConnectionSubscribe()
     if (payload == online_payload)
     { 
       events.emplace_back(PLBEvents::EV_Connected);
-      connectionEvents.push(_stationId);
+      idEvents.push(_stationId);
     }
     else if (payload == offline_payload) 
     { 
       events.emplace_back(PLBEvents::EV_Disconnected);
-      connectionEvents.push(_stationId);
+      idEvents.push(_stationId);
     }
   });
 }
@@ -166,17 +163,7 @@ std::vector<PLBEvents>& MQTTClientStation::getEvents()
   return events;
 }
 
-std::queue<int>& MQTTClientStation::getSupplyEvents()
+std::queue<int>& MQTTClientStation::getIdEvents()
 {
-  return supplyRequestEvents;
-}
-
-std::queue<int>& MQTTClientStation::getStopEvents()
-{
-  return stopSupplyEvents;
-}
-
-std::queue<int>& MQTTClientStation::getDirectorEvents()
-{
-  return directorEvents;
+  return idEvents;
 }

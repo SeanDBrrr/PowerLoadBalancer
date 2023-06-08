@@ -19,10 +19,7 @@ class PLB
 private:
     PLBStates _state;
     PLBModes _mode;
-    std::queue<int> _supplyRequestStationIdEvents;
-    std::queue<int> _stopStationIdEvents;
-    std::queue<int> _directorEvents;
-    std::queue<int> _connectionEvents;
+    std::queue<int> _stationIdEvents;
 
     IBuilding *_building;
     std::vector<IStation *> _stations;
@@ -30,7 +27,6 @@ private:
     std::vector<int> _userStations;
     std::vector<uint32_t> _directorIds;
     std::vector<uint32_t> _validDirectorIds = {2267176004, 432104642, 1518206872, 40, 50};
-    float _prevSolarPower;
 
     /* PLB Private Functions */
     void _distributePower(float solarPower);
@@ -54,7 +50,7 @@ public:
     /* PLB Public Functions */
     void addStation(IStation* station);
     int checkDirector(IStation* station);
-    void setEvents(std::queue<int>& supply, std::queue<int>& stop, std::queue<int>& directors, std::queue<int>& connection);
+    void setIdEvents(std::queue<int>& ids);
     bool isTimeout();
     void loop(std::vector<PLBEvents>& events);
 

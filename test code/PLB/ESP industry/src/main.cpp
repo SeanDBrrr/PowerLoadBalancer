@@ -38,10 +38,7 @@ void loop() {
   mqttStation3->receive();
 
   /* Pass all events to the PLB */
-  plb->setEvents(MQTTClientStation::supplyRequestEvents,
-                 MQTTClientStation::stopSupplyEvents,
-                 MQTTClientStation::directorEvents,
-                 MQTTClientStation::connectionEvents);
+  plb->setIdEvents(MQTTClientStation::idEvents);
                 
   /* PLB handles events */
   plb->loop(MQTTClientStation::events);

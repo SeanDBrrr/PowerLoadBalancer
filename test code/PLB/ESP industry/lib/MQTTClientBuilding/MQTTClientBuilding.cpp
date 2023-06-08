@@ -33,14 +33,22 @@ void MQTTClientBuilding::onConnectionSubscribe()
   _client.subscribe(mqtt_topic_solarPower, [this](const String &topic, const String &payload)
   { 
     _isSolarPowerArrivedFlag = true;
-    _totalSolarPower = payload.toFloat(); 
+    Serial.println("OnConnectionSubscribe(): _isSolarPowerArrivedFlag == true.");
+    _totalSolarPower = payload.toFloat();
+    Serial.print("_totalSolarPower = "); Serial.println(_totalSolarPower);
   });
 }
 
 float MQTTClientBuilding::calculateSolarPower()
 {
+  _isSolarPowerArrivedFlag = false;
+  #if COMMENTS
+  Serial.print("Before publishing Calculate Solar Power: _isSolarPowerArrivedFlag = "); Serial.println(_isSolarPowerArrivedFlag);
+  #endif
   send(mqtt_topic_calculateSolarPower, "Calculate Solar Power");
-
+  #if COMMENTS
+  Serial.print("After publishing Calculate Solar Power: _isSolarPowerArrivedFlag = "); Serial.println(_isSolarPowerArrivedFlag);
+  #endif
   long lastTime = millis();
   while(!_isSolarPowerArrivedFlag)
   {
@@ -58,7 +66,9 @@ float MQTTClientBuilding::calculateSolarPower()
     _lastConnectionState = _isConnected;
     notifyDashboard("Building is online again.");
   }
-  _isSolarPowerArrivedFlag = false;
+  #if COMMENTS
+  Serial.print("Before returning _totalSolarPower: _isSolarPowerArrivedFlag = "); Serial.println(_isSolarPowerArrivedFlag);
+  #endif
   return _totalSolarPower;
 }
 

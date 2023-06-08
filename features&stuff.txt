@@ -32,7 +32,8 @@ Miscellaneous:
 	-> when station goes off (hardware limitation)
 	-> keeps sending supply request so long as a station do not receive power from PLB
 	-> Dorin's idea with ID in states as parameters
-	-> last will message
+	-> last will message for stations (this has to be retained)
+	-> keep supplying the building with power when it is disconnected
 
 Sioux support:
 	-> busy waiting for timeouts? : 

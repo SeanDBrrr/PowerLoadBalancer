@@ -10,6 +10,7 @@ _directorId(0)
 {
   _setStationTopics();
   _client.setMqttClientName(mqtt_module.c_str());
+  _client.enableDebuggingMessages();
 }
 
 MQTTClientStation::~MQTTClientStation() {}
@@ -53,7 +54,6 @@ void MQTTClientStation::onConnectionSubscribe()
     idEvents.push(_stationId);
     /* -> We store the director's ID */
     _directorId = payload.toInt();
-    Serial.print("Director Event from: "); Serial.println(_stationId);
   });
   _client.subscribe(mqtt_topic_requestSupply, [this](const String &topic, const String &payload)
   {
@@ -62,7 +62,6 @@ void MQTTClientStation::onConnectionSubscribe()
     events.emplace_back(PLBEvents::EV_Supply);
     /* -> We add its ID to the supplyRequest queue */
     idEvents.push(_stationId);
-    Serial.print("Request Supply from: "); Serial.println(_stationId);
   });
   _client.subscribe(mqtt_topic_stopSupply, [this](const String &topic, const String &payload)
   {

@@ -7,7 +7,7 @@ _solarPowerTimeout(5000),
 _isConnected(true),
 _lastConnectionState(true)
 {
-  calculateSolarPower();
+  _client.enableDebuggingMessages();
 }
 
 MQTTClientBuilding::~MQTTClientBuilding() {}

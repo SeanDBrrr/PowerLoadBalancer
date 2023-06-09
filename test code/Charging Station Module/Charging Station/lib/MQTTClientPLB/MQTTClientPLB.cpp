@@ -9,7 +9,12 @@ MQTTClientPLB::MQTTClientPLB( // Few objects are not initialized yet.
       _isModeChangedFlag(0),
       _wifiConnectedFlag(0),
       _mqttConnectedFlag(0),
-      _directorState(DirectorState::noState)
+      _directorState(DirectorState::noState),
+      _previousTime(0),
+      _wifiConnected(false),
+      _mqttConnected(false),
+      _wifiTrials(0),
+      _mqttTrials(0)
 {
   Serial.print("OBJECT CREATED: ");
   Serial.println(_id);
@@ -37,7 +42,8 @@ void MQTTClientPLB::receive()
   }
 
   _event = Event::noEvent;
-  checkConnection();
+  _event = getConnectionStatusEvent();
+  // checkConnection();
 
   if (_directorState == DirectorState::TIMED_OUT)
   {
@@ -87,7 +93,7 @@ void MQTTClientPLB::onConnectionSubscribe()
                     {
     _isPowerReceivedFlag = true;
     _powerReceived = payload.toFloat(); });
-  _client.subscribe(mqtt_topic_heartbeat, [this](const String &topic, const String &payload){});
+  _client.subscribe(mqtt_topic_heartbeat, [this](const String &topic, const String &payload) {});
   _client.subscribe(mqtt_topic_directorResponse, [this](const String &topic, const String &payload)
                     {
     _isDirectorResponseFlag = true;
@@ -160,27 +166,77 @@ void MQTTClientPLB::directorTimeout(int waitingTime)
   }
 }
 
-void MQTTClientPLB::checkConnection()
+Event MQTTClientPLB::getConnectionStatusEvent()
 {
-  if (!_client.isWifiConnected() && !_wifiConnectedFlag)
+  Event ev = Event::noEvent;
+
+  if (millis() - _previousTime >= _INTERVAL)
   {
-    _event = Event::EV_DISCONNECTED_WIFI;
-    _wifiConnectedFlag = true;
-  }
-  else if (_client.isWifiConnected() && _wifiConnectedFlag)
-  {
-    _event = Event::noEvent;
-    _wifiConnectedFlag = false;
+    _previousTime = millis();
+
+    if (!_client.isWifiConnected() && _wifiTrials < _TRIALS)
+    {
+      _wifiTrials++;
+      ev = Event::EV_WIFI_TRIALS;
+      _wifiConnected = false;
+    }
+    else if (!_client.isWifiConnected() && _wifiTrials == _TRIALS)
+    {
+      _wifiTrials++;
+      ev = Event::EV_WIFI_NOT_CONNECTED;
+    }
+    if (!_client.isMqttConnected() && _wifiConnected && _mqttTrials < _TRIALS)
+    {
+      _mqttTrials++;
+      _mqttConnected = false;
+      ev = Event::EV_MQTT_TRIALS;
+    }
+    else if (!_client.isMqttConnected() && _wifiConnected && _mqttTrials == _TRIALS)
+    {
+      _mqttTrials++;
+      ev = Event::EV_MQTT_NOT_CONNECTED;
+    }
   }
 
-  if (!_client.isMqttConnected() && !_mqttConnectedFlag)
+  if (_client.isWifiConnected() && _wifiTrials > 0 && _wifiTrials < _TRIALS)
   {
-    _event = Event::EV_DISCONNECTED_MQTT;
-    _mqttConnectedFlag = true;
+    _wifiTrials = 0;
+    _mqttTrials = 0;
+    ev = Event::EV_WIFI_CONNECTED;
+    _wifiConnected = true;
   }
-  else if (_client.isMqttConnected() && _mqttConnectedFlag)
+
+  if (_client.isMqttConnected() && _wifiConnected && _mqttTrials > 0 && _mqttTrials < _TRIALS)
   {
-    _event = Event::noEvent;
-    _mqttConnectedFlag = false;
+    _mqttTrials = 0;
+    _mqttConnected = true;
+    ev = Event::EV_MQTT_CONNECTED;
   }
+
+  return ev;
 }
+
+// void MQTTClientPLB::checkConnection()
+// {
+//   if (!_client.isWifiConnected() && !_wifiConnectedFlag)
+//   {
+//     _event = Event::EV_DISCONNECTED_WIFI;
+//     _wifiConnectedFlag = true;
+//   }
+//   else if (_client.isWifiConnected() && _wifiConnectedFlag)
+//   {
+//     _event = Event::noEvent;
+//     _wifiConnectedFlag = false;
+//   }
+
+//   if (!_client.isMqttConnected() && !_mqttConnectedFlag)
+//   {
+//     _event = Event::EV_DISCONNECTED_MQTT;
+//     _mqttConnectedFlag = true;
+//   }
+//   else if (_client.isMqttConnected() && _mqttConnectedFlag)
+//   {
+//     _event = Event::noEvent;
+//     _mqttConnectedFlag = false;
+//   }
+//}

@@ -19,8 +19,12 @@ enum class Event
     EV_MODE_CHANGED_DYNAMIC,
     EV_MODE_CHANGED_FCFS,
     EV_MODE_CHANGED_DIRECTOR,
-    EV_DISCONNECTED_WIFI,
-    EV_DISCONNECTED_MQTT
+    EV_WIFI_TRIALS,
+    EV_MQTT_TRIALS,
+    EV_WIFI_NOT_CONNECTED,
+    EV_WIFI_CONNECTED,
+    EV_MQTT_NOT_CONNECTED,
+    EV_MQTT_CONNECTED
 };
 
 enum class State
@@ -35,7 +39,7 @@ enum class State
     STATE_WAITING_FOR_POWER,
     STATE_CHARGING,
     STATE_STOPPED_CHARGING,
-    STATE_ERROR//maybe not needed? Needs to exit substate machine via this I think
+    STATE_ERROR // maybe not needed? Needs to exit substate machine via this I think
 };
 
 enum class DirectorState

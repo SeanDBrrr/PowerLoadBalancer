@@ -21,9 +21,17 @@ private:
     bool _mqttConnectedFlag;
     DirectorState _directorState;
     StationMode _stationMode;
+    unsigned long _previousTime;
+    bool _wifiConnected;
+    bool _mqttConnected;
+    int _wifiTrials;
+    int _mqttTrials;
+    const int _INTERVAL = 1000;
+    const int _TRIALS = 40;
 
-    String name = "Kiwy";
-    String password = "aquamagic23";
+
+    String name = "SeanIOS";
+    String password = "cashsins69";
     String mqtt_module = "Group4-Charger" + static_cast<String>(_id);
     String broker_ip = "192.168.140.23";
     String mqtt_topic_requestPower = "group4/requestPowerSupply" + static_cast<String>(_id);
@@ -54,7 +62,7 @@ public:
     void onConnectionSubscribe();
     void directorTimeout (int waitingTime);
     void checkConnection();
-    
+    Event getConnectionStatusEvent();
     Event getEvent();
     ~MQTTClientPLB() = default;
 };

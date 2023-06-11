@@ -19,25 +19,33 @@ class PLB
 private:
     PLBStates _state;
     PLBModes _mode;
+    StationModes _stationsMode;
     std::queue<int> _stationIdEvents;
 
     IBuilding *_building;
     std::vector<IStation *> _stations;
     std::vector<int> _directorStations;
     std::vector<int> _userStations;
+    std::vector<int> _occupancyStations;
     std::vector<uint32_t> _directorIds;
     std::vector<uint32_t> _validDirectorIds = {2267176004, 432104642, 1518206872, 40, 50};
-
-    /* PLB Private Functions */
+    
+    void _initialiseStations();
+   
+    /* Private functions (Auto mode) */
     void _distributePower(float solarPower);
     void _supplyPowerToStation(IStation* station);
     void _supplyPowerToBuilding(float solarPower);
     int _stopSupply(IStation* station);
-    void _initialiseStations();
-    float _supplyDirectors(float availablePower);
-    float _supplyUsers(float availablePower);
+    
+    /* Private functions (Manual mode) */
+    void _switchToAutoMode();
+    void _supplyPowerDynamicMode(float availablePower);
+    void _supplyPowerDirectorMode(float availablePower);
+    void _supplyPowerFCFSMode(float availablePower);
 
 public:
+    /* Constructor and Destructor */
     PLB(IBuilding *building,
         IStation *station1,
         IStation *station2,
@@ -45,7 +53,7 @@ public:
         IStation *station4
     );
 
-    ~PLB() {}
+    ~PLB();
 
     /* PLB Public Functions */
     void addStation(IStation* station);
@@ -54,7 +62,8 @@ public:
     bool isTimeout();
     void loop(std::vector<PLBEvents>& events);
 
-    void handleEvents(PLBEvents ev);
+    /* Public Functions (Auto mode) */
+    void handleAutoModeEvents(PLBEvents ev);
     PLBStates handleIdleState(PLBEvents ev);
     PLBStates handleNoDirState(PLBEvents ev);
     PLBStates handleDir1State(PLBEvents ev);
@@ -63,10 +72,11 @@ public:
     PLBStates handleDir3OnlyState(PLBEvents ev);
     PLBStates handleDir4State(PLBEvents ev);
 
-    void handleManualMode(StationModes mo);
-    void handleDynamicMode();
-    void handleDirectorMode();
-    void handleFCFSMode();
+    /* Public Functions (Manual mode) */
+    void handleManualModeEvents(PLBEvents ev);
+    void handleDynamicMode(PLBEvents ev);
+    void handleDirectorMode(PLBEvents ev);
+    void handleFCFSMode(PLBEvents ev);
 
     /* Getters & Setters */
     inline const IBuilding *

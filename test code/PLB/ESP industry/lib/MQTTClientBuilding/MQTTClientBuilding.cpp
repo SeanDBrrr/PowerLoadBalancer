@@ -1,5 +1,6 @@
 #include "MQTTClientBuilding.h"
 
+/* ----------------- Constructor and Destructor */
 MQTTClientBuilding::MQTTClientBuilding() : 
 _isSolarPowerArrivedFlag(false), 
 _totalSolarPower(0),
@@ -12,6 +13,7 @@ _lastConnectionState(true)
 
 MQTTClientBuilding::~MQTTClientBuilding() {}
 
+/* ----------------- MQTT related functions */
 EspMQTTClient &MQTTClientBuilding::getClient()
 {
   return _client;
@@ -36,6 +38,7 @@ void MQTTClientBuilding::onConnectionSubscribe()
   });
 }
 
+/* ----------------- Interface's functions */
 float MQTTClientBuilding::calculateSolarPower()
 {
   send(mqtt_topic_calculateSolarPower, "Calculate Solar Power");

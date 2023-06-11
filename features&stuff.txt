@@ -49,6 +49,8 @@ Manual mode:
 		-> Dynamic: all stations go to dynamic mode
 		-> Director:
 		-> FCFS:
+	-> switch to Manual mode: keeps the same stations mode
+	-> switch to Auto Mode : has to determine which PLBStates we are (cars might have driven off or arrived while in Manual mode)
 
 Notes from Dorin from Tuesday:
 	-> My idea with id in states as parameters.

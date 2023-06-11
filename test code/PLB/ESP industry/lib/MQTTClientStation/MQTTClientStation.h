@@ -1,56 +1,24 @@
 #ifndef MQTTCLIENTSTATION_H
 #define MQTTCLIENTSTATION_H
 
-#include "IStation.h"
-#include "EspMQTTClient.h"
-#include "Enums.h"
 #include <vector>
 #include <queue>
 #include <string>
-#include <set>
 
+#include "IStation.h"
+#include "EspMQTTClient.h"
+#include "Enums.h"
 
 using namespace std;
 
 class MQTTClientStation : public IStation
 {
-public:
-    MQTTClientStation(int Id);
-    ~MQTTClientStation();
-    
-    /* These are containers that all the MQTTClientStation object instances share, 
-        every time a event is triggered, they are updated */
-
-    /* Stores stations ID that requested power */
-    static std::queue<int> idEvents;
-    /* Stores all PLBEvents that occured over loop */
-    static std::vector<PLBEvents> events;
-
-    /* MQTT related */
-    EspMQTTClient& getClient();
-    void send(String topic, String message);
-    void receive();
-    void onConnectionSubscribe();
-
-    /* Events Getters */
-    std::vector<PLBEvents>& getEvents();
-    std::queue<int>& getIdEvents();
-
-    /* Interface functions */
-    void validateDirector(DirectorState directorState);
-    int getId();
-    uint32_t getDirectorId();
-    void charge(float power);
-    void switchMode(StationModes mode);
-    unsigned long getArrivedTime();
-
 private:
     uint32_t _directorId;
     int _stationId;
-    unsigned long _arrivedTime;
+    StationModes _mode;
 
     void _setStationTopics();
-    void notifyDashboard(String message);
 
     String mqtt_topic_mode = "group4/stationMode";
     String mqtt_topic_StationId = "group4/StationId";
@@ -73,6 +41,37 @@ private:
         mqtt_module.c_str(),
         port
     );
+public:
+/* Constructor and Destructor */
+    MQTTClientStation(int Id);
+    ~MQTTClientStation();
+    
+    /* These are containers that all the MQTTClientStation object instances share, 
+        every time a event is triggered, they are updated */
+
+    /* Stores stations ID that requested power */
+    static std::queue<int> idEvents;
+    /* Stores all PLBEvents that occured over loop */
+    static std::vector<PLBEvents> events;
+
+    /* MQTT related */
+    EspMQTTClient& getClient();
+    void send(String topic, String message);
+    void receive();
+    void onConnectionSubscribe();
+
+    /* Events Getters */
+    std::vector<PLBEvents>& getEvents();
+    std::queue<int>& getIdEvents();
+
+    /* Interface functions */
+    int getId();
+    uint32_t getDirectorId();
+    void validateDirector(DirectorState directorState);
+    void charge(float power);
+    void switchMode(StationModes mode);
+    void notifyDashboard(String message);
+    StationModes getMode();
 };
 
 #endif

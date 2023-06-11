@@ -34,14 +34,17 @@ private:
     );
 
 public:
+    /* Constructor and Destructor */
     MQTTClientBuilding();
     ~MQTTClientBuilding();
 
+    /* MQTT related */
     EspMQTTClient& getClient();
     void send(String topic, String message);
     void receive();
     void onConnectionSubscribe();
 
+    /* Interface functions */
     float calculateSolarPower();
     void charge(float power);
     float getCurrentSolarPower();

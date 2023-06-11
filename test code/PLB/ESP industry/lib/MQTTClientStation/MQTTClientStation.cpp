@@ -1,12 +1,15 @@
 #include "MQTTClientStation.h"
 #include <string>
 
+/* ----------------- Static variables */
 std::queue<int> MQTTClientStation::idEvents;
 std::vector<PLBEvents> MQTTClientStation::events;
 
+/* ----------------- Constructor and Destructor */
 MQTTClientStation::MQTTClientStation(int id) : 
 _stationId(id), 
-_directorId(0)
+_directorId(0),
+_mode(StationModes::MO_Dynamic)
 {
   _setStationTopics();
   _client.setMqttClientName(mqtt_module.c_str());
@@ -15,11 +18,7 @@ _directorId(0)
 
 MQTTClientStation::~MQTTClientStation() {}
 
-EspMQTTClient &MQTTClientStation::getClient()
-{
-  return _client;
-}
-
+/* ----------------- Private functions */
 void MQTTClientStation::_setStationTopics()
 {
   mqtt_topic_StationId += static_cast<String>(_stationId);
@@ -29,6 +28,12 @@ void MQTTClientStation::_setStationTopics()
   mqtt_topic_stopSupply += static_cast<String>(_stationId);
   mqtt_topic_directorId += static_cast<String>(_stationId);
   mqtt_topic_directorValidate += static_cast<String>(_stationId);
+}
+
+/* ----------------- MQTT related functions */
+EspMQTTClient &MQTTClientStation::getClient()
+{
+  return _client;
 }
 
 void MQTTClientStation::send(String topic, String message)
@@ -57,7 +62,6 @@ void MQTTClientStation::onConnectionSubscribe()
   });
   _client.subscribe(mqtt_topic_requestSupply, [this](const String &topic, const String &payload)
   {
-    _arrivedTime = millis();
     /* _stationId requested power */
     events.emplace_back(PLBEvents::EV_Supply);
     /* -> We add its ID to the supplyRequest queue */
@@ -65,7 +69,6 @@ void MQTTClientStation::onConnectionSubscribe()
   });
   _client.subscribe(mqtt_topic_stopSupply, [this](const String &topic, const String &payload)
   {
-    _arrivedTime = millis();
     /* _stationId requested a stop */
     events.emplace_back(PLBEvents::EV_Stop);
     /* -> We add its ID to the stopSupply queue */
@@ -87,10 +90,27 @@ void MQTTClientStation::onConnectionSubscribe()
     { 
       events.emplace_back(PLBEvents::EV_Disconnected);
       idEvents.push(_stationId);
+      // charge(0); already implemented in PLB
+    }
+  });
+  _client.subscribe(mqtt_topic_mode, [this](const String &topic, const String &payload)
+  {
+    if (payload == "DynamicMaintainer") {
+      _mode = StationModes::MO_Dynamic;
+      events.emplace_back(PLBEvents::EV_SwitchStationMode);
+    }
+    else if (payload == "DirectorMaintainer") {
+      _mode = StationModes::MO_Director;
+      events.emplace_back(PLBEvents::EV_SwitchStationMode);
+    }
+    else if (payload == "FCFSMaintainer") {
+      _mode = StationModes::MO_FCFS;
+      events.emplace_back(PLBEvents::EV_SwitchStationMode);
     }
   });
 }
 
+/* ----------------- Interface's functions */
 int MQTTClientStation::getId()
 {
   return _stationId;
@@ -99,11 +119,6 @@ int MQTTClientStation::getId()
 uint32_t MQTTClientStation::getDirectorId()
 {
   return _directorId;
-}
-
-unsigned long MQTTClientStation::getArrivedTime()
-{
-  return _arrivedTime;
 }
 
 void MQTTClientStation::validateDirector(DirectorState directorState)
@@ -129,17 +144,18 @@ void MQTTClientStation::charge(float power)
 
 void MQTTClientStation::switchMode(StationModes mode)
 {
+  _mode = mode;
   if(mode == StationModes::MO_Director)
   {
-    send(mqtt_topic_mode, "Director Mode");
+    send(mqtt_topic_mode, "Director");
   }
   else if(mode == StationModes::MO_FCFS)
   {
-    send(mqtt_topic_mode, "FCFS Mode");
+    send(mqtt_topic_mode, "FCFS");
   }
   else if(mode == StationModes::MO_Dynamic)
   {
-    send(mqtt_topic_mode, "Dynamic Mode");
+    send(mqtt_topic_mode, "Dynamic");
   }
 }
 
@@ -148,7 +164,12 @@ void MQTTClientStation::notifyDashboard(String message)
   send(mqtt_topic_notifyDashboard, message);
 }
 
-/* ----------- Events Getters */
+StationModes MQTTClientStation::getMode()
+{
+  return _mode;
+}
+
+/* ----------------- Events Getters */
 std::vector<PLBEvents>& MQTTClientStation::getEvents()
 {
   return events;

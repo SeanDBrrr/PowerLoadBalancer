@@ -7,7 +7,9 @@ enum class PLBEvents {
     EV_Stop, 
     EV_Director,
     EV_Disconnected,
-    EV_Connected
+    EV_Connected,
+    EV_SwitchMode,
+    EV_SwitchStationMode,
 };
 
 enum class PLBStates {
@@ -31,8 +33,7 @@ enum class StationModes {
     MO_Director,
 };
 
-enum class DirectorState
-{
+enum class DirectorState {
     VALID ,
     INVALID,
     ALREADY_CHECKED_IN,

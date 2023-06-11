@@ -15,6 +15,7 @@ public:
     virtual void charge(float power) = 0;
     virtual void switchMode(StationModes mode) = 0;
     virtual void notifyDashboard(String message) = 0;
+    virtual StationModes getMode() = 0;
 };
 
 #endif

@@ -45,12 +45,13 @@ Code Changes:
 
 Manual mode:
 	-> the maintainer should be able to control the stations state from the dashboard
-	-> when he presses one of the mode:
-		-> Dynamic: all stations go to dynamic mode
-		-> Director:
-		-> FCFS:
+	-> he can switch to one of the mode:
+		-> Dynamic
+		-> Director
+		-> FCFS
 	-> switch to Manual mode: keeps the same stations mode
 	-> switch to Auto Mode : has to determine which PLBStates we are (cars might have driven off or arrived while in Manual mode)
+	-> if station disconnects and is busy, maintainer is notified and can manually put the user back in the list of arrival (but auto mode don't allow that)
 
 Notes from Dorin from Tuesday:
 	-> My idea with id in states as parameters.

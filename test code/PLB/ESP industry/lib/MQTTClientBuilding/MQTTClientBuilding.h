@@ -23,7 +23,7 @@ private:
     String name = "S21 FE J";
     String password = "yo koaster";
     String mqtt_module = "Group4-PLB-Building";
-    String broker_ip = "192.168.206.132";
+    String broker_ip = "192.168.17.132";
     short port = 1883;
     EspMQTTClient _client = EspMQTTClient(
         name.c_str(),

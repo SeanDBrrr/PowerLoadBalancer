@@ -4,22 +4,20 @@
 /* ----------------- Constructor and Destructor */
 PLB::PLB(
     IBuilding *building,
+    IStation *station0,
     IStation *station1,
     IStation *station2,
-    IStation *station3,
-    IStation *station4
+    IStation *station3
     )
     : busyStations(0),
       _state(PLBStates::ST_Idle),
       _mode(PLBModes::MO_Auto),
       _building(building)
 {
+    _stations.emplace_back(station0);
     _stations.emplace_back(station1);
     _stations.emplace_back(station2);
     _stations.emplace_back(station3);
-    _stations.emplace_back(station4);
-
-    // _initialiseStations();
 }
 
 PLB::~PLB() {}
@@ -33,6 +31,11 @@ void PLB::_initialiseStations()
     }
 }
 
+void PLB::_changeStationsMode(StationModes stMode)
+{
+    _stationsMode = stMode;
+    _stations.at(0)->switchMode(stMode);
+}
 /*
  * @brief This function is called only when a user press the start button
  * @return void
@@ -107,63 +110,57 @@ void PLB::_distributePower(float solarPower)
         case PLBStates::ST_Idle:
             break;
         case PLBStates::ST_NoDir:
-            _stationsMode = StationModes::MO_Dynamic;
+            _changeStationsMode(StationModes::MO_Dynamic);
             userPower = availablePower/busyStations;
             if (userPower > 11) userPower = 11;
 
             for (size_t i = 0; i < _userStations.size(); i++)
             {
-                _stations.at(_userStations.at(i))->switchMode(_stationsMode);
                 _stations.at(_userStations.at(i))->charge(userPower);
             }
             break;
         case PLBStates::ST_Dir1:
-            _stationsMode = StationModes::MO_Director;
+            _changeStationsMode(StationModes::MO_Director);
             directorPower = 11;
             userPower = _userStations.size() > 0 ? (availablePower-directorPower)/_userStations.size() : 0;
 
             /* Supply director first */
-            _stations.at(_directorStations.at(0))->switchMode(_stationsMode);
             _stations.at(_directorStations.at(0))->charge(directorPower);
 
             /* Then supply users */
             for (size_t i = 0; i < _userStations.size(); i++)
             {
-                _stations.at(_userStations.at(i))->switchMode(StationModes::MO_Director);
                 _stations.at(_userStations.at(i))->charge(userPower);
             }
             break;
         case PLBStates::ST_Dir2:
-            _stationsMode = StationModes::MO_Director;
+            _changeStationsMode(StationModes::MO_Director);
             directorPower = (availablePower >= 22) ? 11 : availablePower/2;
             userPower = (_userStations.size() > 0 && availablePower > 22) ? (availablePower-directorPower)/_userStations.size() : 0;
 
             /* Supply directors first */
             for (size_t i = 0; i < _directorStations.size(); i++)
             {
-                _stations.at(_directorStations.at(i))->switchMode(_stationsMode);
                 _stations.at(_directorStations.at(i))->charge(directorPower);
             }
 
             /* Then supply users */
             for (size_t i = 0; i < _userStations.size(); i++)
             {
-                _stations.at(_userStations.at(i))->switchMode(StationModes::MO_Director);
                 _stations.at(_userStations.at(i))->charge(userPower);
             }
             break;
         case PLBStates::ST_Dir3:
-            _stationsMode = StationModes::MO_Dynamic;
+            _changeStationsMode(StationModes::MO_Dynamic);
             for (size_t i = 0; i < _stations.size(); i++)
             {
-                _stations.at(i)->switchMode(_stationsMode);
                 _stations.at(i)->charge(availablePower/4);
             }
             break;
         case PLBStates::ST_Dir3Only:
             if (availablePower > 22)
             {
-                _stationsMode = StationModes::MO_FCFS;
+                _changeStationsMode(StationModes::MO_FCFS);
                 for (size_t i = 0; i < _directorStations.size(); i++)
                 {
                     _stations.at(_directorStations.at(i))->switchMode(_stationsMode);
@@ -180,16 +177,15 @@ void PLB::_distributePower(float solarPower)
             }
             else
             {
-                _stationsMode = StationModes::MO_Director;
+                _changeStationsMode(StationModes::MO_Director);
                 for (size_t i = 0; i < _directorStations.size(); i++)
                 {
-                    _stations.at(_directorStations.at(i))->switchMode(_stationsMode);
                     _stations.at(_directorStations.at(i))->charge(availablePower/3);
                 }
             }
             break;
         case PLBStates::ST_Dir4:
-            _stationsMode = StationModes::MO_Director;
+            _changeStationsMode(StationModes::MO_Director);
             for (size_t i = 0; i < _directorStations.size(); i++)
             {
                 _stations.at(_directorStations.at(i))->switchMode(_stationsMode);
@@ -629,11 +625,12 @@ void PLB::handleDynamicMode(PLBEvents ev)
         _supplyPowerDynamicMode(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
         break;
-    case PLBEvents::EV_SwitchMode: 
+    case PLBEvents::EV_SwitchMode:
         _mode = PLBModes::MO_Auto;
         _switchToAutoMode();
         break;
-    case PLBEvents::EV_SwitchStationMode: _stationsMode = _stations.at(0)->getMode();
+    case PLBEvents::EV_SwitchStationMode: 
+        _stationsMode = _stations.at(0)->getMode();
         break;
     default:
         break;
@@ -674,7 +671,8 @@ void PLB::handleDirectorMode(PLBEvents ev)
         _mode = PLBModes::MO_Auto;
         _switchToAutoMode();
         break;
-    case PLBEvents::EV_SwitchStationMode: _stationsMode = _stations.at(0)->getMode();
+    case PLBEvents::EV_SwitchStationMode: 
+        _stationsMode = _stations.at(0)->getMode();
         break;
     default:
         break;
@@ -715,7 +713,8 @@ void PLB::handleFCFSMode(PLBEvents ev)
         _mode = PLBModes::MO_Auto;
         _switchToAutoMode();
         break;
-    case PLBEvents::EV_SwitchStationMode: _stationsMode = _stations.at(0)->getMode();
+    case PLBEvents::EV_SwitchStationMode:
+        _stationsMode = _stations.at(0)->getMode();
         break;
     default:
         break;
@@ -774,7 +773,7 @@ bool PLB::isTimeout()
 
 void PLB::loop(std::vector<PLBEvents>& events)
 {
-    if (isTimeout()) handleEvents(PLBEvents::EV_Timeout);
+    if (isTimeout()) handleAutoModeEvents(PLBEvents::EV_Timeout);
 
     if (_mode == PLBModes::MO_Auto) 
     {
@@ -786,14 +785,14 @@ void PLB::loop(std::vector<PLBEvents>& events)
             else if (ev==PLBEvents::EV_Director) { Serial.println("PLB loop: EV_Director"); }
             else if (ev==PLBEvents::EV_Connected) { Serial.println("PLB loop: EV_Connected"); }
             else if (ev==PLBEvents::EV_Disconnected) { Serial.println("PLB loop: EV_Disconnected"); }
-            handleEvents(ev);
+            handleAutoModeEvents(ev);
         }
     }
     else if (_mode == PLBModes::MO_Manual) 
     {
         for (const auto &ev: events)
         {
-            handleManualMode(ev);
+            handleManualModeEvents(ev);
         }
     }
     /* Get rid of events once handled */

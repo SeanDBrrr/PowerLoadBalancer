@@ -31,6 +31,7 @@ private:
     std::vector<uint32_t> _validDirectorIds = {2267176004, 432104642, 1518206872, 40, 50};
     
     void _initialiseStations();
+    void _changeStationsMode(StationModes stMode);
    
     /* Private functions (Auto mode) */
     void _distributePower(float solarPower);

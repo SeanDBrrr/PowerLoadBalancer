@@ -9,7 +9,7 @@ enum class PLBEvents {
     EV_Disconnected,
     EV_Connected,
     EV_SwitchMode,
-    EV_SwitchStationMode,
+    EV_SwitchStationMode
 };
 
 enum class PLBStates {

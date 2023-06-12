@@ -16,11 +16,13 @@ class MQTTClientStation : public IStation
 private:
     uint32_t _directorId;
     int _stationId;
-    StationModes _mode;
+    StationModes _stationMode;
+    PLBModes _mode;
 
     void _setStationTopics();
 
-    String mqtt_topic_mode = "group4/stationMode";
+    String mqtt_topic_stationMode = "group4/stationMode";
+    String mqtt_topic_mode = "group4/mode";
     String mqtt_topic_StationId = "group4/StationId";
     String mqtt_topic_directorId = "group4/directorId";
     String mqtt_topic_requestSupply = "group4/requestPowerSupply";
@@ -71,7 +73,8 @@ public:
     void charge(float power);
     void switchMode(StationModes mode);
     void notifyDashboard(String message);
-    StationModes getMode();
+    StationModes getStationMode();
+    PLBModes getPLBMode();
 };
 
 #endif

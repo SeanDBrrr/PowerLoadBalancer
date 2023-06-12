@@ -256,7 +256,7 @@ PLBStates PLB::handleIdleState(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
         break;
-    case PLBEvents::EV_SwitchMode: _mode = PLBModes::MO_Manual;
+    case PLBEvents::EV_SwitchMode: _mode = _stations.at(0)->getPLBMode();
         break;
     }
     return _state;
@@ -299,7 +299,7 @@ PLBStates PLB::handleNoDirState(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
         break;
-    case PLBEvents::EV_SwitchMode: _mode = PLBModes::MO_Manual;
+    case PLBEvents::EV_SwitchMode: _mode = _stations.at(0)->getPLBMode();
         break;
     }
     return _state;
@@ -349,7 +349,7 @@ PLBStates PLB::handleDir1State(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
         break;
-    case PLBEvents::EV_SwitchMode: _mode = PLBModes::MO_Manual;
+    case PLBEvents::EV_SwitchMode: _mode = _stations.at(0)->getPLBMode();
         break;
     }
     return _state;
@@ -397,7 +397,7 @@ PLBStates PLB::handleDir2State(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
         break;
-    case PLBEvents::EV_SwitchMode: _mode = PLBModes::MO_Manual;
+    case PLBEvents::EV_SwitchMode: _mode = _stations.at(0)->getPLBMode();
         break;
     }
     return _state;
@@ -438,7 +438,7 @@ PLBStates PLB::handleDir3OnlyState(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
         break;
-    case PLBEvents::EV_SwitchMode: _mode = PLBModes::MO_Manual;
+    case PLBEvents::EV_SwitchMode: _mode = _stations.at(0)->getPLBMode();
         break;
     }
     return _state;
@@ -476,7 +476,7 @@ PLBStates PLB::handleDir3State(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
         break;
-    case PLBEvents::EV_SwitchMode: _mode = PLBModes::MO_Manual;
+    case PLBEvents::EV_SwitchMode: _mode = _stations.at(0)->getPLBMode();
         break;
     }
     return _state;
@@ -507,7 +507,7 @@ PLBStates PLB::handleDir4State(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
         break;
-    case PLBEvents::EV_SwitchMode: _mode = PLBModes::MO_Manual;
+    case PLBEvents::EV_SwitchMode: _mode = _stations.at(0)->getPLBMode();
         break;
     }
     return _state;
@@ -626,11 +626,14 @@ void PLB::handleDynamicMode(PLBEvents ev)
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_SwitchMode:
-        _mode = PLBModes::MO_Auto;
-        _switchToAutoMode();
+        _mode = _stations.at(0)->getPLBMode();
+        if(_mode == PLBModes::MO_Auto)
+        {
+            _switchToAutoMode();
+        }
         break;
     case PLBEvents::EV_SwitchStationMode: 
-        _stationsMode = _stations.at(0)->getMode();
+        _stationsMode = _stations.at(0)->getStationMode();
         break;
     default:
         break;
@@ -668,11 +671,14 @@ void PLB::handleDirectorMode(PLBEvents ev)
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_SwitchMode:
-        _mode = PLBModes::MO_Auto;
-        _switchToAutoMode();
+        _mode = _stations.at(0)->getPLBMode();
+        if(_mode == PLBModes::MO_Auto)
+        {
+            _switchToAutoMode();
+        }
         break;
     case PLBEvents::EV_SwitchStationMode: 
-        _stationsMode = _stations.at(0)->getMode();
+        _stationsMode = _stations.at(0)->getStationMode();
         break;
     default:
         break;
@@ -710,11 +716,14 @@ void PLB::handleFCFSMode(PLBEvents ev)
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_SwitchMode:
-        _mode = PLBModes::MO_Auto;
-        _switchToAutoMode();
+        _mode = _stations.at(0)->getPLBMode();
+        if(_mode == PLBModes::MO_Auto)
+        {
+            _switchToAutoMode();
+        }
         break;
     case PLBEvents::EV_SwitchStationMode:
-        _stationsMode = _stations.at(0)->getMode();
+        _stationsMode = _stations.at(0)->getStationMode();
         break;
     default:
         break;

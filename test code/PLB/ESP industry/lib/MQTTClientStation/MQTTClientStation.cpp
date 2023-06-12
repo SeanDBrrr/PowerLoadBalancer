@@ -9,7 +9,8 @@ std::vector<PLBEvents> MQTTClientStation::events;
 MQTTClientStation::MQTTClientStation(int id) : 
 _stationId(id), 
 _directorId(0),
-_mode(StationModes::MO_Dynamic)
+_stationMode(StationModes::MO_Dynamic),
+_mode(PLBModes::MO_Auto)
 {
   _setStationTopics();
   _client.setMqttClientName(mqtt_module.c_str());
@@ -93,19 +94,30 @@ void MQTTClientStation::onConnectionSubscribe()
       // charge(0); already implemented in PLB
     }
   });
-  _client.subscribe(mqtt_topic_mode, [this](const String &topic, const String &payload)
+  _client.subscribe(mqtt_topic_stationMode, [this](const String &topic, const String &payload)
   {
     if (payload == "DynamicMaintainer") {
-      _mode = StationModes::MO_Dynamic;
+      _stationMode = StationModes::MO_Dynamic;
       events.emplace_back(PLBEvents::EV_SwitchStationMode);
     }
     else if (payload == "DirectorMaintainer") {
-      _mode = StationModes::MO_Director;
+      _stationMode = StationModes::MO_Director;
       events.emplace_back(PLBEvents::EV_SwitchStationMode);
     }
     else if (payload == "FCFSMaintainer") {
-      _mode = StationModes::MO_FCFS;
+      _stationMode = StationModes::MO_FCFS;
       events.emplace_back(PLBEvents::EV_SwitchStationMode);
+    }
+  });
+   _client.subscribe(mqtt_topic_mode, [this](const String &topic, const String &payload)
+  {
+    if (payload == "AutoMode") {
+      _mode = PLBModes::MO_Auto;
+      events.emplace_back(PLBEvents::EV_SwitchMode);
+    }
+    else if (payload == "ManualMode") {
+      _mode = PLBModes::MO_Manual;
+      events.emplace_back(PLBEvents::EV_SwitchMode);
     }
   });
 }
@@ -144,18 +156,18 @@ void MQTTClientStation::charge(float power)
 
 void MQTTClientStation::switchMode(StationModes mode)
 {
-  _mode = mode;
+  _stationMode = mode;
   if(mode == StationModes::MO_Director)
   {
-    send(mqtt_topic_mode, "Director");
+    send(mqtt_topic_stationMode, "Director");
   }
   else if(mode == StationModes::MO_FCFS)
   {
-    send(mqtt_topic_mode, "FCFS");
+    send(mqtt_topic_stationMode, "FCFS");
   }
   else if(mode == StationModes::MO_Dynamic)
   {
-    send(mqtt_topic_mode, "Dynamic");
+    send(mqtt_topic_stationMode, "Dynamic");
   }
 }
 
@@ -164,7 +176,12 @@ void MQTTClientStation::notifyDashboard(String message)
   send(mqtt_topic_notifyDashboard, message);
 }
 
-StationModes MQTTClientStation::getMode()
+StationModes MQTTClientStation::getStationMode()
+{
+  return _stationMode;
+}
+
+PLBModes MQTTClientStation::getPLBMode()
 {
   return _mode;
 }

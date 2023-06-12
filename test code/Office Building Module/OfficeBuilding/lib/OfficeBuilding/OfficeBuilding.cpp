@@ -53,7 +53,7 @@ void OfficeBuilding::handleEvent(BuildingEvents ev)
         sendSolarPower(calculateSolarPower());
         break;
     case BuildingEvents::EV_ChargeBuilding:
-        _display->display(static_cast<String>(_plb->getPower()));
+        _display->display("Consumption:", static_cast<String>(_plb->getPower()) + "kW");
         break;
     case BuildingEvents::EV_WIFI_TRIALS:
         _wifiTrials++;

@@ -31,7 +31,7 @@ void setup()
   startButton = new StartButton();
   plugButton = new PlugButton();
   mqttPLB = new MQTTClientPLB(stationId);
-  mqttPLB->getClient().enableLastWillMessage("group4/heartbeat", "ONLINE2");
+  //mqttPLB->getClient().enableLastWillMessage("group4/heartbeat", ("OFFLINE" + static_cast<const char>(stationId)));
   chargingStation = new ChargingStation(
     stationId,
     startButton,
@@ -43,6 +43,19 @@ void setup()
 }
 
 void loop() {
+  // Event tempEV = mqttPLB->getEvent();
+  // Event lastEV;
+  // Event ReturnEvent;
+  // if (tempEV != lastEV)
+  // {
+  //   Serial.println("PLB EVENT CHANGED");
+  //   ReturnEvent = tempEV;
+  //   lastEV = tempEV;
+  // }
+  // else
+  // {
+  //   ReturnEvent = Event::noEvent;
+  // }
   
   chargingStation->loop(mqttPLB->getEvent());
   mqttPLB->receive();

@@ -43,6 +43,19 @@ void setup()
 }
 
 void loop() {
+  // Event tempEV = mqttPLB->getEvent();
+  // Event lastEV;
+  // Event ReturnEvent;
+  // if (tempEV != lastEV)
+  // {
+  //   Serial.println("PLB EVENT CHANGED");
+  //   ReturnEvent = tempEV;
+  //   lastEV = tempEV;
+  // }
+  // else
+  // {
+  //   ReturnEvent = Event::noEvent;
+  // }
   
   chargingStation->loop(mqttPLB->getEvent());
   mqttPLB->receive();

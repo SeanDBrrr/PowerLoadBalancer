@@ -7,6 +7,7 @@
 #include "Enums.h"
 #include <iostream>
 #include <exception>
+#include <queue>
 
 enum class Event; 
 enum class State;

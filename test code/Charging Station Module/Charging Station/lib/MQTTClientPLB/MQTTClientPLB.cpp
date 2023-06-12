@@ -34,15 +34,16 @@ void MQTTClientPLB::send(String topic, String message)
 void MQTTClientPLB::receive()
 {
   _client.loop();
-  static unsigned long lastTime = 0;
-  if (millis() - lastTime >= 5000)
-  {
-    send(mqtt_topic_heartbeat, static_cast<String>(_id));
-    lastTime = millis();
-  }
+  // HeartBeat
+  //  static unsigned long lastTime = 0;
+  //  if (millis() - lastTime >= 5000)
+  //  {
+  //    send(mqtt_topic_heartbeat, static_cast<String>(_id));
+  //    lastTime = millis();
+  //  }
 
-  _event = Event::noEvent;
-  _event = getConnectionStatusEvent();
+  //_event = Event::noEvent;
+  //_event = getConnectionStatusEvent();
   // checkConnection();
 
   if (_directorState == DirectorState::TIMED_OUT)
@@ -151,11 +152,44 @@ float MQTTClientPLB::getPowerReceived()
   return _powerReceived;
 }
 
+void MQTTClientPLB::SetPowerRecievedFlag(bool powerRecievedFlag)
+{
+  _isPowerReceivedFlag = powerRecievedFlag;
+}
+
+bool MQTTClientPLB::getPowerReceievedFlag()
+{
+  return _isPowerReceivedFlag;
+}
+
+void MQTTClientPLB::callClientLoop()
+{
+  _client.loop();
+}
+
+// void MQTTClientPLB::WaitingForPower()
+// {
+//   unsigned long lastTime = millis();
+//   while (!_isPowerReceivedFlag)
+//   {
+//     _client.loop();
+//     if (millis() - lastTime >= 5000)
+//     {
+//       send(mqtt_topic_requestPower, static_cast<String>(id));
+//       Serial.println("Requesting Power");
+//       lastTime = millis();
+//     }
+//   }
+//   _isPowerReceivedFlag = 0; // unsure, was at the end of while loop
+//   _event = Event::EV_CHARGING;
+// }
+
 void MQTTClientPLB::directorTimeout(int waitingTime)
 {
   unsigned long lastTime = millis();
   while (!_isDirectorResponseFlag)
   {
+    _client.loop();
     if (millis() - lastTime >= waitingTime)
     {
       Serial.println("TIMED_OUT");

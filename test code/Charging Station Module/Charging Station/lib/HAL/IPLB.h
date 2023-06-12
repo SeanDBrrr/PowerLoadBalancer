@@ -11,4 +11,7 @@ public:
     virtual void stopSupplyToStation(int id) = 0;
     virtual void checkDirector(uint32_t id) = 0;
     virtual void directorTimeout(int waitingTime) = 0;
+    virtual void SetPowerRecievedFlag(bool powerRecievedFlag) = 0;
+    virtual bool getPowerReceievedFlag() = 0;
+    virtual void callClientLoop();
 };

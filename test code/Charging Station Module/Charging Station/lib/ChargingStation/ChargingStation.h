@@ -20,7 +20,6 @@ private:
     bool _isStartedFlag;
     bool _isPluggedFlag;
     bool _isRfidAvailable;
-    //bool _isBusy;
     Event _currentEvent;
     State _currentState;
     int _wifiTrials;
@@ -60,5 +59,5 @@ public:
     State HandleErrorState(Event ev);
     
     void charge(float power);
-    void requestPower();
+    int requestPower();
 };

@@ -31,7 +31,7 @@ void setup()
   startButton = new StartButton();
   plugButton = new PlugButton();
   mqttPLB = new MQTTClientPLB(stationId);
-  mqttPLB->getClient().enableLastWillMessage("group4/heartbeat", "ONLINE2");
+  //mqttPLB->getClient().enableLastWillMessage("group4/heartbeat", ("OFFLINE" + static_cast<const char>(stationId)));
   chargingStation = new ChargingStation(
     stationId,
     startButton,

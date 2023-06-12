@@ -18,11 +18,14 @@ private:
     uint32_t _directorId;
     int _id;
     float _powerRecieved;
+    bool _startButtonState = false;
+    bool _plugButtonState = false;
     bool _isStartedFlag;
     bool _isPluggedFlag;
     bool _isRfidAvailable;
     std::vector<Event> _currentEvents;
     State _currentState;
+    State _lastState;
     int _wifiTrials;
     int _mqttTrials;
 

@@ -500,15 +500,14 @@ void ChargingStation::requestPower() // MAKE VOID WHEN DONE
     while (!_IPLB->getPowerReceievedFlag()) // PLB
     {
         _IPLB->callClientLoop(); // PLB
-        if (_isStartedFlag)
+
+        if (_startButtonState) // STARTBUTTON has been pressed
         {
-            if (_IStart->isStarted()) // STARTBUTTON has been pressed
-            {
-                _isStartedFlag = false;
-                Serial.println("STOPPED");
-                return;
-            }
+            _isStartedFlag = false;
+            Serial.println("STOPPED");
+            return;
         }
+
         if (millis() - lastTime >= 5000)
         {
             _IPLB->supplyPowerToStation(_id); //_IPLB
@@ -524,52 +523,48 @@ void ChargingStation::requestPower() // MAKE VOID WHEN DONE
 
 void ChargingStation::loop(Event ev)
 {
+    _startButtonState = _IStart->isStarted();
+    _plugButtonState = _IPlug->isPlugged();
 
-
-    if (!_isStartedFlag)
+    if (_currentState == State::STATE_STOPPED_CHARGING || _currentState == State::STATE_PLUGGED_DIRECTOR || _currentState == State::STATE_PLUGGED)
     {
-        if (_IStart->isStarted())
+        if (_startButtonState)
         {
             Serial.println("STARTED BUTTON");
             _isStartedFlag = true;
             _currentEvents.emplace_back(Event::EV_START);
         }
     }
-    else if (_isStartedFlag)
+
+    if (_currentState == State::STATE_CHARGING || _currentState == State::STATE_WAITING_FOR_POWER)
     {
-        if (_IStart->isStarted())
+        if (_startButtonState)
         {
+            Serial.println("StartButtonState = " + static_cast<String>(_startButtonState));
             Serial.println("STOPPED BUTTON");
-            _isStartedFlag = false;
             _currentEvents.emplace_back(Event::EV_STOP);
-            //_currentEvent = Event::EV_STOP;
         }
     }
 
-    if (_currentState == State::STATE_WAITING_FOR_POWER && _isStartedFlag == false)
+    if (_currentState == State::STATE_IDLE || _currentState == State::STATE_IDLE_DIRECTOR)
     {
-        _currentEvents.emplace_back(Event::EV_STOP);
-    }
-    
-
-    if (!_isPluggedFlag)
-    {
-        if (_IPlug->isPlugged())
+        if (_plugButtonState)
         {
-            _isPluggedFlag = true;
+            Serial.println("plugButtonState = " + static_cast<String>(_plugButtonState));
             _currentEvents.emplace_back(Event::EV_PLUGGED);
         }
     }
-    else if (_isPluggedFlag)
+
+    if ((_currentState == State::STATE_STOPPED_CHARGING || _currentState == State::STATE_PLUGGED || _currentState == State::STATE_PLUGGED_DIRECTOR))
     {
-        if (_IPlug->isPlugged())
+        if (_plugButtonState)
         {
-            _isPluggedFlag = false;
+            Serial.println("plugButtonState = " + static_cast<String>(_plugButtonState));
             _currentEvents.emplace_back(Event::EV_UNPLUGGED);
         }
     }
 
-    if (_isRfidAvailable)
+    if (_currentState == State::STATE_IDLE || _currentState == State::STATE_PLUGGED)
     {
         _directorId = _IDirector->getID();
     }
@@ -602,7 +597,7 @@ void ChargingStation::loop(Event ev)
 
     try
     {
-        for (const auto &currentEvent: _currentEvents)
+        for (const auto &currentEvent : _currentEvents)
         {
             HandleEvent(currentEvent);
         }

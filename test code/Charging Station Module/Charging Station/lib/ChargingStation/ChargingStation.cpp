@@ -13,7 +13,6 @@ ChargingStation::ChargingStation(
       _isStartedFlag(0),
       _isPluggedFlag(0),
       _isRfidAvailable(1),
-      _currentEvent(Event::noEvent),
       _currentState(State::STATE_IDLE),
       _wifiTrials(0),
       _mqttTrials(0),
@@ -299,11 +298,6 @@ State ChargingStation::HandlePluggedDirectorState(Event ev)
 State ChargingStation::HandleWaitingForPowerState(Event ev)
 {
     State result = State::STATE_WAITING_FOR_POWER;
-    if (_currentEvent == Event::EV_STOP)
-    {
-        Serial.println("still STOP");
-    }
-    assert(_currentEvent == Event::EV_STOP);
 
     switch (ev)
     {
@@ -403,6 +397,7 @@ State ChargingStation::HandleStoppedChargingState(Event ev)
     {
     case Event::EV_START:
         _isRfidAvailable = false;
+        Serial.println("stp charging, requesting");
         _display->display("stp WAITING POWER");
         result = State::STATE_WAITING_FOR_POWER;
         requestPower();
@@ -498,7 +493,7 @@ void ChargingStation::HandleEvent(Event ev) // can technically just call private
     }
 }
 
-int ChargingStation::requestPower() // MAKE VOID WHEN DONE
+void ChargingStation::requestPower() // MAKE VOID WHEN DONE
 {
     _IPLB->supplyPowerToStation(_id);
     unsigned long lastTime = millis();
@@ -507,12 +502,11 @@ int ChargingStation::requestPower() // MAKE VOID WHEN DONE
         _IPLB->callClientLoop(); // PLB
         if (_isStartedFlag)
         {
-            if (_IStart->isStarted()) // STARTBUTTON
+            if (_IStart->isStarted()) // STARTBUTTON has been pressed
             {
                 _isStartedFlag = false;
-                _currentEvent = Event::EV_STOP;
                 Serial.println("STOPPED");
-                return 0;
+                return;
             }
         }
         if (millis() - lastTime >= 5000)
@@ -524,23 +518,13 @@ int ChargingStation::requestPower() // MAKE VOID WHEN DONE
     }
     Serial.println("EXIT WHILE");
     _IPLB->SetPowerRecievedFlag(false); // PLB
-    _currentEvent = Event::EV_CHARGING;
-    return 0;
+    _currentEvents.emplace_back(Event::EV_CHARGING);
+    return;
 }
 
 void ChargingStation::loop(Event ev)
 {
-    _currentEvent = ev; // needed for the events recieved from the PLB
 
-    if (_currentState == State::STATE_WAITING_FOR_POWER)
-    {
-        if (_currentEvent == Event::EV_STOP)
-        {
-            Serial.println("still STOP2");
-        }
-        //assert(_currentEvent == Event::noEvent);
-        assert(_currentEvent == Event::EV_STOP);
-    }
 
     if (!_isStartedFlag)
     {
@@ -548,7 +532,7 @@ void ChargingStation::loop(Event ev)
         {
             Serial.println("STARTED BUTTON");
             _isStartedFlag = true;
-            _currentEvent = Event::EV_START;
+            _currentEvents.emplace_back(Event::EV_START);
         }
     }
     else if (_isStartedFlag)
@@ -557,16 +541,23 @@ void ChargingStation::loop(Event ev)
         {
             Serial.println("STOPPED BUTTON");
             _isStartedFlag = false;
-            _currentEvent = Event::EV_STOP;
+            _currentEvents.emplace_back(Event::EV_STOP);
+            //_currentEvent = Event::EV_STOP;
         }
     }
+
+    if (_currentState == State::STATE_WAITING_FOR_POWER && _isStartedFlag == false)
+    {
+        _currentEvents.emplace_back(Event::EV_STOP);
+    }
+    
 
     if (!_isPluggedFlag)
     {
         if (_IPlug->isPlugged())
         {
             _isPluggedFlag = true;
-            _currentEvent = Event::EV_PLUGGED;
+            _currentEvents.emplace_back(Event::EV_PLUGGED);
         }
     }
     else if (_isPluggedFlag)
@@ -574,7 +565,7 @@ void ChargingStation::loop(Event ev)
         if (_IPlug->isPlugged())
         {
             _isPluggedFlag = false;
-            _currentEvent = Event::EV_UNPLUGGED;
+            _currentEvents.emplace_back(Event::EV_UNPLUGGED);
         }
     }
 
@@ -595,7 +586,7 @@ void ChargingStation::loop(Event ev)
         _IPLB->directorTimeout(3000);
         Serial.println("AFTER call dir timeout");
         _isRfidAvailable = false;
-        _currentEvent = Event::EV_RFID_DIRECTOR_DETECTED;
+        _currentEvents.emplace_back(Event::EV_RFID_DIRECTOR_DETECTED);
     }
 
     static float lastPower = 0;
@@ -604,12 +595,18 @@ void ChargingStation::loop(Event ev)
     {
         _display->display("Charging: " + static_cast<String>(_powerRecieved));
         lastPower = _powerRecieved;
-        _currentEvent = Event::EV_CHARGING;
+        _currentEvents.emplace_back(Event::EV_CHARGING);
     }
+
+    _currentEvents.emplace_back(ev); // needed for the events recieved from the PLB
 
     try
     {
-        HandleEvent(_currentEvent);
+        for (const auto &currentEvent: _currentEvents)
+        {
+            HandleEvent(currentEvent);
+        }
+        _currentEvents.clear();
     }
     catch (const std::exception &e)
     {

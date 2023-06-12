@@ -42,7 +42,7 @@ void MQTTClientPLB::receive()
   //    lastTime = millis();
   //  }
 
-  //_event = Event::noEvent;
+  _event = Event::noEvent;
   //_event = getConnectionStatusEvent();
   // checkConnection();
 

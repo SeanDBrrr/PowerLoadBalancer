@@ -20,7 +20,7 @@ private:
     bool _isStartedFlag;
     bool _isPluggedFlag;
     bool _isRfidAvailable;
-    Event _currentEvent;
+    std::vector<Event> _currentEvents;
     State _currentState;
     int _wifiTrials;
     int _mqttTrials;
@@ -59,5 +59,5 @@ public:
     State HandleErrorState(Event ev);
     
     void charge(float power);
-    int requestPower();
+    void requestPower();
 };

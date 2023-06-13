@@ -43,9 +43,10 @@ void PLB::_changeStationsMode(StationModes stMode)
 void PLB::_supplyPowerToStation(IStation *station)
 {
     ++busyStations;
-    _occupiedStations.emplace_back(station->getId());
-    if (busyStations > _directorIds.size())
+    // _occupiedStations.emplace_back(station->getId());
+    if (busyStations > (_directorIds.size()+_userStations.size()))
     {
+        Serial.print("_userStations.emplace_back(): "); Serial.println(station->getId());
         _userStations.emplace_back(station->getId());
     }
     _distributePower(_building->getCurrentSolarPower());
@@ -66,22 +67,23 @@ void PLB::_supplyPowerToBuilding(float solarPower)
  */
 int PLB::_stopSupply(IStation *station)
 {
-    for (size_t i = 0; i < _occupiedStations.size(); i++)
-    {
-        if (station->getId() == _occupiedStations.at(i))
-        {
-            --busyStations;
-            _occupiedStations.erase(_occupiedStations.cbegin() + i);
-            break;
-        }
-    }
+    // for (size_t i = 0; i < _occupiedStations.size(); i++)
+    // {
+    //     if (station->getId() == _occupiedStations.at(i))
+    //     {
+    //         --busyStations;
+    //         _occupiedStations.erase(_occupiedStations.cbegin() + i);
+    //         break;
+    //     }
+    // }
     for (size_t i = 0; i < _directorStations.size(); i++)
     {
         if (station->getId() == _directorStations.at(i))
         {
+            --busyStations;
+            Serial.print("_stopSupply: "); Serial.println(station->getId());
             _directorStations.erase(_directorStations.begin() + i);
             _directorIds.erase(_directorIds.begin() + i);
-            station->charge(0);
             return 1;
         }
     }
@@ -89,13 +91,41 @@ int PLB::_stopSupply(IStation *station)
     {
         if (station->getId() == _userStations.at(i))
         {
+            --busyStations;
             _userStations.erase(_userStations.begin() + i);
-            station->charge(0);
             return 0;
         }
     }
     if (busyStations<0) busyStations = 0;
     return -1;
+}
+
+/*
+ * @brief This function is called when a director swipes his RFID card
+ * @return RFID state: failed(-1), checkedIn(1), notCheckedIn(0)
+ */
+int PLB::checkDirector(IStation *station)
+{
+    uint32_t directorId = station->getDirectorId();
+    for (size_t i = 0; i < _directorIds.size(); i++)
+    {
+        if (_directorIds.at(i) == directorId)
+            station->validateDirector(DirectorState::ALREADY_CHECKED_IN);
+            return -1;
+    }
+    for(size_t i = 0; i < _validDirectorIds.size(); i++)
+    {
+        if(_validDirectorIds.at(i) == directorId)
+        {
+            _directorIds.emplace_back(directorId);
+            _directorStations.emplace_back(station->getId());
+            Serial.print("VALID");
+            station->validateDirector(DirectorState::VALID);
+            return 1;
+        }
+    }
+    station->validateDirector(DirectorState::INVALID);
+    return 0;
 }
 
 /*
@@ -119,7 +149,6 @@ void PLB::_distributePower(float solarPower)
         case PLBStates::ST_Idle:
             break;
         case PLBStates::ST_NoDir:
-            _changeStationsMode(StationModes::MO_Dynamic);
             userPower = availablePower/busyStations;
             if (userPower > 11) userPower = 11;
 
@@ -129,16 +158,16 @@ void PLB::_distributePower(float solarPower)
             }
             break;
         case PLBStates::ST_Dir1:
-            _changeStationsMode(StationModes::MO_Director);
-            directorPower = 11;
-            userPower = _userStations.size() > 0 ? (availablePower-directorPower)/_userStations.size() : 0;
+            userPower = (availablePower-11)/_userStations.size();
+            if (_userStations.size() == 1 && userPower > 11) userPower = 11;
 
             /* Supply director first */
-            _stations.at(_directorStations.at(0))->charge(directorPower);
+            _stations.at(_directorStations.at(0))->charge(11);
 
             /* Then supply users */
             for (size_t i = 0; i < _userStations.size(); i++)
             {
+                // Serial.print("supply user: "); Serial.println(station->getId());
                 _stations.at(_userStations.at(i))->charge(userPower);
             }
             break;
@@ -172,7 +201,6 @@ void PLB::_distributePower(float solarPower)
                 _changeStationsMode(StationModes::MO_FCFS);
                 for (size_t i = 0; i < _directorStations.size(); i++)
                 {
-                    _stations.at(_directorStations.at(i))->switchMode(_stationsMode);
                     if (availablePower < 11)
                     {
                         _stations.at(_directorStations.at(i))->charge(availablePower);
@@ -197,7 +225,6 @@ void PLB::_distributePower(float solarPower)
             _changeStationsMode(StationModes::MO_Director);
             for (size_t i = 0; i < _directorStations.size(); i++)
             {
-                _stations.at(_directorStations.at(i))->switchMode(_stationsMode);
                 _stations.at(_directorStations.at(i))->charge(availablePower/4);
             }
             break;
@@ -247,12 +274,13 @@ PLBStates PLB::handleIdleState(PLBEvents ev)
         _distributePower(solarPower);
         break;
     case PLBEvents::EV_Supply:
-        if (_directorIds.size() == 0) _state = PLBStates::ST_NoDir;
+        _changeStationsMode(StationModes::MO_Dynamic);
+        _state = (_directorIds.size() == 0) ? _state = PLBStates::ST_NoDir : _state = PLBStates::ST_Dir1;
         _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Director:
-        if(checkDirector(_stations.at(_stationIdEvents.front())) == 1) _state = PLBStates::ST_Dir1;
+        checkDirector(_stations.at(_stationIdEvents.front()));
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Connected:
@@ -282,6 +310,7 @@ PLBStates PLB::handleNoDirState(PLBEvents ev)
         _distributePower(solarPower);
         break;
     case PLBEvents::EV_Supply:
+        // _changeStationsMode(StationModes::MO_Dynamic);
         if (_directorIds.size() == 1) { _state = PLBStates::ST_Dir1; }
         else { _state = PLBStates::ST_NoDir; }
         _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
@@ -325,16 +354,17 @@ PLBStates PLB::handleDir1State(PLBEvents ev)
         _distributePower(solarPower);
         break;
     case PLBEvents::EV_Supply:
+        _changeStationsMode(StationModes::MO_Director);
         _state = (_directorIds.size() == 2) ? PLBStates::ST_Dir2 : PLBStates::ST_Dir1;
         _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
         _stationIdEvents.pop();
-        break;
         break;
     case PLBEvents::EV_Director:
         checkDirector(_stations.at(_stationIdEvents.front()));
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Stop:
+        Serial.print("PLBEvents::EV_Stop: "); Serial.println(_stationIdEvents.front());
         _stopSupply(_stations.at(_stationIdEvents.front()));
         _stationIdEvents.pop();
         _state = (_userStations.size() == 0) ? PLBStates::ST_NoDir : PLBStates::ST_Dir1;
@@ -375,6 +405,7 @@ PLBStates PLB::handleDir2State(PLBEvents ev)
         _distributePower(solarPower);
         break;
     case PLBEvents::EV_Supply:
+        _changeStationsMode(StationModes::MO_Director);
         _state = (_directorIds.size() == 3 && _userStations.size() == 0) ? PLBStates::ST_Dir3Only : PLBStates::ST_Dir3;
         _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
         _stationIdEvents.pop();
@@ -750,34 +781,6 @@ void PLB::setIdEvents(std::queue<int>& ids)
 {
     /* using std::move() avoids unnecessary copy by tranfersing the ownership of these containers to the PLB */
     if (ids.size()>0) _stationIdEvents = std::move(ids);
-}
-
-/*
- * @brief This function is called when a director swipes his RFID card
- * @return RFID state: failed(-1), checkedIn(1), notCheckedIn(0)
- */
-int PLB::checkDirector(IStation *station)
-{
-    uint32_t directorId = station->getDirectorId();
-    for (size_t i = 0; i < _directorIds.size(); i++)
-    {
-        if (_directorIds.at(i) == directorId)
-            station->validateDirector(DirectorState::ALREADY_CHECKED_IN);
-            return -1;
-    }
-    for(size_t i = 0; i < _validDirectorIds.size(); i++)
-    {
-        if(_validDirectorIds.at(i) == directorId)
-        {
-            _directorIds.emplace_back(directorId);
-            _directorStations.emplace_back(station->getId());
-            Serial.print("VALID");
-            station->validateDirector(DirectorState::VALID);
-            return 1;
-        }
-    }
-    station->validateDirector(DirectorState::INVALID);
-    return 0;
 }
 
 bool PLB::isTimeout()

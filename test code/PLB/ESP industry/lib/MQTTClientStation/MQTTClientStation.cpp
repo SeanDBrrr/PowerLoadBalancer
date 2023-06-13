@@ -70,6 +70,7 @@ void MQTTClientStation::onConnectionSubscribe()
   });
   _client.subscribe(mqtt_topic_stopSupply, [this](const String &topic, const String &payload)
   {
+    Serial.print("PLBEvents::EV_Stop: "); Serial.println(_stationId);
     /* _stationId requested a stop */
     events.emplace_back(PLBEvents::EV_Stop);
     /* -> We add its ID to the stopSupply queue */
@@ -86,12 +87,13 @@ void MQTTClientStation::onConnectionSubscribe()
     { 
       events.emplace_back(PLBEvents::EV_Connected);
       idEvents.push(_stationId);
+      charge(0);
     }
     else if (payload == offline_payload) 
     { 
       events.emplace_back(PLBEvents::EV_Disconnected);
       idEvents.push(_stationId);
-      // charge(0); already implemented in PLB
+      charge(0);
     }
   });
   _client.subscribe(mqtt_topic_stationMode, [this](const String &topic, const String &payload)

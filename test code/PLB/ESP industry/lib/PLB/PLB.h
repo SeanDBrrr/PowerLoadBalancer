@@ -28,7 +28,7 @@ private:
     std::vector<int> _userStations;
     std::vector<int> _occupiedStations;
     std::vector<uint32_t> _directorIds;
-    std::vector<uint32_t> _validDirectorIds = {2267176004, 432104642, 1518206872, 432104642, 69};
+    std::vector<uint32_t> _validDirectorIds = {2267176004, 432104642, 1518206872, 432104642};
     
     void _initialiseStations();
     void _changeStationsMode(StationModes stMode);

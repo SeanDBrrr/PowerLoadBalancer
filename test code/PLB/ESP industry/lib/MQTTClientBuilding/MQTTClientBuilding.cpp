@@ -1,7 +1,9 @@
 #include "MQTTClientBuilding.h"
 
 /* ----------------- Constructor and Destructor */
-MQTTClientBuilding::MQTTClientBuilding() : 
+MQTTClientBuilding::MQTTClientBuilding() :
+_event(PLBEvents::EV_NoEvent),
+_PLBMode(PLBModes::MO_Auto),
 _isSolarPowerArrivedFlag(false), 
 _totalSolarPower(0),
 _solarPowerTimeout(5000),
@@ -12,6 +14,16 @@ _lastConnectionState(true)
 }
 
 MQTTClientBuilding::~MQTTClientBuilding() {}
+
+PLBEvents& MQTTClientBuilding::getEvent()
+{
+  return _event;
+}
+
+PLBModes MQTTClientBuilding::getPLBMode()
+{
+  return _PLBMode;
+}
 
 /* ----------------- MQTT related functions */
 EspMQTTClient &MQTTClientBuilding::getClient()
@@ -35,6 +47,16 @@ void MQTTClientBuilding::onConnectionSubscribe()
   { 
     _isSolarPowerArrivedFlag = true;
     _totalSolarPower = payload.toFloat();
+  });
+  _client.subscribe(mqtt_topic_PLBmode, [this](const String &topic, const String &payload)
+  {
+    _event = PLBEvents::EV_SwitchMode;
+    if (payload == "PLBAutoMode") {
+      _PLBMode = PLBModes::MO_Auto;
+    }
+    else if (payload == "PLBManualMode") {
+      _PLBMode = PLBModes::MO_Manual;
+    }
   });
 }
 

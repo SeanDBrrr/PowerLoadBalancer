@@ -10,6 +10,8 @@ using namespace std;
 class MQTTClientBuilding : public IBuilding
 {
 private:
+    PLBEvents _event;
+    PLBModes _PLBMode;
     bool _isSolarPowerArrivedFlag;
     float _totalSolarPower;
     bool _isConnected;
@@ -20,10 +22,11 @@ private:
     String mqtt_topic_calculateSolarPower= "group4/calculateSolarPower";
     String mqtt_topic_charge_building = "group4/chargeBuilding";
     String mqtt_topic_notifyDashboard = "group4/notifyDashboard";
+    String mqtt_topic_PLBmode = "group4/PLBMode";
+    String mqtt_module = "Group4-PLB-Building";
     String name = "S21 FE J";
     String password = "yo koaster";
-    String mqtt_module = "Group4-PLB-Building";
-    String broker_ip = "192.168.17.132";
+    String broker_ip = "192.168.190.132";
     short port = 1883;
     EspMQTTClient _client = EspMQTTClient(
         name.c_str(),
@@ -38,6 +41,8 @@ public:
     MQTTClientBuilding();
     ~MQTTClientBuilding();
 
+    PLBEvents& getEvent();
+
     /* MQTT related */
     EspMQTTClient& getClient();
     void send(String topic, String message);
@@ -49,6 +54,7 @@ public:
     void charge(float power);
     float getCurrentSolarPower();
     void notifyDashboard(String message);
+    PLBModes getPLBMode();
 };
 
 #endif

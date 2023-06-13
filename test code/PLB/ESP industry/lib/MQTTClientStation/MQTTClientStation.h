@@ -22,7 +22,6 @@ private:
     void _setStationTopics();
 
     String mqtt_topic_stationMode = "group4/stationMode";
-    String mqtt_topic_mode = "group4/mode";
     String mqtt_topic_StationId = "group4/StationId";
     String mqtt_topic_directorId = "group4/directorId";
     String mqtt_topic_requestSupply = "group4/requestPowerSupply";
@@ -31,10 +30,10 @@ private:
     String mqtt_topic_directorValidate = "group4/directorResponse";
     String mqtt_topic_stationHeartbeat = "group4/heartbeat";
     String mqtt_topic_notifyDashboard = "group4/notifyDashboard";
+    String mqtt_module = "Group4-PLB-Station";
     String name = "S21 FE J";
     String password = "yo koaster";
-    String mqtt_module = "Group4-PLB-Station";
-    String broker_ip = "192.168.17.132";
+    String broker_ip = "192.168.190.132";
     short port = 1883;
     EspMQTTClient _client = EspMQTTClient(
         name.c_str(),
@@ -74,7 +73,6 @@ public:
     void switchMode(StationModes mode);
     void notifyDashboard(String message);
     StationModes getStationMode();
-    PLBModes getPLBMode();
 };
 
 #endif

@@ -43,6 +43,7 @@ void PLB::_changeStationsMode(StationModes stMode)
 void PLB::_supplyPowerToStation(IStation *station)
 {
     ++busyStations;
+    _occupiedStations.emplace_back(station->getId());
     if (busyStations > _directorIds.size())
     {
         _userStations.emplace_back(station->getId());
@@ -65,8 +66,15 @@ void PLB::_supplyPowerToBuilding(float solarPower)
  */
 int PLB::_stopSupply(IStation *station)
 {
-    --busyStations;
-    if (busyStations<0) busyStations = 0;
+    for (size_t i = 0; i < _occupiedStations.size(); i++)
+    {
+        if (station->getId() == _occupiedStations.at(i))
+        {
+            --busyStations;
+            _occupiedStations.erase(_occupiedStations.cbegin() + i);
+            break;
+        }
+    }
     for (size_t i = 0; i < _directorStations.size(); i++)
     {
         if (station->getId() == _directorStations.at(i))
@@ -86,6 +94,7 @@ int PLB::_stopSupply(IStation *station)
             return 0;
         }
     }
+    if (busyStations<0) busyStations = 0;
     return -1;
 }
 
@@ -256,7 +265,7 @@ PLBStates PLB::handleIdleState(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
         break;
-    case PLBEvents::EV_SwitchMode: _mode = _stations.at(0)->getPLBMode();
+    case PLBEvents::EV_SwitchMode: _mode = _building->getPLBMode();
         break;
     }
     return _state;
@@ -299,7 +308,7 @@ PLBStates PLB::handleNoDirState(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
         break;
-    case PLBEvents::EV_SwitchMode: _mode = _stations.at(0)->getPLBMode();
+    case PLBEvents::EV_SwitchMode: _mode = _building->getPLBMode();
         break;
     }
     return _state;
@@ -349,7 +358,7 @@ PLBStates PLB::handleDir1State(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
         break;
-    case PLBEvents::EV_SwitchMode: _mode = _stations.at(0)->getPLBMode();
+    case PLBEvents::EV_SwitchMode: _mode = _building->getPLBMode();
         break;
     }
     return _state;
@@ -397,7 +406,7 @@ PLBStates PLB::handleDir2State(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
         break;
-    case PLBEvents::EV_SwitchMode: _mode = _stations.at(0)->getPLBMode();
+    case PLBEvents::EV_SwitchMode: _mode = _building->getPLBMode();
         break;
     }
     return _state;
@@ -438,7 +447,7 @@ PLBStates PLB::handleDir3OnlyState(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
         break;
-    case PLBEvents::EV_SwitchMode: _mode = _stations.at(0)->getPLBMode();
+    case PLBEvents::EV_SwitchMode: _mode = _building->getPLBMode();
         break;
     }
     return _state;
@@ -476,7 +485,7 @@ PLBStates PLB::handleDir3State(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
         break;
-    case PLBEvents::EV_SwitchMode: _mode = _stations.at(0)->getPLBMode();
+    case PLBEvents::EV_SwitchMode: _mode = _building->getPLBMode();
         break;
     }
     return _state;
@@ -507,7 +516,7 @@ PLBStates PLB::handleDir4State(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
         break;
-    case PLBEvents::EV_SwitchMode: _mode = _stations.at(0)->getPLBMode();
+    case PLBEvents::EV_SwitchMode: _mode = _building->getPLBMode();
         break;
     }
     return _state;
@@ -572,8 +581,18 @@ void PLB::_supplyPowerDirectorMode(float solarPower)
 void PLB::_supplyPowerFCFSMode(float solarPower)
 {
     float availablePower = 20 + solarPower;
-
-    /* Directors are not priviliged in this mode, one idea is to create a vector to store the order of people arrival */
+    for (size_t i = 0; i < _occupiedStations.size(); i++)
+    {
+        if (availablePower > 11) 
+        { 
+            _stations.at(_occupiedStations.at(i))->charge(11);
+            availablePower-=11;
+        }
+        else 
+        { 
+            _stations.at(_occupiedStations.at(i))->charge(availablePower); 
+        }   
+    }
 }
 
 /* ----------------- Public Functions (Manual mode) */
@@ -626,11 +645,8 @@ void PLB::handleDynamicMode(PLBEvents ev)
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_SwitchMode:
-        _mode = _stations.at(0)->getPLBMode();
-        if(_mode == PLBModes::MO_Auto)
-        {
-            _switchToAutoMode();
-        }
+        _mode = _building->getPLBMode();
+        if(_mode == PLBModes::MO_Auto) _switchToAutoMode();
         break;
     case PLBEvents::EV_SwitchStationMode: 
         _stationsMode = _stations.at(0)->getStationMode();
@@ -671,11 +687,8 @@ void PLB::handleDirectorMode(PLBEvents ev)
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_SwitchMode:
-        _mode = _stations.at(0)->getPLBMode();
-        if(_mode == PLBModes::MO_Auto)
-        {
-            _switchToAutoMode();
-        }
+        _mode = _building->getPLBMode();
+        if(_mode == PLBModes::MO_Auto) _switchToAutoMode();
         break;
     case PLBEvents::EV_SwitchStationMode: 
         _stationsMode = _stations.at(0)->getStationMode();
@@ -716,11 +729,8 @@ void PLB::handleFCFSMode(PLBEvents ev)
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_SwitchMode:
-        _mode = _stations.at(0)->getPLBMode();
-        if(_mode == PLBModes::MO_Auto)
-        {
-            _switchToAutoMode();
-        }
+        _mode = _building->getPLBMode();
+        if(_mode == PLBModes::MO_Auto) _switchToAutoMode();
         break;
     case PLBEvents::EV_SwitchStationMode:
         _stationsMode = _stations.at(0)->getStationMode();
@@ -780,12 +790,15 @@ bool PLB::isTimeout()
     return false;
 }
 
-void PLB::loop(std::vector<PLBEvents>& events)
+void PLB::loop(std::vector<PLBEvents>& events, PLBEvents& PLBModeEvent)
 {
     if (isTimeout()) handleAutoModeEvents(PLBEvents::EV_Timeout);
 
     if (_mode == PLBModes::MO_Auto) 
     {
+        /* Maintainer that can switch PLB mode from the dashboard */
+        if (PLBModeEvent != PLBEvents::EV_NoEvent) handleAutoModeEvents(std::move(PLBModeEvent));
+
         /* Iterate through the list of PLBEvents */
         for (const auto &ev: events)
         {
@@ -799,6 +812,9 @@ void PLB::loop(std::vector<PLBEvents>& events)
     }
     else if (_mode == PLBModes::MO_Manual) 
     {
+        /* Maintainer that can switch PLB mode from the dashboard */
+        if (PLBModeEvent != PLBEvents::EV_NoEvent) handleManualModeEvents(std::move(PLBModeEvent));
+
         for (const auto &ev: events)
         {
             handleManualModeEvents(ev);

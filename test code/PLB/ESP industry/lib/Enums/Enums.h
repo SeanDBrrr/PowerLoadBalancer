@@ -1,7 +1,7 @@
 #pragma once
 
 enum class PLBEvents {
-    noEvent, 
+    EV_NoEvent, 
     EV_Timeout, 
     EV_Supply,
     EV_Stop, 

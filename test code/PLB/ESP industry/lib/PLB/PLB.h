@@ -26,9 +26,9 @@ private:
     std::vector<IStation *> _stations;
     std::vector<int> _directorStations;
     std::vector<int> _userStations;
-    std::vector<int> _occupancyStations;
+    std::vector<int> _occupiedStations;
     std::vector<uint32_t> _directorIds;
-    std::vector<uint32_t> _validDirectorIds = {2267176004, 432104642, 1518206872, 40, 50};
+    std::vector<uint32_t> _validDirectorIds = {2267176004, 432104642, 1518206872, 432104642, 69};
     
     void _initialiseStations();
     void _changeStationsMode(StationModes stMode);
@@ -61,7 +61,7 @@ public:
     int checkDirector(IStation* station);
     void setIdEvents(std::queue<int>& ids);
     bool isTimeout();
-    void loop(std::vector<PLBEvents>& events);
+    void loop(std::vector<PLBEvents>& events, PLBEvents& PLBModeEvent);
 
     /* Public Functions (Auto mode) */
     void handleAutoModeEvents(PLBEvents ev);

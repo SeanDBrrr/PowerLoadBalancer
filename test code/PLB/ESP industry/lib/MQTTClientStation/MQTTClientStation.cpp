@@ -109,17 +109,6 @@ void MQTTClientStation::onConnectionSubscribe()
       events.emplace_back(PLBEvents::EV_SwitchStationMode);
     }
   });
-   _client.subscribe(mqtt_topic_mode, [this](const String &topic, const String &payload)
-  {
-    if (payload == "AutoMode") {
-      _mode = PLBModes::MO_Auto;
-      events.emplace_back(PLBEvents::EV_SwitchMode);
-    }
-    else if (payload == "ManualMode") {
-      _mode = PLBModes::MO_Manual;
-      events.emplace_back(PLBEvents::EV_SwitchMode);
-    }
-  });
 }
 
 /* ----------------- Interface's functions */
@@ -179,11 +168,6 @@ void MQTTClientStation::notifyDashboard(String message)
 StationModes MQTTClientStation::getStationMode()
 {
   return _stationMode;
-}
-
-PLBModes MQTTClientStation::getPLBMode()
-{
-  return _mode;
 }
 
 /* ----------------- Events Getters */

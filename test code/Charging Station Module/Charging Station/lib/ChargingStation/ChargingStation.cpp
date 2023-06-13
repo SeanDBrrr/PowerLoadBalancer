@@ -33,7 +33,7 @@ State ChargingStation::HandleIdleState(Event ev)
     switch (ev)
     {
     case Event::EV_PLUGGED:
-        _display->display("EV plugged");
+        _display->display("ev plugged","PLUGGED");
         result = State::STATE_PLUGGED;
         break;
     case Event::EV_RFID_DIRECTOR_DETECTED:
@@ -80,12 +80,12 @@ State ChargingStation::HandleVerifyingDirectorState(Event ev)
     case Event::EV_RFID_VALID:
         if (_isPluggedFlag)
         {
-            _display->display("Plugged director", "Verified!");
+            _display->display("RFID valid", "PLUGGED DIRECTOR");
             result = State::STATE_PLUGGED_DIRECTOR;
         }
         else if (!_isPluggedFlag)
         {
-            _display->display("Idle director", "Verified!");
+            _display->display("RFID valid", "IDLE DIRECTOR");
             result = State::STATE_IDLE_DIRECTOR;
         }
         break;
@@ -93,29 +93,29 @@ State ChargingStation::HandleVerifyingDirectorState(Event ev)
         _isRfidAvailable = true;
         if (_isPluggedFlag)
         {
-            _display->display("Plugged director", "is invalid");
+            _display->display("RFID invalid", "PLUGGED");
             result = State::STATE_PLUGGED;
         }
         else if (!_isPluggedFlag)
         {
-            _display->display("Idle director", "is invalid");
+            _display->display("RFID invalid", "IDLE");
             result = State::STATE_IDLE;
         }
         break;
     case Event::EV_RFID_TIMED_OUT:
         _isRfidAvailable = true;
-        Serial.println("IN EV TIMED OUT");
-        Serial.println(_isPluggedFlag);
+        //Serial.println("IN EV TIMED OUT");
+        //Serial.println(_isPluggedFlag);
         if (_isPluggedFlag)
         {
-            Serial.println("TIMED OUT PLUGGED");
-            _display->display("Timeout Error", "while plugged");
+            //Serial.println("TIMED OUT PLUGGED");
+            _display->display("RFID timed out", "PLUGGED");
             result = State::STATE_PLUGGED;
         }
         else if (!_isPluggedFlag)
         {
-            Serial.println("TIMED OUT IDLE");
-            _display->display("Timeout Error", "while idle");
+            //Serial.println("TIMED OUT IDLE");
+            _display->display("RFID timed out", "IDLE");
             result = State::STATE_IDLE;
         }
         break;
@@ -123,12 +123,12 @@ State ChargingStation::HandleVerifyingDirectorState(Event ev)
         _isRfidAvailable = true;
         if (_isPluggedFlag)
         {
-            _display->display("alrdy in PLUGGED");
+            _display->display("alrdy chekd in","PLUGGED");
             result = State::STATE_PLUGGED;
         }
         else if (!_isPluggedFlag)
         {
-            _display->display("alrdy in IDLE");
+            _display->display("alrdy chekd in","IDLE");
             result = State::STATE_IDLE;
         }
         break;
@@ -168,7 +168,7 @@ State ChargingStation::HandleIdleDirectorState(Event ev)
     switch (ev)
     {
     case Event::EV_PLUGGED:
-        _display->display("Director is plugged");
+        _display->display("ev plugged", "PLUGGED DIRECTOR");
         result = State::STATE_PLUGGED_DIRECTOR;
         break;
         _display->display("Connecting WiFi:", "Attempts: " + static_cast<String>(_wifiTrials));
@@ -208,7 +208,7 @@ State ChargingStation::HandlePluggedState(Event ev)
     switch (ev)
     {
     case Event::EV_UNPLUGGED:
-        _display->display("EV unplugged", "going to idle");
+        _display->display("ev unplugged", "IDLE");
         result = State::STATE_IDLE;
         break;
     case Event::EV_RFID_DIRECTOR_DETECTED:
@@ -217,7 +217,7 @@ State ChargingStation::HandlePluggedState(Event ev)
         break;
     case Event::EV_START:
         _isRfidAvailable = false;
-        _display->display("EV plugged", "Waiting for Power");
+        _display->display("ev start", "WAITING ON POWER");
         result = State::STATE_WAITING_FOR_POWER;
         requestPower();
         break;
@@ -255,16 +255,16 @@ State ChargingStation::HandlePluggedDirectorState(Event ev)
     switch (ev)
     {
     case Event::EV_UNPLUGGED:
-        _display->display("EV unplugged", "Director in idle");
+        _display->display("ev unplugged", "IDLE DIRECTOR");
         result = State::STATE_IDLE_DIRECTOR;
         break;
     case Event::EV_RFID_INVALID:
-        _display->display("EV plugged", "Director invalid");
+        _display->display("RFID invalid", "PLUGGED");
         result = State::STATE_PLUGGED;
         break;
     case Event::EV_START:
         _isRfidAvailable = false;
-        _display->display("Director plugged", "Waiting for Power");
+        _display->display("ev start", "WAITING ON POWER");
         result = State::STATE_WAITING_FOR_POWER;
         requestPower();
         break;
@@ -305,9 +305,9 @@ State ChargingStation::HandleWaitingForPowerState(Event ev)
         result = State::STATE_CHARGING;
         break;
     case Event::EV_STOP:
-        Serial.println("SHOULDA STOPPED CHARGING");
+        //Serial.println("SHOULDA STOPPED CHARGING");
         _IPLB->stopSupplyToStation(_id);
-        _display->display("STOPED CHARGING");
+        _display->display("ev stop", "STOPPED CHARGING");
         result = State::STATE_STOPPED_CHARGING;
         break;
     case Event::EV_MQTT_TRIALS:
@@ -345,8 +345,7 @@ State ChargingStation::HandleChargingState(Event ev)
     {
     case Event::EV_STOP:
         _IPLB->stopSupplyToStation(_id);
-        Serial.println("STOPPED TOO EARLY");
-        _display->display("STOPED CHARGING");
+        _display->display("ev stop", "STOPPED CHARGING");
         result = State::STATE_STOPPED_CHARGING;
         break;
     case Event::EV_ERROR:
@@ -397,14 +396,14 @@ State ChargingStation::HandleStoppedChargingState(Event ev)
     {
     case Event::EV_START:
         _isRfidAvailable = false;
-        Serial.println("stp charging, requesting");
-        _display->display("stp WAITING POWER");
+        //Serial.println("stp charging, requesting");
+        _display->display("ev start", "WAITING ON POWER");
         result = State::STATE_WAITING_FOR_POWER;
         requestPower();
         break;
     case Event::EV_UNPLUGGED:
         _isRfidAvailable = true;
-        _display->display("unplugged IDLE");
+        _display->display("ev unplugged", "IDLE");
         result = State::STATE_IDLE;
         break;
     case Event::EV_MQTT_TRIALS:
@@ -504,18 +503,18 @@ void ChargingStation::requestPower() // MAKE VOID WHEN DONE
         if (_startButtonState) // STARTBUTTON has been pressed
         {
             _isStartedFlag = false;
-            Serial.println("STOPPED");
+            //Serial.println("STOPPED");
             return;
         }
 
         if (millis() - lastTime >= 5000)
         {
             _IPLB->supplyPowerToStation(_id); //_IPLB
-            Serial.println("Requesting Power");
+            //Serial.println("Requesting Power");
             lastTime = millis();
         }
     }
-    Serial.println("EXIT WHILE");
+    //Serial.println("EXIT WHILE");
     _IPLB->SetPowerRecievedFlag(false); // PLB
     _currentEvents.emplace_back(Event::EV_CHARGING);
     return;
@@ -530,7 +529,7 @@ void ChargingStation::loop(Event ev)
     {
         if (_startButtonState)
         {
-            Serial.println("STARTED BUTTON");
+            //Serial.println("STARTED BUTTON");
             _isStartedFlag = true;
             _currentEvents.emplace_back(Event::EV_START);
         }
@@ -540,8 +539,8 @@ void ChargingStation::loop(Event ev)
     {
         if (_startButtonState)
         {
-            Serial.println("StartButtonState = " + static_cast<String>(_startButtonState));
-            Serial.println("STOPPED BUTTON");
+            //Serial.println("StartButtonState = " + static_cast<String>(_startButtonState));
+            //Serial.println("STOPPED BUTTON");
             _currentEvents.emplace_back(Event::EV_STOP);
         }
     }
@@ -550,7 +549,7 @@ void ChargingStation::loop(Event ev)
     {
         if (_plugButtonState)
         {
-            Serial.println("plugButtonState = " + static_cast<String>(_plugButtonState));
+            //Serial.println("plugButtonState = " + static_cast<String>(_plugButtonState));
             _currentEvents.emplace_back(Event::EV_PLUGGED);
         }
     }
@@ -559,7 +558,7 @@ void ChargingStation::loop(Event ev)
     {
         if (_plugButtonState)
         {
-            Serial.println("plugButtonState = " + static_cast<String>(_plugButtonState));
+            //Serial.println("plugButtonState = " + static_cast<String>(_plugButtonState));
             _currentEvents.emplace_back(Event::EV_UNPLUGGED);
         }
     }
@@ -576,10 +575,10 @@ void ChargingStation::loop(Event ev)
     if (_directorId != 0)
     {
         _IPLB->checkDirector(_directorId);
-        _display->display("VERIFYING DIR");
-        Serial.println("call dir timeout");
+        _display->display("VERIFYING","DIRECTOR");
+        //Serial.println("call dir timeout");
         _IPLB->directorTimeout(3000);
-        Serial.println("AFTER call dir timeout");
+        //Serial.println("AFTER call dir timeout");
         _isRfidAvailable = false;
         _currentEvents.emplace_back(Event::EV_RFID_DIRECTOR_DETECTED);
     }
@@ -590,7 +589,8 @@ void ChargingStation::loop(Event ev)
     {
         _display->display("Charging: " + static_cast<String>(_powerRecieved));
         lastPower = _powerRecieved;
-        _currentEvents.emplace_back(Event::EV_CHARGING);
+        _currentEvents.emplace_back(Event::EV_CHARGING);//technically shouldnt always call this event
+        //because if it receives 0 power when it stops charging, it will call EV_CHARGING for no reason.
     }
 
     _currentEvents.emplace_back(ev); // needed for the events recieved from the PLB

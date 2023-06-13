@@ -19,6 +19,7 @@ MQTTClientPLB::MQTTClientPLB( // Few objects are not initialized yet.
   Serial.print("OBJECT CREATED: ");
   Serial.println(_id);
   _client.enableDebuggingMessages();
+  _client.enableLastWillMessage("group4/heartbeat",  "OFFLINE3");
 }
 
 EspMQTTClient &MQTTClientPLB::getClient()
@@ -43,7 +44,7 @@ void MQTTClientPLB::receive()
   //  }
 
   _event = Event::noEvent;
-  //_event = getConnectionStatusEvent();
+  _event = getConnectionStatusEvent();
   // checkConnection();
 
   if (_directorState == DirectorState::TIMED_OUT)
@@ -140,6 +141,12 @@ void MQTTClientPLB::supplyPowerToStation(int id)
 void MQTTClientPLB::stopSupplyToStation(int id)
 {
   send(mqtt_topic_stopSupply, static_cast<String>(id));
+}
+
+void MQTTClientPLB::birthMessage()
+{
+  String birthMessage = "ONLINE" + static_cast<String>(_id);
+  send(mqtt_topic_heartbeat, birthMessage);
 }
 
 Event MQTTClientPLB::getEvent()
@@ -245,6 +252,7 @@ Event MQTTClientPLB::getConnectionStatusEvent()
     _mqttTrials = 0;
     _mqttConnected = true;
     ev = Event::EV_MQTT_CONNECTED;
+    birthMessage();
   }
 
   return ev;

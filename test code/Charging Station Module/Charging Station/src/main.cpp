@@ -10,7 +10,7 @@
 #include "StationScreen.h"
 
 
-int stationId = 4;
+int stationId = 3;
 DirectorScanner *director;
 StationScreen *lcd;
 StartButton* startButton;
@@ -31,7 +31,6 @@ void setup()
   startButton = new StartButton();
   plugButton = new PlugButton();
   mqttPLB = new MQTTClientPLB(stationId);
-  //mqttPLB->getClient().enableLastWillMessage("group4/heartbeat", ("OFFLINE" + static_cast<const char>(stationId)));
   chargingStation = new ChargingStation(
     stationId,
     startButton,

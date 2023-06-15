@@ -9,6 +9,10 @@
 #include <exception>
 #include <queue>
 
+//#define NOT_WORKING_V1
+//#define WORKING_V2
+#define WORKING_V2_1
+
 enum class Event; 
 enum class State;
 
@@ -20,12 +24,9 @@ private:
     float _powerRecieved;
     bool _startButtonState = false;
     bool _plugButtonState = false;
-    bool _isStartedFlag;
-    bool _isPluggedFlag;
-    bool _isRfidAvailable;
+    bool _isDirPluggedFlag;
     std::vector<Event> _currentEvents;
     State _currentState;
-    State _lastState;
     int _wifiTrials;
     int _mqttTrials;
 
@@ -61,7 +62,6 @@ public:
     State HandleChargingState(Event ev);
     State HandleStoppedChargingState(Event ev);
     State HandleErrorState(Event ev);
-    bool isPluggedFlag();
     void charge(float power);
     void requestPower();
 };

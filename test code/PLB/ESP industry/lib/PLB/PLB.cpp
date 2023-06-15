@@ -12,12 +12,19 @@ PLB::PLB(
     : busyStations(0),
       _state(PLBStates::ST_Idle),
       _mode(PLBModes::MO_Auto),
+      _stationsMode(StationModes::MO_Dynamic),
+      _buildingState(BuildingState::ST_Day),
       _building(building)
 {
     _stations.emplace_back(station0);
     _stations.emplace_back(station1);
     _stations.emplace_back(station2);
     _stations.emplace_back(station3);
+
+    _validDirectorIds.emplace_back(RFID1);
+    _validDirectorIds.emplace_back(RFID2);
+    _validDirectorIds.emplace_back(RFID3);
+    _validDirectorIds.emplace_back(RFID4);
 }
 
 PLB::~PLB() {}
@@ -44,6 +51,9 @@ void PLB::_supplyPowerToStation(IStation *station)
 {
     ++busyStations;
     // _occupiedStations.emplace_back(station->getId());
+    Serial.print("_userStations.size(): "); Serial.println(_userStations.size());
+    Serial.print("busyStations: "); Serial.println(busyStations);
+    Serial.print("_directorIds.size(): "); Serial.println(_directorIds.size());
     if (busyStations > (_directorIds.size()+_userStations.size()))
     {
         Serial.print("_userStations.emplace_back(): "); Serial.println(station->getId());
@@ -80,9 +90,10 @@ StopStatus PLB::_stopSupply(IStation *station)
     {
         if (station->getId() == _directorStations.at(i))
         {
-            --busyStations;
+            if ((_userStations.size() + _directorIds.size()) == busyStations) --busyStations;
             _directorStations.erase(_directorStations.begin() + i);
             _directorIds.erase(_directorIds.begin() + i);
+            Serial.print("_stopSupply DIRECTOR: "); Serial.println(station->getId());
             station->charge(0);
             return StopStatus::DirectorLeft;
         }
@@ -93,6 +104,7 @@ StopStatus PLB::_stopSupply(IStation *station)
         {
             --busyStations;
             _userStations.erase(_userStations.begin() + i);
+            Serial.print("_stopSupply USER: "); Serial.println(station->getId());
             station->charge(0);
             return StopStatus::UserLeft;
         }
@@ -107,8 +119,8 @@ StopStatus PLB::_stopSupply(IStation *station)
  */
 DirectorState PLB::checkDirector(IStation *station)
 {
-    uint32_t directorId = station->getDirectorId();
-    // Serial.print("checkDirector VALID: "); Serial.println(_validDirectorIds.size());
+    float directorId = station->getDirectorId();
+    Serial.print("directorId: "); Serial.println(directorId);
     for (size_t i = 0; i < _directorIds.size(); i++)
     {
         if (_directorIds.at(i) == directorId)
@@ -119,6 +131,7 @@ DirectorState PLB::checkDirector(IStation *station)
     }
     for(size_t i = 0; i < _validDirectorIds.size(); i++)
     {
+        Serial.print("RFID: "); Serial.println(_validDirectorIds.at(i));
         if(_validDirectorIds.at(i) == directorId)
         {
             _directorIds.emplace_back(directorId);
@@ -145,8 +158,21 @@ void PLB::_distributePower(float solarPower)
         prevBusyStations = busyStations;
 
         _supplyPowerToBuilding(solarPower);
-        float availablePower = 20 + solarPower;
+        float availablePower;
+        if (_buildingState == BuildingState::ST_Day) { availablePower = 20 + solarPower; }
+        else if (_buildingState == BuildingState::ST_Night) 
+        { 
+            for (size_t i = 0; i < _directorStations.size(); i++)
+            {
+                _stations.at(_directorStations.at(i))->charge(11);
+            }
+            for (size_t i = 0; i < _userStations.size(); i++)
+            {
+                _stations.at(_userStations.at(i))->charge(11);
+            }
+        }
         float directorPower=0, userPower=0, stationPower=0;
+
         switch (_state)
         {
         case PLBStates::ST_Idle:
@@ -161,7 +187,7 @@ void PLB::_distributePower(float solarPower)
             }
             break;
         case PLBStates::ST_Dir1:
-            userPower = (availablePower-11)/_userStations.size();
+            userPower = (availablePower-11);
             if (_userStations.size() == 1 && userPower > 11) userPower = 11;
 
             /* Supply director first */
@@ -170,14 +196,14 @@ void PLB::_distributePower(float solarPower)
             /* Then supply users */
             for (size_t i = 0; i < _userStations.size(); i++)
             {
-                _stations.at(_userStations.at(i))->charge(userPower);
+                _stations.at(_userStations.at(i))->charge(userPower/_userStations.size());
             }
             break;
         case PLBStates::ST_Dir2:
             directorPower = (availablePower >= 22) ? 11 : availablePower/2;
             if (_userStations.size() > 0 && availablePower > 22)
             {
-                userPower = (availablePower-directorPower*_directorStations.size())/_userStations.size();
+                userPower = (availablePower-directorPower*_directorStations.size());
             }
             else 
             {
@@ -193,7 +219,7 @@ void PLB::_distributePower(float solarPower)
             /* Then supply users */
             for (size_t i = 0; i < _userStations.size(); i++)
             {
-                _stations.at(_userStations.at(i))->charge(userPower);
+                _stations.at(_userStations.at(i))->charge(userPower/_userStations.size());
             }
             break;
         case PLBStates::ST_Dir3:
@@ -285,7 +311,8 @@ PLBStates PLB::handleIdleState(PLBEvents ev)
             _changeStationsMode(StationModes::MO_Dynamic); 
         }
         else 
-        { 
+        {
+            Serial.print("handleIdleState (EV_Supply): "); Serial.println(_stationIdEvents.front());
             _state = PLBStates::ST_Dir1; 
             _changeStationsMode(StationModes::MO_Director); 
         }
@@ -307,6 +334,10 @@ PLBStates PLB::handleIdleState(PLBEvents ev)
         break;
     case PLBEvents::EV_SwitchMode: _mode = _building->getPLBMode();
         break;
+    case PLBEvents::EV_SwitchBuildingState: 
+        _buildingState = _building->getState();
+        _distributePower(_building->getCurrentSolarPower());
+        break;
     }
     return _state;
 }
@@ -326,6 +357,8 @@ PLBStates PLB::handleNoDirState(PLBEvents ev)
             _state = PLBStates::ST_Dir1; 
             _changeStationsMode(StationModes::MO_Director); 
         }
+        Serial.print("handleNoDirState EV_Supply: "); Serial.println(_stationIdEvents.front());
+        assert(_directorIds.size() == 0 && _directorStations.size() == 0);
         _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
         _stationIdEvents.pop();
         break;
@@ -353,6 +386,10 @@ PLBStates PLB::handleNoDirState(PLBEvents ev)
         break;
     case PLBEvents::EV_SwitchMode: _mode = _building->getPLBMode();
         break;
+    case PLBEvents::EV_SwitchBuildingState: 
+        _buildingState = _building->getState();
+        _distributePower(_building->getCurrentSolarPower());
+        break;
     }
     return _state;
 }
@@ -367,6 +404,7 @@ PLBStates PLB::handleDir1State(PLBEvents ev)
         _distributePower(_building->calculateSolarPower());
         break;
     case PLBEvents::EV_Supply:
+        Serial.print("handleDir1State (EV_Supply): "); Serial.println(_stationIdEvents.front());
         _state = (_directorIds.size() == 2) ? PLBStates::ST_Dir2 : PLBStates::ST_Dir1;
         _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
         _stationIdEvents.pop();
@@ -401,6 +439,10 @@ PLBStates PLB::handleDir1State(PLBEvents ev)
         break;
     case PLBEvents::EV_SwitchMode: _mode = _building->getPLBMode();
         break;
+    case PLBEvents::EV_SwitchBuildingState: 
+        _buildingState = _building->getState();
+        _distributePower(_building->getCurrentSolarPower());
+        break;
     }
     return _state;
 }
@@ -429,7 +471,6 @@ PLBStates PLB::handleDir2State(PLBEvents ev)
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Director:
-        Serial.print("handleDir2State EV_Director: "); Serial.println(_stationIdEvents.front());
         checkDirector(_stations.at(_stationIdEvents.front()));
         _stationIdEvents.pop();
         break;
@@ -449,6 +490,10 @@ PLBStates PLB::handleDir2State(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         break;
     case PLBEvents::EV_SwitchMode: _mode = _building->getPLBMode();
+        break;
+    case PLBEvents::EV_SwitchBuildingState: 
+        _buildingState = _building->getState();
+        _distributePower(_building->getCurrentSolarPower());
         break;
     }
     return _state;
@@ -499,6 +544,10 @@ PLBStates PLB::handleDir3OnlyState(PLBEvents ev)
         break;
     case PLBEvents::EV_SwitchMode: _mode = _building->getPLBMode();
         break;
+    case PLBEvents::EV_SwitchBuildingState: 
+        _buildingState = _building->getState();
+        _distributePower(_building->getCurrentSolarPower());
+        break;
     }
     return _state;
 }
@@ -546,6 +595,10 @@ PLBStates PLB::handleDir3State(PLBEvents ev)
         break;
     case PLBEvents::EV_SwitchMode: _mode = _building->getPLBMode();
         break;
+    case PLBEvents::EV_SwitchBuildingState: 
+        _buildingState = _building->getState();
+        _distributePower(_building->getCurrentSolarPower());
+        break;
     }
     return _state;
 }
@@ -575,6 +628,10 @@ PLBStates PLB::handleDir4State(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         break;
     case PLBEvents::EV_SwitchMode: _mode = _building->getPLBMode();
+        break;
+    case PLBEvents::EV_SwitchBuildingState: 
+        _buildingState = _building->getState();
+        _distributePower(_building->getCurrentSolarPower());
         break;
     }
     return _state;

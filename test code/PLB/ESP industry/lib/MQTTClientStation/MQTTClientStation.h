@@ -14,12 +14,15 @@ using namespace std;
 class MQTTClientStation : public IStation
 {
 private:
-    uint32_t _directorId;
+    float _directorId;
     int _stationId;
     StationModes _stationMode;
     PLBModes _mode;
+    unsigned long _timer;
+    float _slope;
 
     void _setStationTopics();
+    void _setTimer(float power);
 
     String mqtt_topic_stationMode = "group4/stationMode";
     String mqtt_topic_StationId = "group4/StationId";
@@ -33,9 +36,11 @@ private:
     String mqtt_module = "Group4-PLB-Station";
     // String name = "S21 FE J";
     // String password = "yo koaster";
-    String name = "Kiwy";
-    String password = "aquamagic23";
-    String broker_ip = "192.168.131.23";
+    // String name = "Kiwy";
+    // String password = "aquamagic23";
+    String name = "123soleil";
+    String password = "elFamoso";
+    String broker_ip = "192.168.121.245";
     short port = 1883;
     EspMQTTClient _client = EspMQTTClient(
         name.c_str(),
@@ -69,7 +74,7 @@ public:
 
     /* Interface functions */
     int getId();
-    uint32_t getDirectorId();
+    float getDirectorId();
     void validateDirector(DirectorState directorState);
     void charge(float power);
     void switchMode(StationModes mode);

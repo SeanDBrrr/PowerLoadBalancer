@@ -15,20 +15,25 @@
 class PLB
 {
     int busyStations;
+    const uint32_t RFID1 = 3812054555;
+    const uint32_t RFID2 = 2267176004;
+    const uint32_t RFID3 = 2313450178;
+    const uint32_t RFID4 = 432104642;
 
 private:
     PLBStates _state;
     PLBModes _mode;
     StationModes _stationsMode;
+    BuildingState _buildingState;
     std::queue<int> _stationIdEvents;
 
     IBuilding *_building;
     std::vector<IStation *> _stations;
-    std::vector<int> _directorStations;
+    std::vector<float> _directorStations;
     std::vector<int> _userStations;
     std::vector<int> _occupiedStations;
-    std::vector<uint32_t> _directorIds;
-    std::vector<uint32_t> _validDirectorIds = {2267176004, 432104642, 1518206872, 432104642, 2313450178};
+    std::vector<float> _directorIds;
+    std::vector<float> _validDirectorIds;
     
     void _initialiseStations();
     void _changeStationsMode(StationModes stMode);

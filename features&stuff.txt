@@ -34,6 +34,7 @@ Miscellaneous:
 	-> Dorin's idea with ID in states as parameters
 	-> last will message for stations (this has to be retained)
 	-> keep supplying the building with power when it is disconnected
+	-> edge cases: director gets disconnected before being supplied (needs to wait for the OFFLINE otherwise not removed from director vector), 
 
 Sioux support:
 	-> busy waiting for timeouts? : 

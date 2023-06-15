@@ -13,6 +13,7 @@ public:
     virtual float getCurrentSolarPower() = 0;
     virtual void notifyDashboard(String message) = 0;
     virtual PLBModes getPLBMode() = 0;
+    virtual BuildingState getState() = 0;
 };
 
 

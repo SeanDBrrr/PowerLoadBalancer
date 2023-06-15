@@ -10,7 +10,9 @@ MQTTClientStation::MQTTClientStation(int id) :
 _stationId(id), 
 _directorId(0),
 _stationMode(StationModes::MO_Dynamic),
-_mode(PLBModes::MO_Auto)
+_mode(PLBModes::MO_Auto),
+_timer(0),
+_slope(30000/11)
 {
   _setStationTopics();
   _client.setMqttClientName(mqtt_module.c_str());
@@ -31,6 +33,12 @@ void MQTTClientStation::_setStationTopics()
   mqtt_topic_directorValidate += static_cast<String>(_stationId);
 }
 
+void MQTTClientStation::_setTimer(float power)
+{
+  /* 30 sec to fully charge when power is max: slope (ms/kw) = 30000/11 */
+  _timer = power * _slope;
+}
+
 /* ----------------- MQTT related functions */
 EspMQTTClient &MQTTClientStation::getClient()
 {
@@ -45,6 +53,7 @@ void MQTTClientStation::send(String topic, String message)
 void MQTTClientStation::receive()
 {
   _client.loop();
+  //if (_timer) _timer -= millis();
 }
 
 /*
@@ -59,7 +68,7 @@ void MQTTClientStation::onConnectionSubscribe()
     events.emplace_back(PLBEvents::EV_Director);
     idEvents.push(_stationId);
     /* -> We store the director's ID */
-    _directorId = payload.toInt();
+    _directorId = payload.toFloat();
   });
   _client.subscribe(mqtt_topic_requestSupply, [this](const String &topic, const String &payload)
   {
@@ -119,7 +128,7 @@ int MQTTClientStation::getId()
   return _stationId;
 }
 
-uint32_t MQTTClientStation::getDirectorId()
+float MQTTClientStation::getDirectorId()
 {
   return _directorId;
 }
@@ -143,6 +152,7 @@ void MQTTClientStation::validateDirector(DirectorState directorState)
 void MQTTClientStation::charge(float power)
 {
   send(mqtt_topic_charge_station, String(power));
+  //if (_timer) _setTimer(power);
 }
 
 void MQTTClientStation::switchMode(StationModes mode)

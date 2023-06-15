@@ -11,6 +11,7 @@ _isConnected(true),
 _lastConnectionState(true)
 {
   _client.enableDebuggingMessages();
+  _client.enableLastWillMessage(mqtt_topic_buildingHeartbeat.c_str(), "PLB");
 }
 
 MQTTClientBuilding::~MQTTClientBuilding() {}

@@ -28,7 +28,7 @@ private:
     std::vector<int> _userStations;
     std::vector<int> _occupiedStations;
     std::vector<uint32_t> _directorIds;
-    std::vector<uint32_t> _validDirectorIds = {2267176004, 432104642, 1518206872, 432104642};
+    std::vector<uint32_t> _validDirectorIds = {2267176004, 432104642, 1518206872, 432104642, 2313450178};
     
     void _initialiseStations();
     void _changeStationsMode(StationModes stMode);
@@ -58,7 +58,7 @@ public:
 
     /* PLB Public Functions */
     void addStation(IStation* station);
-    int checkDirector(IStation* station);
+    DirectorState checkDirector(IStation* station);
     void setIdEvents(std::queue<int>& ids);
     bool isTimeout();
     void loop(std::vector<PLBEvents>& events, PLBEvents& PLBModeEvent);

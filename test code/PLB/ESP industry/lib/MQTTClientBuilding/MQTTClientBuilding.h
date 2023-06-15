@@ -22,6 +22,7 @@ private:
     String mqtt_topic_calculateSolarPower= "group4/calculateSolarPower";
     String mqtt_topic_charge_building = "group4/chargeBuilding";
     String mqtt_topic_notifyDashboard = "group4/notifyDashboard";
+    String mqtt_topic_buildingHeartbeat = "group4/heartbeat";
     String mqtt_topic_PLBmode = "group4/PLBMode";
     String mqtt_module = "Group4-PLB-Building";
     // String name = "S21 FE J";

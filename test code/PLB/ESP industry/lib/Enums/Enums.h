@@ -38,3 +38,9 @@ enum class DirectorState {
     INVALID,
     ALREADY_CHECKED_IN,
 };
+
+enum class StopStatus {
+    DirectorLeft,
+    UserLeft,
+    NotOccupied,
+};

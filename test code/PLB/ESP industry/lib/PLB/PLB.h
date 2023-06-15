@@ -37,7 +37,7 @@ private:
     void _distributePower(float solarPower);
     void _supplyPowerToStation(IStation* station);
     void _supplyPowerToBuilding(float solarPower);
-    int _stopSupply(IStation* station);
+    StopStatus _stopSupply(IStation* station);
     
     /* Private functions (Manual mode) */
     void _switchToAutoMode();

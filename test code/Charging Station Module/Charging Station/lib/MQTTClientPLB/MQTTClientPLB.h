@@ -30,10 +30,10 @@ private:
     const int _TRIALS = 40;
 
 
-    String name = "S21 FE J";
-    String password = "yo koaster";
+    String name = "123soleil";
+    String password = "elFamoso";
     String mqtt_module = "Group4-Charger" + static_cast<String>(_id);
-    String broker_ip = "192.168.190.132";
+    String broker_ip = "192.168.121.245";
     String mqtt_topic_requestPower = "group4/requestPowerSupply" + static_cast<String>(_id);
     String mqtt_topic_stopSupply = "group4/stopPowerSupply" + static_cast<String>(_id);
     String mqtt_topic_receivePower = "group4/chargeStation" + static_cast<String>(_id);

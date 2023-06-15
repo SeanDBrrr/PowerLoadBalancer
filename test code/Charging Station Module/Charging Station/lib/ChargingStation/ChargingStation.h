@@ -61,7 +61,7 @@ public:
     State HandleChargingState(Event ev);
     State HandleStoppedChargingState(Event ev);
     State HandleErrorState(Event ev);
-    
+    bool isPluggedFlag();
     void charge(float power);
     void requestPower();
 };

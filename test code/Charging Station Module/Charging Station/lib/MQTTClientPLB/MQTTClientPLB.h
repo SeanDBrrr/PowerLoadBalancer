@@ -19,6 +19,8 @@ private:
     bool _isModeChangedFlag;
     bool _wifiConnectedFlag;
     bool _mqttConnectedFlag;
+    bool _isPLBConnected;
+    bool _plbWasConnectedBefore;
     DirectorState _directorState;
     StationMode _stationMode;
     unsigned long _previousTime;
@@ -30,10 +32,10 @@ private:
     const int _TRIALS = 40;
 
 
-    String name = "123soleil";
-    String password = "elFamoso";
+    String name = "Kiwy";
+    String password = "aquamagic23";
     String mqtt_module = "Group4-Charger" + static_cast<String>(_id);
-    String broker_ip = "192.168.121.245";
+    String broker_ip = "192.168.131.23";
     String mqtt_topic_requestPower = "group4/requestPowerSupply" + static_cast<String>(_id);
     String mqtt_topic_stopSupply = "group4/stopPowerSupply" + static_cast<String>(_id);
     String mqtt_topic_receivePower = "group4/chargeStation" + static_cast<String>(_id);

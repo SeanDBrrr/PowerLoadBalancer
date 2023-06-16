@@ -13,7 +13,7 @@ PLB::PLB(
       _state(PLBStates::ST_Idle),
       _mode(PLBModes::MO_Auto),
       _stationsMode(StationModes::MO_Dynamic),
-      _buildingState(BuildingState::ST_Day),
+      _buildingState(BuildingState::ST_Open),
       _building(building)
 {
     _stations.emplace_back(station0);
@@ -51,12 +51,11 @@ void PLB::_supplyPowerToStation(IStation *station)
 {
     ++busyStations;
     // _occupiedStations.emplace_back(station->getId());
-    Serial.print("_userStations.size(): "); Serial.println(_userStations.size());
-    Serial.print("busyStations: "); Serial.println(busyStations);
-    Serial.print("_directorIds.size(): "); Serial.println(_directorIds.size());
+    // Serial.print("_userStations.size(): "); Serial.println(_userStations.size());
+    // Serial.print("busyStations: "); Serial.println(busyStations);
+    // Serial.print("_directorIds.size(): "); Serial.println(_directorIds.size());
     if (busyStations > (_directorIds.size()+_userStations.size()))
     {
-        Serial.print("_userStations.emplace_back(): "); Serial.println(station->getId());
         _userStations.emplace_back(station->getId());
     }
 }
@@ -92,7 +91,6 @@ StopStatus PLB::_stopSupply(IStation *station)
             if ((_userStations.size() + _directorStations.size()) == busyStations) --busyStations;
             _directorStations.erase(_directorStations.begin() + i);
             _directorIds.erase(_directorIds.begin() + i);
-            Serial.print("_stopSupply DIRECTOR: "); Serial.println(station->getId());
             station->charge(0);
             return StopStatus::DirectorLeft;
         }
@@ -158,8 +156,8 @@ void PLB::_distributePower(float solarPower)
 
         _supplyPowerToBuilding(solarPower);
         float availablePower;
-        if (_buildingState == BuildingState::ST_Day) { availablePower = 20 + solarPower; }
-        else if (_buildingState == BuildingState::ST_Night) 
+        if (_buildingState == BuildingState::ST_Open) { availablePower = 20 + solarPower; }
+        else if (_buildingState == BuildingState::ST_Close) 
         { 
             for (size_t i = 0; i < _directorStations.size(); i++)
             {
@@ -254,9 +252,9 @@ void PLB::_distributePower(float solarPower)
             }
             break;
         case PLBStates::ST_Dir4:
+            Serial.print("_distributePower() ST_Dir4: power = "); Serial.println(availablePower/4);
             for (size_t i = 0; i < _directorStations.size(); i++)
             {
-                Serial.print("PLBStates::ST_Dir4: power = "); Serial.println(availablePower/4);
                 _stations.at(_directorStations.at(i))->charge(availablePower/4);
             }
             break;
@@ -360,11 +358,9 @@ PLBStates PLB::handleNoDirState(PLBEvents ev)
             _state = PLBStates::ST_Dir1; 
             _changeStationsMode(StationModes::MO_Director); 
         }
-        Serial.print("handleNoDirState EV_Supply: "); Serial.println(_stationIdEvents.front());
-        assert(_directorIds.size() == 0 && _directorStations.size() == 0);
         _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
-        _distributePower(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
+        _distributePower(_building->getCurrentSolarPower());
         break;
     case PLBEvents::EV_Director:
         checkDirector(_stations.at(_stationIdEvents.front()));
@@ -521,19 +517,20 @@ PLBStates PLB::handleDir3OnlyState(PLBEvents ev)
         _distributePower(_building->calculateSolarPower());
         break;
     case PLBEvents::EV_Supply:
-        Serial.print("handleDir3OnlyState EV_Supply: "); Serial.println(_stationIdEvents.front());
         if (_directorIds.size() == 3) 
-        { 
+        {
+            Serial.print("handleDir3OnlyState EV_Supply -> ST_Dir3: "); Serial.println(_stationIdEvents.front());
             _state = PLBStates::ST_Dir3; 
             _changeStationsMode(StationModes::MO_Dynamic); 
         }
         else if (_directorIds.size() == 4)
-        { 
+        {
+            Serial.print("handleDir3OnlyState EV_Supply -> ST_Dir4: "); Serial.println(_stationIdEvents.front());
             _state = PLBStates::ST_Dir4;
         }
         _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
-        _distributePower(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
+        _distributePower(_building->getCurrentSolarPower());
         break;
     case PLBEvents::EV_Director:
         Serial.print("handleDir3OnlyState EV_Director: "); Serial.println(_stationIdEvents.front());
@@ -576,6 +573,7 @@ PLBStates PLB::handleDir3State(PLBEvents ev)
     {
     case PLBEvents::EV_Timeout:
         _distributePower(_building->calculateSolarPower());
+        break;
     case PLBEvents::EV_Stop:
         if (_stopSupply(_stations.at(_stationIdEvents.front())) == StopStatus::DirectorLeft)
         {
@@ -589,6 +587,11 @@ PLBStates PLB::handleDir3State(PLBEvents ev)
         }
         _stationIdEvents.pop();
         _distributePower(_building->getCurrentSolarPower());
+        break;
+    case PLBEvents::EV_Director:
+        Serial.print("handleDir3State EV_Director: "); Serial.println(_stationIdEvents.front());
+        // checkDirector(_stations.at(_stationIdEvents.front()));
+        // _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Connected:
         _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front()) + " connected.");
@@ -629,6 +632,7 @@ PLBStates PLB::handleDir4State(PLBEvents ev)
     {
     case PLBEvents::EV_Timeout:
         _distributePower(_building->calculateSolarPower());
+        break;
     case PLBEvents::EV_Stop:
         Serial.print("handleDir4State EV_Stop: "); Serial.println(_stationIdEvents.front());
         _stopSupply(_stations.at(_stationIdEvents.front()));
@@ -727,7 +731,7 @@ void PLB::_supplyPowerFCFSMode(float solarPower)
         }
         else 
         { 
-            _stations.at(_occupiedStations.at(i))->charge(availablePower); 
+            _stations.at(_occupiedStations.at(i))->charge(availablePower);
         }   
     }
 }

@@ -59,7 +59,6 @@ void PLB::_supplyPowerToStation(IStation *station)
         Serial.print("_userStations.emplace_back(): "); Serial.println(station->getId());
         _userStations.emplace_back(station->getId());
     }
-    _distributePower(_building->getCurrentSolarPower());
 }
 
 /*
@@ -90,7 +89,7 @@ StopStatus PLB::_stopSupply(IStation *station)
     {
         if (station->getId() == _directorStations.at(i))
         {
-            if ((_userStations.size() + _directorIds.size()) == busyStations) --busyStations;
+            if ((_userStations.size() + _directorStations.size()) == busyStations) --busyStations;
             _directorStations.erase(_directorStations.begin() + i);
             _directorIds.erase(_directorIds.begin() + i);
             Serial.print("_stopSupply DIRECTOR: "); Serial.println(station->getId());
@@ -257,6 +256,7 @@ void PLB::_distributePower(float solarPower)
         case PLBStates::ST_Dir4:
             for (size_t i = 0; i < _directorStations.size(); i++)
             {
+                Serial.print("PLBStates::ST_Dir4: power = "); Serial.println(availablePower/4);
                 _stations.at(_directorStations.at(i))->charge(availablePower/4);
             }
             break;
@@ -317,6 +317,7 @@ PLBStates PLB::handleIdleState(PLBEvents ev)
             _changeStationsMode(StationModes::MO_Director); 
         }
         _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
+        _distributePower(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Director:
@@ -332,7 +333,9 @@ PLBStates PLB::handleIdleState(PLBEvents ev)
         _stopSupply(_stations.at(_stationIdEvents.front()));
         _stationIdEvents.pop();
         break;
-    case PLBEvents::EV_SwitchMode: _mode = _building->getPLBMode();
+    case PLBEvents::EV_SwitchMode: 
+        _mode = _building->getPLBMode();
+        if (_mode == PLBModes::MO_Manual) _building->notifyDashboard("PLB switched to manual mode.");
         break;
     case PLBEvents::EV_SwitchBuildingState: 
         _buildingState = _building->getState();
@@ -360,6 +363,7 @@ PLBStates PLB::handleNoDirState(PLBEvents ev)
         Serial.print("handleNoDirState EV_Supply: "); Serial.println(_stationIdEvents.front());
         assert(_directorIds.size() == 0 && _directorStations.size() == 0);
         _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
+        _distributePower(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Director:
@@ -384,7 +388,9 @@ PLBStates PLB::handleNoDirState(PLBEvents ev)
         if (_userStations.size() == 0) _state = PLBStates::ST_Idle;
         _distributePower(_building->getCurrentSolarPower());
         break;
-    case PLBEvents::EV_SwitchMode: _mode = _building->getPLBMode();
+    case PLBEvents::EV_SwitchMode:
+        _mode = _building->getPLBMode();
+        if (_mode == PLBModes::MO_Manual) _building->notifyDashboard("PLB switched to manual mode.");
         break;
     case PLBEvents::EV_SwitchBuildingState: 
         _buildingState = _building->getState();
@@ -407,6 +413,7 @@ PLBStates PLB::handleDir1State(PLBEvents ev)
         Serial.print("handleDir1State (EV_Supply): "); Serial.println(_stationIdEvents.front());
         _state = (_directorIds.size() == 2) ? PLBStates::ST_Dir2 : PLBStates::ST_Dir1;
         _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
+        _distributePower(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Director:
@@ -437,7 +444,9 @@ PLBStates PLB::handleDir1State(PLBEvents ev)
         _stationIdEvents.pop();
         _distributePower(_building->getCurrentSolarPower());
         break;
-    case PLBEvents::EV_SwitchMode: _mode = _building->getPLBMode();
+    case PLBEvents::EV_SwitchMode:
+        _mode = _building->getPLBMode();
+        if (_mode == PLBModes::MO_Manual) _building->notifyDashboard("PLB switched to manual mode.");
         break;
     case PLBEvents::EV_SwitchBuildingState: 
         _buildingState = _building->getState();
@@ -468,6 +477,7 @@ PLBStates PLB::handleDir2State(PLBEvents ev)
             _changeStationsMode(StationModes::MO_Dynamic);
         }
         _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
+        _distributePower(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Director:
@@ -489,7 +499,9 @@ PLBStates PLB::handleDir2State(PLBEvents ev)
         _stationIdEvents.pop();
         _distributePower(_building->getCurrentSolarPower());
         break;
-    case PLBEvents::EV_SwitchMode: _mode = _building->getPLBMode();
+    case PLBEvents::EV_SwitchMode:
+        _mode = _building->getPLBMode();
+        if (_mode == PLBModes::MO_Manual) _building->notifyDashboard("PLB switched to manual mode.");
         break;
     case PLBEvents::EV_SwitchBuildingState: 
         _buildingState = _building->getState();
@@ -509,16 +521,18 @@ PLBStates PLB::handleDir3OnlyState(PLBEvents ev)
         _distributePower(_building->calculateSolarPower());
         break;
     case PLBEvents::EV_Supply:
+        Serial.print("handleDir3OnlyState EV_Supply: "); Serial.println(_stationIdEvents.front());
         if (_directorIds.size() == 3) 
         { 
             _state = PLBStates::ST_Dir3; 
             _changeStationsMode(StationModes::MO_Dynamic); 
         }
-        else 
+        else if (_directorIds.size() == 4)
         { 
             _state = PLBStates::ST_Dir4;
         }
         _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
+        _distributePower(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Director:
@@ -542,7 +556,9 @@ PLBStates PLB::handleDir3OnlyState(PLBEvents ev)
         _stationIdEvents.pop();
         _distributePower(_building->getCurrentSolarPower());
         break;
-    case PLBEvents::EV_SwitchMode: _mode = _building->getPLBMode();
+    case PLBEvents::EV_SwitchMode:
+        _mode = _building->getPLBMode();
+        if (_mode == PLBModes::MO_Manual) _building->notifyDashboard("PLB switched to manual mode.");
         break;
     case PLBEvents::EV_SwitchBuildingState: 
         _buildingState = _building->getState();
@@ -593,7 +609,9 @@ PLBStates PLB::handleDir3State(PLBEvents ev)
         _stationIdEvents.pop();
         _distributePower(_building->getCurrentSolarPower());
         break;
-    case PLBEvents::EV_SwitchMode: _mode = _building->getPLBMode();
+    case PLBEvents::EV_SwitchMode:
+        _mode = _building->getPLBMode();
+        if (_mode == PLBModes::MO_Manual) _building->notifyDashboard("PLB switched to manual mode.");
         break;
     case PLBEvents::EV_SwitchBuildingState: 
         _buildingState = _building->getState();
@@ -612,6 +630,7 @@ PLBStates PLB::handleDir4State(PLBEvents ev)
     case PLBEvents::EV_Timeout:
         _distributePower(_building->calculateSolarPower());
     case PLBEvents::EV_Stop:
+        Serial.print("handleDir4State EV_Stop: "); Serial.println(_stationIdEvents.front());
         _stopSupply(_stations.at(_stationIdEvents.front()));
         _stationIdEvents.pop();
         _state = PLBStates::ST_Dir3Only;
@@ -627,7 +646,9 @@ PLBStates PLB::handleDir4State(PLBEvents ev)
         _stationIdEvents.pop();
         _distributePower(_building->getCurrentSolarPower());
         break;
-    case PLBEvents::EV_SwitchMode: _mode = _building->getPLBMode();
+    case PLBEvents::EV_SwitchMode:
+        _mode = _building->getPLBMode();
+        if (_mode == PLBModes::MO_Manual) _building->notifyDashboard("PLB switched to manual mode.");
         break;
     case PLBEvents::EV_SwitchBuildingState: 
         _buildingState = _building->getState();
@@ -654,13 +675,14 @@ void PLB::_switchToAutoMode()
 void PLB::_supplyPowerDynamicMode(float solarPower)
 {
     float availablePower = 20 + solarPower;
+    float power = (availablePower/busyStations > 11) ? 11 : availablePower/busyStations;
     for (size_t i = 0; i < _directorStations.size(); i++)
     {
-        _stations.at(_directorStations.at(i))->charge(availablePower/busyStations);
+        _stations.at(_directorStations.at(i))->charge(power);
     }
     for (size_t i = 0; i < _userStations.size(); i++)
     {
-        _stations.at(_userStations.at(i))->charge(availablePower/busyStations);
+        _stations.at(_userStations.at(i))->charge(power);
     }
 }
 
@@ -739,6 +761,8 @@ void PLB::handleDynamicMode(PLBEvents ev)
         _supplyPowerDynamicMode(_building->calculateSolarPower());
         break;
     case PLBEvents::EV_Supply:
+        Serial.print("handleDynamicMode EV_Supply: "); Serial.println();
+        _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
         _supplyPowerDynamicMode(_building->getCurrentSolarPower());
         break;
     case PLBEvents::EV_Director:
@@ -781,6 +805,7 @@ void PLB::handleDirectorMode(PLBEvents ev)
         _supplyPowerDirectorMode(_building->calculateSolarPower());
         break;
     case PLBEvents::EV_Supply:
+        _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
         _supplyPowerDirectorMode(_building->getCurrentSolarPower());
         break;
     case PLBEvents::EV_Director:
@@ -823,6 +848,7 @@ void PLB::handleFCFSMode(PLBEvents ev)
         _supplyPowerFCFSMode(_building->calculateSolarPower());
         break;
     case PLBEvents::EV_Supply:
+        _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
         _supplyPowerFCFSMode(_building->getCurrentSolarPower());
         break;
     case PLBEvents::EV_Director:
@@ -889,21 +915,26 @@ void PLB::loop(std::vector<PLBEvents>& events, PLBEvents& PLBModeEvent)
         /* Iterate through the list of PLBEvents */
         for (const auto &ev: events)
         {
-            if (ev==PLBEvents::EV_Supply) { Serial.println("PLB loop: EV_Supply"); }
-            else if (ev==PLBEvents::EV_Stop) { Serial.println("PLB loop: EV_Stop"); }
-            else if (ev==PLBEvents::EV_Director) { Serial.println("PLB loop: EV_Director"); }
-            else if (ev==PLBEvents::EV_Connected) { Serial.println("PLB loop: EV_Connected"); }
-            else if (ev==PLBEvents::EV_Disconnected) { Serial.println("PLB loop: EV_Disconnected"); }
+            if (ev==PLBEvents::EV_Supply) { Serial.println("PLB (auto) loop: EV_Supply"); }
+            else if (ev==PLBEvents::EV_Stop) { Serial.println("PLB (auto) loop: EV_Stop"); }
+            else if (ev==PLBEvents::EV_Director) { Serial.println("PLB (auto) loop: EV_Director"); }
+            else if (ev==PLBEvents::EV_Connected) { Serial.println("PLB (auto) loop: EV_Connected"); }
+            else if (ev==PLBEvents::EV_Disconnected) { Serial.println("PLB (auto) loop: EV_Disconnected"); }
             handleAutoModeEvents(ev);
         }
     }
-    else if (_mode == PLBModes::MO_Manual) 
-    {
+    else if (_mode == PLBModes::MO_Manual)
+    {        
         /* Maintainer that can switch PLB mode from the dashboard */
         if (PLBModeEvent != PLBEvents::EV_NoEvent) handleManualModeEvents(std::move(PLBModeEvent));
 
         for (const auto &ev: events)
         {
+            if (ev==PLBEvents::EV_Supply) { Serial.println("PLB (manual) loop: EV_Supply"); }
+            else if (ev==PLBEvents::EV_Stop) { Serial.println("PLB (manual) loop: EV_Stop"); }
+            else if (ev==PLBEvents::EV_Director) { Serial.println("PLB (manual) loop: EV_Director"); }
+            else if (ev==PLBEvents::EV_Connected) { Serial.println("PLB (manual) loop: EV_Connected"); }
+            else if (ev==PLBEvents::EV_Disconnected) { Serial.println("PLB (manual) loop: EV_Disconnected"); }
             handleManualModeEvents(ev);
         }
     }

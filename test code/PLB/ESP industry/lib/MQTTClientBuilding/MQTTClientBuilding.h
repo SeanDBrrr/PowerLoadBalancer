@@ -27,13 +27,9 @@ private:
     String mqtt_topic_PLBHeartbeat = "group4/heartbeat";
     String mqtt_topic_PLBmode = "group4/PLBMode";
     String mqtt_module = "Group4-PLB-Building";
-    String name = "S21 FE J";
-    String password = "yo koaster";
-    // String name = "Kiwy";
-    // String password = "aquamagic23";
-    // String name = "123soleil";
-    // String password = "elFamoso";
-    String broker_ip = "192.168.190.132";
+    String name = "Kiwy";
+    String password = "aquamagic23";
+    String broker_ip = "192.168.131.23";
     short port = 1883;
     EspMQTTClient _client = EspMQTTClient(
         name.c_str(),

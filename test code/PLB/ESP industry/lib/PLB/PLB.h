@@ -23,6 +23,7 @@ class PLB
 private:
     PLBStates _state;
     PLBModes _mode;
+    PLBModes _prevMode;
     StationModes _stationsMode;
     BuildingState _buildingState;
     std::queue<int> _stationIdEvents;

@@ -4,7 +4,7 @@
 MQTTClientBuilding::MQTTClientBuilding() :
 _event(PLBEvents::EV_NoEvent),
 _PLBMode(PLBModes::MO_Auto),
-_state(BuildingState::ST_Day),
+_state(BuildingState::ST_Open),
 _isSolarPowerArrivedFlag(false), 
 _totalSolarPower(0),
 _solarPowerTimeout(2000),
@@ -13,7 +13,6 @@ _lastConnectionState(true)
 {
   _client.enableDebuggingMessages();
   _client.enableLastWillMessage(mqtt_topic_PLBHeartbeat.c_str(), "PLB OFFLINE");
-  //send(mqtt_topic_PLBHeartbeat.c_str(), "PLB ONLINE");
 }
 
 MQTTClientBuilding::~MQTTClientBuilding() {}
@@ -46,6 +45,7 @@ void MQTTClientBuilding::receive()
 
 void MQTTClientBuilding::onConnectionSubscribe()
 {
+  send(mqtt_topic_PLBHeartbeat.c_str(), "PLB ONLINE");
   _client.subscribe(mqtt_topic_solarPower, [this](const String &topic, const String &payload)
   { 
     _isSolarPowerArrivedFlag = true;
@@ -64,11 +64,11 @@ void MQTTClientBuilding::onConnectionSubscribe()
   _client.subscribe(mqtt_topic_BuildingState, [this](const String &topic, const String &payload)
   {
     _event = PLBEvents::EV_SwitchBuildingState;
-    if (payload == "Day") {
-      _state = BuildingState::ST_Day;
+    if (payload == "Open") {
+      _state = BuildingState::ST_Open;
     }
-    else if (payload == "Night") {
-      _state = BuildingState::ST_Night;
+    else if (payload == "Close") {
+      _state = BuildingState::ST_Close;
     }
   });
 }

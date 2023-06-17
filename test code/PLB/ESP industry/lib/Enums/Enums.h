@@ -24,8 +24,8 @@ enum class PLBStates {
 };
 
 enum class BuildingState {
-    ST_Day,
-    ST_Night,
+    ST_Open,
+    ST_Close,
 };
 
 enum class PLBModes {

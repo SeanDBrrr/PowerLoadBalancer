@@ -8,11 +8,21 @@ MQTTClientPLB::MQTTClientPLB( // Few objects are not initialized yet.
     int id)
     : _id(id),
       _powerReceived(0),
+<<<<<<< HEAD
       _isPowerReceivedFlag(false),
       _isDirectorResponseFlag(false),
       _isModeChangedFlag(false),
       _wifiConnectedFlag(false),
       _mqttConnectedFlag(false),
+=======
+      _isPowerReceivedFlag(0),
+      _isDirectorResponseFlag(0),
+      _isModeChangedFlag(0),
+      _wifiConnectedFlag(0),
+      _mqttConnectedFlag(0),
+      _isPLBConnected(0),
+      _plbWasConnectedBefore(0),
+>>>>>>> Developing
       _directorState(DirectorState::noState),
       _previousTime(0),
       _wifiConnected(false),
@@ -23,7 +33,7 @@ MQTTClientPLB::MQTTClientPLB( // Few objects are not initialized yet.
   Serial.print("OBJECT CREATED: ");
   Serial.println(_id);
   _client.enableDebuggingMessages();
-  _client.enableLastWillMessage("group4/heartbeat",  "OFFLINE3");
+  _client.enableLastWillMessage("group4/heartbeat", "OFFLINE0");
 }
 
 EspMQTTClient &MQTTClientPLB::getClient()
@@ -50,6 +60,19 @@ void MQTTClientPLB::receive()
   _event = Event::noEvent;
   _event = getConnectionStatusEvent();
   // checkConnection();
+
+  if (_isPLBConnected && !_plbWasConnectedBefore && _mqttConnected)//works, Event unsure
+  {
+    Serial.println("PLB CONNECTED");
+    _event = Event::EV_PLB_CONNECTED;
+    _plbWasConnectedBefore = true;
+  }
+  else if (!_isPLBConnected && _plbWasConnectedBefore)
+  {
+    Serial.println("PLB DISCONNECTED");
+    _event = Event::EV_PLB_DISCONNECTED;
+    _plbWasConnectedBefore = false;
+  }
 
   if (_directorState == DirectorState::TIMED_OUT)
   {
@@ -99,7 +122,17 @@ void MQTTClientPLB::onConnectionSubscribe()
                     {
     _isPowerReceivedFlag = true;
     _powerReceived = payload.toFloat(); });
-  _client.subscribe(mqtt_topic_heartbeat, [this](const String &topic, const String &payload) {});
+  _client.subscribe(mqtt_topic_heartbeat, [this](const String &topic, const String &payload)
+                    {
+                      if (payload == "PLB ONLINE")
+                      {
+                        _isPLBConnected = true;
+                      }
+                      else if (payload == "PLB OFFLINE")
+                      {
+                        _isPLBConnected = false;
+                      }
+                    });
   _client.subscribe(mqtt_topic_directorResponse, [this](const String &topic, const String &payload)
                     {
     _isDirectorResponseFlag = true;

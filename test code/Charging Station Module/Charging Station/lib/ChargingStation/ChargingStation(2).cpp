@@ -584,7 +584,8 @@ void ChargingStation::loop(Event ev)
     {
         _display->display("Charging: " + static_cast<String>(_powerRecieved));
         lastPower = _powerRecieved;
-        _currentEvents.emplace_back(Event::EV_CHARGING);
+        _currentEvents.emplace_back(Event::EV_CHARGING);//technically shouldnt always call this event
+        //because if it receives 0 power when it stops charging, it will call EV_CHARGING for no reason.
     }
 
     _currentEvents.emplace_back(ev); // needed for the events recieved from the PLB

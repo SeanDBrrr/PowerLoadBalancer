@@ -9,10 +9,16 @@
 #include <exception>
 #include <queue>
 
+<<<<<<< HEAD
 //#define NOT_WORKING_V0
 //#define WORKING_V1
 #define WORKING_V1_2
 //#define WORKING_V2
+=======
+//#define NOT_WORKING_V1
+#define WORKING_V2
+//#define WORKING_V2_1
+>>>>>>> Developing
 
 enum class Event; 
 enum class State;

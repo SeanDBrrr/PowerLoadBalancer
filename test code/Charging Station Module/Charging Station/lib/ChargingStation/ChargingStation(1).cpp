@@ -69,6 +69,14 @@ State ChargingStation::HandleIdleState(Event ev)
         _display->display("MQTT:", "Connected!");
         state = State:: STATE_IDLE;
         break;
+    case Event::EV_PLB_CONNECTED:
+        _display->display("plb connected", "IDLE");
+        state = State::STATE_IDLE;
+        break;
+    case Event::EV_PLB_DISCONNECTED:
+        _display->display("plb disconnected", "STOPPED CHARGING");
+        state = State::STATE_STOPPED_CHARGING;
+        break;
     case Event::noEvent:
         // do nothing
         break;
@@ -156,6 +164,14 @@ State ChargingStation::HandleVerifyingDirectorState(Event ev)
         _display->display("MQTT:", "Connected!");
         state = State:: STATE_IDLE;
         break;
+    case Event::EV_PLB_CONNECTED:
+        _display->display("plb connected", "IDLE");
+        state = State::STATE_IDLE;
+        break;
+    case Event::EV_PLB_DISCONNECTED:
+        _display->display("plb disconnected", "STOPPED CHARGING");
+        state = State::STATE_STOPPED_CHARGING;
+        break;
     case Event::noEvent:
         // do nothing
         break;
@@ -198,6 +214,14 @@ State ChargingStation::HandleIdleDirectorState(Event ev)
         _mqttTrials = 0;
         _display->display("MQTT:", "Connected!");
         state = State:: STATE_IDLE;
+        break;
+    case Event::EV_PLB_CONNECTED:
+        _display->display("plb connected", "IDLE");
+        state = State::STATE_IDLE;
+        break;
+    case Event::EV_PLB_DISCONNECTED:
+        _display->display("plb disconnected", "STOPPED CHARGING");
+        state = State::STATE_STOPPED_CHARGING;
         break;
     case Event::noEvent:
         // do nothing
@@ -252,6 +276,14 @@ State ChargingStation::HandlePluggedState(Event ev)
         _display->display("MQTT:", "Connected!");
         state = State:: STATE_IDLE;
         break;
+    case Event::EV_PLB_CONNECTED:
+        _display->display("plb connected", "IDLE");
+        state = State::STATE_IDLE;
+        break;
+    case Event::EV_PLB_DISCONNECTED:
+        _display->display("plb disconnected", "STOPPED CHARGING");
+        state = State::STATE_STOPPED_CHARGING;
+        break;
     case Event::noEvent:
         // do nothing
         break;
@@ -305,6 +337,14 @@ State ChargingStation::HandlePluggedDirectorState(Event ev)
         _display->display("MQTT:", "Connected!");
         state = State:: STATE_IDLE;
         break;
+    case Event::EV_PLB_CONNECTED:
+        _display->display("plb connected", "IDLE");
+        state = State::STATE_IDLE;
+        break;
+    case Event::EV_PLB_DISCONNECTED:
+        _display->display("plb disconnected", "STOPPED CHARGING");
+        state = State::STATE_STOPPED_CHARGING;
+        break;
     case Event::noEvent:
         // do nothing
         break;
@@ -349,6 +389,14 @@ State ChargingStation::HandleWaitingForPowerState(Event ev)
         _mqttTrials = 0;
         _display->display("MQTT:", "Connected!");
         state = State:: STATE_IDLE;
+        break;
+    case Event::EV_PLB_CONNECTED:
+        _display->display("plb connected", "IDLE");
+        state = State::STATE_IDLE;
+        break;
+    case Event::EV_PLB_DISCONNECTED:
+        _display->display("plb disconnected", "STOPPED CHARGING");
+        state = State::STATE_STOPPED_CHARGING;
         break;
     case Event::noEvent:
         // do nothing
@@ -405,6 +453,15 @@ State ChargingStation::HandleChargingState(Event ev)
         _display->display("MQTT:", "Connected!");
         state = State:: STATE_IDLE;
         break;
+    case Event::EV_PLB_CONNECTED:
+        _display->display("plb connected", "IDLE");
+        state = State::STATE_IDLE;
+        break;
+    case Event::EV_PLB_DISCONNECTED:
+        _display->display("plb disconnected", "STOPPED CHARGING");
+        state = State::STATE_STOPPED_CHARGING;
+        _IPLB->stopSupplyToStation(_id);
+        break;
     case Event::noEvent:
         // do nothing
         break;
@@ -452,6 +509,14 @@ State ChargingStation::HandleStoppedChargingState(Event ev)
         _mqttTrials = 0;
         _display->display("MQTT:", "Connected!");
         state = State:: STATE_IDLE;
+        break;
+    case Event::EV_PLB_CONNECTED:
+        _display->display("plb connected", "IDLE");
+        state = State::STATE_IDLE;
+        break;
+    case Event::EV_PLB_DISCONNECTED:
+        _display->display("plb disconnected", "STOPPED CHARGING");
+        state = State::STATE_STOPPED_CHARGING;
         break;
     case Event::noEvent:
         // do nothing
@@ -522,7 +587,11 @@ void ChargingStation::HandleEvent(Event ev) // can technically just call private
 
 void ChargingStation::requestPower() // MAKE VOID WHEN DONE
 {
+<<<<<<< HEAD
     Serial.println("IN request power");
+=======
+    Serial.println("requesting power");
+>>>>>>> Developing
     _IPLB->supplyPowerToStation(_id);
     unsigned long lastTime = millis();
     bool breakLoop = false;
@@ -558,11 +627,13 @@ void ChargingStation::requestPower() // MAKE VOID WHEN DONE
 
 void ChargingStation::loop(Event ev)
 {
-    _startButtonState = _IStart->isStarted();
-    _plugButtonState = _IPlug->isPlugged();
+
+    //_startButtonState = _IStart->isStarted();//Guaranteed works
+    //_plugButtonState = _IPlug->isPlugged();//Guranateed works
 
     if (_currentState == State::STATE_STOPPED_CHARGING || _currentState == State::STATE_PLUGGED_DIRECTOR || _currentState == State::STATE_PLUGGED)
     {
+        _startButtonState = _IStart->isStarted(); // test
         if (_startButtonState)
         {
             _currentEvents.emplace_back(Event::EV_START);
@@ -572,6 +643,7 @@ void ChargingStation::loop(Event ev)
 
     if (_currentState == State::STATE_WAITING_FOR_POWER || _currentState == State::STATE_CHARGING)
     {
+        _startButtonState = _IStart->isStarted(); // test
         if (_startButtonState)
         {
             
@@ -582,6 +654,7 @@ void ChargingStation::loop(Event ev)
 
     if (_currentState == State::STATE_IDLE || _currentState == State::STATE_IDLE_DIRECTOR)
     {
+        _plugButtonState = _IPlug->isPlugged(); // test
         if (_plugButtonState)
         {
             _currentEvents.emplace_back(Event::EV_PLUGGED);
@@ -591,6 +664,7 @@ void ChargingStation::loop(Event ev)
 
     if ((_currentState == State::STATE_STOPPED_CHARGING || _currentState == State::STATE_PLUGGED || _currentState == State::STATE_PLUGGED_DIRECTOR))
     {
+        _plugButtonState = _IPlug->isPlugged(); // test
         if (_plugButtonState)
         {
             _currentEvents.emplace_back(Event::EV_UNPLUGGED);
@@ -623,9 +697,15 @@ void ChargingStation::loop(Event ev)
     _powerRecieved = _IPLB->getPowerReceived();
     if (_powerRecieved != lastPower)
     {
+        if (_powerRecieved == 0)//tst
+        {
+            _display->display("ev stop Charging:" + static_cast<String>(_powerRecieved), "STOPPED CHARGING");
+            _currentEvents.emplace_back(Event::EV_STOP);
+        }
         _display->display("Charging: " + static_cast<String>(_powerRecieved));
         lastPower = _powerRecieved;
-        _currentEvents.emplace_back(Event::EV_CHARGING);
+        _currentEvents.emplace_back(Event::EV_CHARGING); // technically shouldnt always call this event
+        // because if it receives 0 power when it stops charging, it will call EV_CHARGING for no reason.
     }
 
     _currentEvents.emplace_back(ev); // needed for the events recieved from the PLB

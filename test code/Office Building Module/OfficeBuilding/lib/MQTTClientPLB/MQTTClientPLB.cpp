@@ -23,7 +23,7 @@ void MQTTClientPLB::send(String topic, String message)
 
 Event MQTTClientPLB::getConnectionStatusEvent()
 {
-    Event ev = Event::NoEvent;
+    _event = Event::NoEvent;
 
     if (millis() - _previousTime >= _INTERVAL)
     {
@@ -32,24 +32,24 @@ Event MQTTClientPLB::getConnectionStatusEvent()
         if (!_client.isWifiConnected() && _wifiTrials < _TRIALS)
         {
             _wifiTrials++;
-            ev = Event::EV_WIFI_TRIALS;
+            _event = Event::EV_WIFI_TRIALS;
             _wifiConnected = false;
         }
         else if (!_client.isWifiConnected() && _wifiTrials == _TRIALS)
         {
             _wifiTrials++;
-            ev = Event::EV_WIFI_NOT_CONNECTED;
+            _event = Event::EV_WIFI_NOT_CONNECTED;
         }
         if (!_client.isMqttConnected() && _wifiConnected && _mqttTrials < _TRIALS)
         {
             _mqttTrials++;
             _mqttConnected = false;
-            ev = Event::EV_MQTT_TRIALS;
+            _event = Event::EV_MQTT_TRIALS;
         }
         else if (!_client.isMqttConnected() && _wifiConnected && _mqttTrials == _TRIALS)
         {
             _mqttTrials++;
-            ev = Event::EV_MQTT_NOT_CONNECTED;
+            _event = Event::EV_MQTT_NOT_CONNECTED;
         }
     }
 
@@ -57,7 +57,7 @@ Event MQTTClientPLB::getConnectionStatusEvent()
     {
         _wifiTrials = 0;
         _mqttTrials = 0;
-        ev = Event::EV_WIFI_CONNECTED;
+        _event = Event::EV_WIFI_CONNECTED;
         _wifiConnected = true;
     }
 
@@ -65,32 +65,31 @@ Event MQTTClientPLB::getConnectionStatusEvent()
     {
         _mqttTrials = 0;
         _mqttConnected = true;
-        ev = Event::EV_MQTT_CONNECTED;
+        _event = Event::EV_MQTT_CONNECTED;
     }
 
-    return ev;
+    return _event;
 }
 
 Event& MQTTClientPLB::receive()
 {
-    Event ev;
     _client.loop();
-    ev = Event::NoEvent;
+    _event = Event::NoEvent;
 
-    ev = getConnectionStatusEvent();
+    _event = getConnectionStatusEvent();
 
     if (_solarPowerRequested)
     {
         _solarPowerRequested = false;
-        ev = Event::EV_SEND_SOLAR_POWER;
+        _event = Event::EV_SEND_SOLAR_POWER;
     }
 
     if (_isStartedCharging)
     {
         _isStartedCharging = false;
-        ev = Event::EV_CHARGE_BUILDING;
+        _event = Event::EV_CHARGE_BUILDING;
     }
-    return ev;
+    return _event;
 }
 
 void MQTTClientPLB::onConnectionSubscribe()

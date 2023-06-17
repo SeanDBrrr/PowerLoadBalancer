@@ -3,14 +3,14 @@
 #pragma once
 const int BUTTON_PIN = 13; // TODO NEEDS TO BE CHANGED
 
-class OfficeKey : public IOfficeState
+class BuildingStateButton : public IOfficeState
 {
 private:
-    ToggleButton *_button;
+    SinglePressButton *_button;
 
 public:
-    OfficeKey();
-    ~OfficeKey();
+    BuildingStateButton();
+    ~BuildingStateButton();
 
     bool isOpen();
 };

@@ -95,27 +95,30 @@ void OfficeBuilding::sendSolarPower(double solarPower)
 void OfficeBuilding::loop(Event &ev)
 {
     _events.emplace_back(std::move(ev));
-    _readOfficeState = _officeState->isOpen();
 
-    if (_readOfficeState && (_lastOfficeState != _readOfficeState))
+    if (_currentState == State::STATE_OPEN)
     {
-        //_display->display("Building", "is Open");
-        _currentState = State::STATE_OPEN;
-        _events.emplace_back( Event::EV_SWITCH_STATE);
-        Serial.println("Open");
+        if (_officeState->isOpen())
+        {
+            _display->display("Building state", "CLOSED");
+            _currentState = State::STATE_CLOSED;
+            _events.emplace_back(Event::EV_SWITCH_STATE);
+        }
     }
-    else if (_readOfficeState && (_lastOfficeState != _readOfficeState))
+    else if (_currentState == State::STATE_CLOSED)
     {
-        //_display->display("Building", "is CLosed");
-        _currentState = State::STATE_CLOSED;
-        _events.emplace_back(Event::EV_SWITCH_STATE);
-         Serial.println("Closed");
+        if (_officeState->isOpen())
+        {
+            _display->display("Building state", "OPEN");
+            _currentState = State::STATE_OPEN;
+            _events.emplace_back(Event::EV_SWITCH_STATE);
+        }
     }
 
     for (const auto &ev : _events)
-    {
-        handleEvent(ev);
+        {
+            handleEvent(ev);
+        }
+        
+        _events.clear();
     }
-    _events.clear();
-    
-}

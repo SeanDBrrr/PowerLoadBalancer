@@ -62,3 +62,6 @@ Notes from Dorin from Tuesday:
 	-> Fix delay of building receive power and everything
 	-> Think of maybe implementing what Tom said with one queue only.
 	-> Implement last will messages heartbeat (50%)
+
+Bugs:
+	-> Dir1 state with 3 users

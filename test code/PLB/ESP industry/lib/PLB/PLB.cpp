@@ -66,7 +66,8 @@ void PLB::_supplyPowerToStation(IStation *station)
  */
 void PLB::_supplyPowerToBuilding(float solarPower)
 {
-    _building->charge(80 - solarPower);
+    if (_buildingState == BuildingState::ST_Open) { _building->charge(80 - solarPower); }
+    else if (_buildingState == BuildingState::ST_Close) { _building->charge(30 - solarPower); }
 }
 
 /*
@@ -924,6 +925,7 @@ void PLB::loop(std::vector<PLBEvents>& events, PLBEvents& PLBModeEvent)
             else if (ev==PLBEvents::EV_Director) { Serial.println("PLB (auto) loop: EV_Director"); }
             else if (ev==PLBEvents::EV_Connected) { Serial.println("PLB (auto) loop: EV_Connected"); }
             else if (ev==PLBEvents::EV_Disconnected) { Serial.println("PLB (auto) loop: EV_Disconnected"); }
+            else if (ev==PLBEvents::EV_SwitchBuildingState) { Serial.println("PLB (auto) loop: EV_SwitchBuildingState"); }
             handleAutoModeEvents(ev);
         }
     }

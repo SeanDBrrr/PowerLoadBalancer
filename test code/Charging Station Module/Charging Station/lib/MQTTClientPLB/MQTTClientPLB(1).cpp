@@ -1,8 +1,6 @@
 #include "MQTTClientPLB.h"
 
-
-#ifdef MQTT_PLB_V0
-
+#ifdef MQTT_PLB_V1
 
 MQTTClientPLB::MQTTClientPLB( // Few objects are not initialized yet.
     int id)
@@ -23,7 +21,7 @@ MQTTClientPLB::MQTTClientPLB( // Few objects are not initialized yet.
   Serial.print("OBJECT CREATED: ");
   Serial.println(_id);
   _client.enableDebuggingMessages();
-  _client.enableLastWillMessage("group4/heartbeat",  "OFFLINE3");
+  _client.enableLastWillMessage("group4/heartbeat", "OFFLINE3");
 }
 
 EspMQTTClient &MQTTClientPLB::getClient()
@@ -262,8 +260,61 @@ Event MQTTClientPLB::getConnectionStatusEvent()
   return ev;
 }
 
-#endif
+Event MQTTClientPLB::getPLBChargingStatusEvent()
+{
+  Event ev = Event::noEvent;
 
+  if (!_isPowerReceivedFlag)
+  {
+    if (millis() - _previousTime >= _INTERVAL)
+    {
+      _previousTime = millis();
+
+      if (!_client.isWifiConnected() && _wifiTrials < _TRIALS)
+      {
+        _wifiTrials++;
+        ev = Event::EV_WIFI_TRIALS;
+        _wifiConnected = false;
+      }
+      else if (!_client.isWifiConnected() && _wifiTrials == _TRIALS)
+      {
+        _wifiTrials++;
+        ev = Event::EV_WIFI_NOT_CONNECTED;
+      }
+      if (!_client.isMqttConnected() && _wifiConnected && _mqttTrials < _TRIALS)
+      {
+        _mqttTrials++;
+        _mqttConnected = false;
+        ev = Event::EV_MQTT_TRIALS;
+      }
+      else if (!_client.isMqttConnected() && _wifiConnected && _mqttTrials == _TRIALS)
+      {
+        _mqttTrials++;
+        ev = Event::EV_MQTT_NOT_CONNECTED;
+      }
+    }
+
+    if (_client.isWifiConnected() && _wifiTrials > 0 && _wifiTrials < _TRIALS)
+    {
+      _wifiTrials = 0;
+      _mqttTrials = 0;
+      ev = Event::EV_WIFI_CONNECTED;
+      _wifiConnected = true;
+    }
+
+    if (_client.isMqttConnected() && _wifiConnected && _mqttTrials > 0 && _mqttTrials < _TRIALS)
+    {
+      _mqttTrials = 0;
+      _mqttConnected = true;
+      ev = Event::EV_MQTT_CONNECTED;
+      birthMessage();
+    }
+  }
+
+  return ev;
+}
+
+#endif
 // void MQTTClientPLB::checkConnection()
 // {
 //   if (!_client.isWifiConnected() && !_wifiConnectedFlag)

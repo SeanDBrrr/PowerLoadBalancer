@@ -9,9 +9,10 @@
 #include <exception>
 #include <queue>
 
-//#define NOT_WORKING_V1
+//#define NOT_WORKING_V0
+//#define WORKING_V1
+#define WORKING_V1_2
 //#define WORKING_V2
-#define WORKING_V2_1
 
 enum class Event; 
 enum class State;
@@ -25,6 +26,7 @@ private:
     bool _startButtonState = false;
     bool _plugButtonState = false;
     bool _isDirPluggedFlag;
+    bool _stopCharge = false;
     std::vector<Event> _currentEvents;
     State _currentState;
     int _wifiTrials;

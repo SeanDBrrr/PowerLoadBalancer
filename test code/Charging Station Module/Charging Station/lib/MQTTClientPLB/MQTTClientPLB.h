@@ -6,6 +6,9 @@
 #include <string.h>
 #include "Enums.h"
 
+//#define MQTT_PLB_V0
+#define MQTT_PLB_V1
+
 using namespace std;
 
 class MQTTClientPLB : public IPLB
@@ -67,6 +70,7 @@ public:
     void birthMessage();
     bool getPowerReceievedFlag();
     Event getConnectionStatusEvent();
+    Event getPLBChargingStatusEvent();
     Event getEvent();
     void callClientLoop();
     ~MQTTClientPLB() = default;

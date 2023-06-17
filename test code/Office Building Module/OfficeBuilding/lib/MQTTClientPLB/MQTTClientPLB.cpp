@@ -21,9 +21,9 @@ void MQTTClientPLB::send(String topic, String message)
     _client.publish(topic, message);
 }
 
-BuildingEvents MQTTClientPLB::getConnectionStatusEvent()
+Event MQTTClientPLB::getConnectionStatusEvent()
 {
-    BuildingEvents buildingEvents = BuildingEvents::NoEvent;
+    Event ev = Event::NoEvent;
 
     if (millis() - _previousTime >= _INTERVAL)
     {
@@ -32,24 +32,24 @@ BuildingEvents MQTTClientPLB::getConnectionStatusEvent()
         if (!_client.isWifiConnected() && _wifiTrials < _TRIALS)
         {
             _wifiTrials++;
-            buildingEvents = BuildingEvents::EV_WIFI_TRIALS;
+            ev = Event::EV_WIFI_TRIALS;
             _wifiConnected = false;
         }
         else if (!_client.isWifiConnected() && _wifiTrials == _TRIALS)
         {
             _wifiTrials++;
-            buildingEvents = BuildingEvents::EV_WIFI_NOT_CONNECTED;
+            ev = Event::EV_WIFI_NOT_CONNECTED;
         }
         if (!_client.isMqttConnected() && _wifiConnected && _mqttTrials < _TRIALS)
         {
             _mqttTrials++;
             _mqttConnected = false;
-            buildingEvents = BuildingEvents::EV_MQTT_TRIALS;
+            ev = Event::EV_MQTT_TRIALS;
         }
         else if (!_client.isMqttConnected() && _wifiConnected && _mqttTrials == _TRIALS)
         {
             _mqttTrials++;
-            buildingEvents = BuildingEvents::EV_MQTT_NOT_CONNECTED;
+            ev = Event::EV_MQTT_NOT_CONNECTED;
         }
     }
 
@@ -57,7 +57,7 @@ BuildingEvents MQTTClientPLB::getConnectionStatusEvent()
     {
         _wifiTrials = 0;
         _mqttTrials = 0;
-        buildingEvents = BuildingEvents::EV_WIFI_CONNECTED;
+        ev = Event::EV_WIFI_CONNECTED;
         _wifiConnected = true;
     }
 
@@ -65,32 +65,32 @@ BuildingEvents MQTTClientPLB::getConnectionStatusEvent()
     {
         _mqttTrials = 0;
         _mqttConnected = true;
-        buildingEvents = BuildingEvents::EV_MQTT_CONNECTED;
+        ev = Event::EV_MQTT_CONNECTED;
     }
 
-    return buildingEvents;
+    return ev;
 }
 
-BuildingEvents MQTTClientPLB::receive()
+Event& MQTTClientPLB::receive()
 {
-    BuildingEvents buildingEvents;
+    Event ev;
     _client.loop();
-    buildingEvents = BuildingEvents::NoEvent;
+    ev = Event::NoEvent;
 
-    buildingEvents = getConnectionStatusEvent();
+    ev = getConnectionStatusEvent();
 
     if (_solarPowerRequested)
     {
         _solarPowerRequested = false;
-        buildingEvents = BuildingEvents::EV_SendSolarPower;
+        ev = Event::EV_SEND_SOLAR_POWER;
     }
 
     if (_isStartedCharging)
     {
         _isStartedCharging = false;
-        buildingEvents = BuildingEvents::EV_ChargeBuilding;
+        ev = Event::EV_CHARGE_BUILDING;
     }
-    return buildingEvents;
+    return ev;
 }
 
 void MQTTClientPLB::onConnectionSubscribe()
@@ -108,6 +108,18 @@ void MQTTClientPLB::onConnectionSubscribe()
 void MQTTClientPLB::supplyPowerToBuilding(double power)
 {
     send(mqtt_topic_send_power, static_cast<String>(power));
+}
+
+void MQTTClientPLB::sendStateToPLB(State buildingState)
+{
+    if (buildingState == State::STATE_OPEN)
+    {
+        send(mqtt_topic_buildingState, "Open");
+    }
+    else if(buildingState == State::STATE_CLOSED)
+    {
+        send(mqtt_topic_buildingState, "Close");
+    }
 }
 
 double MQTTClientPLB::getPower()

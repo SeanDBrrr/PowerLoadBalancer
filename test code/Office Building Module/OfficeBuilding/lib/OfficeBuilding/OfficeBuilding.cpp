@@ -2,11 +2,14 @@
 
 OfficeBuilding::OfficeBuilding(IPLB *plb,
                                IDisplay *display,
+                               IOfficeState *officeState,
                                ISolarPanel *panel1,
                                ISolarPanel *panel2,
                                ISolarPanel *panel3,
                                ISolarPanel *panel4) : _plb(plb),
                                                       _display(display),
+                                                      _officeState(officeState),
+                                                      _currentState(State::STATE_OPEN),
                                                       _wifiTrials(0),
                                                       _mqttTrials(0),
                                                       _previousTime(0),
@@ -44,48 +47,75 @@ void OfficeBuilding::addSolarPanel(ISolarPanel *panel)
     _solarPanels.emplace_back(panel);
 }
 
-void OfficeBuilding::handleEvent(BuildingEvents ev)
+void OfficeBuilding::handleEvent(Event ev)
 {
 
     switch (ev)
     {
-    case BuildingEvents::EV_SendSolarPower:
+    case Event::EV_SEND_SOLAR_POWER:
         sendSolarPower(calculateSolarPower());
         break;
-    case BuildingEvents::EV_ChargeBuilding:
+    case Event::EV_CHARGE_BUILDING:
         _display->display("Consumption:", static_cast<String>(_plb->getPower()) + "kW");
         break;
-    case BuildingEvents::EV_WIFI_TRIALS:
+    case Event::EV_WIFI_TRIALS:
         _wifiTrials++;
         _display->display("Connecting WiFi:", "Attempts: " + static_cast<String>(_wifiTrials));
         break;
-    case BuildingEvents::EV_MQTT_TRIALS:
+    case Event::EV_MQTT_TRIALS:
         _mqttTrials++;
         _display->display("Connecting MQTT:", "Attempts: " + static_cast<String>(_mqttTrials));
         break;
-    case BuildingEvents::EV_WIFI_NOT_CONNECTED:
+    case Event::EV_WIFI_NOT_CONNECTED:
         _display->display("ERROR:", "WiFi Connection");
         break;
-    case BuildingEvents::EV_MQTT_NOT_CONNECTED:
+    case Event::EV_MQTT_NOT_CONNECTED:
         _display->display("ERROR:", "MQTT Connection");
         break;
-    case BuildingEvents::EV_WIFI_CONNECTED:
+    case Event::EV_WIFI_CONNECTED:
         _wifiTrials = 0;
         _mqttTrials = 0;
         _display->display("WIFI:", "Connected!");
         break;
-    case BuildingEvents::EV_MQTT_CONNECTED:
+    case Event::EV_MQTT_CONNECTED:
         _mqttTrials = 0;
         _display->display("MQTT:", "Connected");
         break;
+    case Event::EV_SWITCH_STATE:
+        _plb->sendStateToPLB(_currentState);
+        break;
     }
 }
+
 void OfficeBuilding::sendSolarPower(double solarPower)
 {
     _plb->supplyPowerToBuilding(solarPower);
 }
 
-void OfficeBuilding::loop(BuildingEvents ev)
+void OfficeBuilding::loop(Event &ev)
 {
-    handleEvent(ev);
+    _events.emplace_back(std::move(ev));
+    _readOfficeState = _officeState->isOpen();
+
+    if (_readOfficeState && (_lastOfficeState != _readOfficeState))
+    {
+        //_display->display("Building", "is Open");
+        _currentState = State::STATE_OPEN;
+        _events.emplace_back( Event::EV_SWITCH_STATE);
+        Serial.println("Open");
+    }
+    else if (_readOfficeState && (_lastOfficeState != _readOfficeState))
+    {
+        //_display->display("Building", "is CLosed");
+        _currentState = State::STATE_CLOSED;
+        _events.emplace_back(Event::EV_SWITCH_STATE);
+         Serial.println("Closed");
+    }
+
+    for (const auto &ev : _events)
+    {
+        handleEvent(ev);
+    }
+    _events.clear();
+    
 }

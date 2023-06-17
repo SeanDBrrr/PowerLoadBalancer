@@ -1,6 +1,6 @@
 #include "ChargingStation.h"
 
-#ifdef WORKING_V2_1
+#ifdef WORKING_V2
 
 #include <iostream>
 ChargingStation::ChargingStation(
@@ -533,6 +533,7 @@ void ChargingStation::loop(Event ev)
     {
         if (_IStart->isStarted())
         {
+
             _currentEvents.emplace_back(Event::EV_STOP);
             _startButtonState = 0;
         }

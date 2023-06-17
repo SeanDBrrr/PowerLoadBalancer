@@ -1,6 +1,6 @@
 #include "ChargingStation.h"
 
-#ifdef WORKING_V2
+#ifdef WORKING_V1
 
 #include <iostream>
 ChargingStation::ChargingStation(
@@ -52,18 +52,22 @@ State ChargingStation::HandleIdleState(Event ev)
         break;
     case Event::EV_WIFI_NOT_CONNECTED:
         _display->display("ERROR:", "WiFi Connection");
+        state = State:: STATE_ERROR;
         break;
     case Event::EV_MQTT_NOT_CONNECTED:
         _display->display("ERROR:", "MQTT Connection");
+        state = State:: STATE_ERROR;
         break;
     case Event::EV_WIFI_CONNECTED:
         _wifiTrials = 0;
         _mqttTrials = 0;
         _display->display("WIFI:", "Connected!");
+        state = State:: STATE_IDLE;
         break;
     case Event::EV_MQTT_CONNECTED:
         _mqttTrials = 0;
         _display->display("MQTT:", "Connected!");
+        state = State:: STATE_IDLE;
         break;
     case Event::noEvent:
         // do nothing
@@ -135,18 +139,22 @@ State ChargingStation::HandleVerifyingDirectorState(Event ev)
         break;
     case Event::EV_WIFI_NOT_CONNECTED:
         _display->display("ERROR:", "WiFi Connection");
+        state = State:: STATE_ERROR;
         break;
     case Event::EV_MQTT_NOT_CONNECTED:
         _display->display("ERROR:", "MQTT Connection");
+        state = State:: STATE_ERROR;
         break;
     case Event::EV_WIFI_CONNECTED:
         _wifiTrials = 0;
         _mqttTrials = 0;
         _display->display("WIFI:", "Connected!");
+        state = State:: STATE_IDLE;
         break;
     case Event::EV_MQTT_CONNECTED:
         _mqttTrials = 0;
         _display->display("MQTT:", "Connected!");
+        state = State:: STATE_IDLE;
         break;
     case Event::noEvent:
         // do nothing
@@ -174,18 +182,22 @@ State ChargingStation::HandleIdleDirectorState(Event ev)
         break;
     case Event::EV_WIFI_NOT_CONNECTED:
         _display->display("ERROR:", "WiFi Connection");
+        state = State:: STATE_ERROR;
         break;
     case Event::EV_MQTT_NOT_CONNECTED:
         _display->display("ERROR:", "MQTT Connection");
+        state = State:: STATE_ERROR;
         break;
     case Event::EV_WIFI_CONNECTED:
         _wifiTrials = 0;
         _mqttTrials = 0;
         _display->display("WIFI:", "Connected!");
+        state = State:: STATE_IDLE;
         break;
     case Event::EV_MQTT_CONNECTED:
         _mqttTrials = 0;
         _display->display("MQTT:", "Connected!");
+        state = State:: STATE_IDLE;
         break;
     case Event::noEvent:
         // do nothing
@@ -204,7 +216,7 @@ State ChargingStation::HandlePluggedState(Event ev)
     {
     case Event::EV_UNPLUGGED:
         _display->display("ev unplugged", "IDLE");
-        _isDirPluggedFlag= false;
+        _isDirPluggedFlag = false;
         state = State::STATE_IDLE;
         break;
     case Event::EV_RFID_DIRECTOR_DETECTED:
@@ -223,18 +235,22 @@ State ChargingStation::HandlePluggedState(Event ev)
         break;
     case Event::EV_WIFI_NOT_CONNECTED:
         _display->display("ERROR:", "WiFi Connection");
+        state = State:: STATE_ERROR;
         break;
     case Event::EV_MQTT_NOT_CONNECTED:
         _display->display("ERROR:", "MQTT Connection");
+        state = State:: STATE_ERROR;
         break;
     case Event::EV_WIFI_CONNECTED:
         _wifiTrials = 0;
         _mqttTrials = 0;
         _display->display("WIFI:", "Connected!");
+        state = State:: STATE_IDLE;
         break;
     case Event::EV_MQTT_CONNECTED:
         _mqttTrials = 0;
         _display->display("MQTT:", "Connected!");
+        state = State:: STATE_IDLE;
         break;
     case Event::noEvent:
         // do nothing
@@ -271,18 +287,23 @@ State ChargingStation::HandlePluggedDirectorState(Event ev)
         break;
     case Event::EV_WIFI_NOT_CONNECTED:
         _display->display("ERROR:", "WiFi Connection");
+        state = State:: STATE_ERROR;
         break;
     case Event::EV_MQTT_NOT_CONNECTED:
+        state = State::STATE_ERROR;
         _display->display("ERROR:", "MQTT Connection");
+        state = State:: STATE_ERROR;
         break;
     case Event::EV_WIFI_CONNECTED:
         _wifiTrials = 0;
         _mqttTrials = 0;
         _display->display("WIFI:", "Connected!");
+        state = State:: STATE_IDLE;
         break;
     case Event::EV_MQTT_CONNECTED:
         _mqttTrials = 0;
         _display->display("MQTT:", "Connected!");
+        state = State:: STATE_IDLE;
         break;
     case Event::noEvent:
         // do nothing
@@ -312,18 +333,22 @@ State ChargingStation::HandleWaitingForPowerState(Event ev)
         break;
     case Event::EV_WIFI_NOT_CONNECTED:
         _display->display("ERROR:", "WiFi Connection");
+        state = State::STATE_ERROR;
         break;
     case Event::EV_MQTT_NOT_CONNECTED:
         _display->display("ERROR:", "MQTT Connection");
+        state = State::STATE_ERROR;
         break;
     case Event::EV_WIFI_CONNECTED:
         _wifiTrials = 0;
         _mqttTrials = 0;
         _display->display("WIFI:", "Connected!");
+        state = State:: STATE_IDLE;
         break;
     case Event::EV_MQTT_CONNECTED:
         _mqttTrials = 0;
         _display->display("MQTT:", "Connected!");
+        state = State:: STATE_IDLE;
         break;
     case Event::noEvent:
         // do nothing
@@ -363,18 +388,22 @@ State ChargingStation::HandleChargingState(Event ev)
         break;
     case Event::EV_WIFI_NOT_CONNECTED:
         _display->display("ERROR:", "WiFi Connection");
+        state = State:: STATE_ERROR;
         break;
     case Event::EV_MQTT_NOT_CONNECTED:
         _display->display("ERROR:", "MQTT Connection");
+        state = State:: STATE_ERROR;
         break;
     case Event::EV_WIFI_CONNECTED:
         _wifiTrials = 0;
         _mqttTrials = 0;
         _display->display("WIFI:", "Connected!");
+        state = State:: STATE_IDLE;
         break;
     case Event::EV_MQTT_CONNECTED:
         _mqttTrials = 0;
         _display->display("MQTT:", "Connected!");
+        state = State:: STATE_IDLE;
         break;
     case Event::noEvent:
         // do nothing
@@ -407,18 +436,22 @@ State ChargingStation::HandleStoppedChargingState(Event ev)
         break;
     case Event::EV_WIFI_NOT_CONNECTED:
         _display->display("ERROR:", "WiFi Connection");
+        state = State:: STATE_ERROR;
         break;
     case Event::EV_MQTT_NOT_CONNECTED:
         _display->display("ERROR:", "MQTT Connection");
+        state = State:: STATE_ERROR;
         break;
     case Event::EV_WIFI_CONNECTED:
         _wifiTrials = 0;
         _mqttTrials = 0;
         _display->display("WIFI:", "Connected!");
+        state = State:: STATE_IDLE;
         break;
     case Event::EV_MQTT_CONNECTED:
         _mqttTrials = 0;
         _display->display("MQTT:", "Connected!");
+        state = State:: STATE_IDLE;
         break;
     case Event::noEvent:
         // do nothing
@@ -431,7 +464,7 @@ State ChargingStation::HandleStoppedChargingState(Event ev)
 State ChargingStation::HandleErrorState(Event ev)
 {
     _IPLB->stopSupplyToStation(_id);
-    return State::STATE_STOPPED_CHARGING;
+    return State::STATE_ERROR;
 }
 
 void ChargingStation::HandleMainEvent(Event ev) // Technically might not be needed unless there are more states
@@ -489,23 +522,31 @@ void ChargingStation::HandleEvent(Event ev) // can technically just call private
 
 void ChargingStation::requestPower() // MAKE VOID WHEN DONE
 {
-
+    Serial.println("IN request power");
     _IPLB->supplyPowerToStation(_id);
     unsigned long lastTime = millis();
+    bool breakLoop = false;
     while (!_IPLB->getPowerReceievedFlag()) // PLB
     {
         _IPLB->callClientLoop(); // PLB
 
-        if (_startButtonState) // STARTBUTTON has been pressed
+        if(_stopCharge) // STARTBUTTON has been pressed
         {
+            Serial.println("stop charge");
+            if (_IStart->isStarted())
+            {
+            Serial.println("STOPPED CHARGING2313123");
             _display->display("ev stop", "STOPPED CHARGING");
             _currentState = State::STATE_STOPPED_CHARGING;
             _startButtonState = 0;
+            _stopCharge = false;
             return;
+            }
         }
 
         if (millis() - lastTime >= 5000)
         {
+            Serial.println("Requesting power 11313");
             _IPLB->supplyPowerToStation(_id); //_IPLB
             lastTime = millis();
         }
@@ -533,6 +574,7 @@ void ChargingStation::loop(Event ev)
     {
         if (_startButtonState)
         {
+            
             _currentEvents.emplace_back(Event::EV_STOP);
             _startButtonState = 0;
         }
@@ -558,7 +600,7 @@ void ChargingStation::loop(Event ev)
 
     if (_currentState == State::STATE_IDLE || _currentState == State::STATE_PLUGGED)
     {
-        
+
         _directorId = _IDirector->getID();
     }
     else

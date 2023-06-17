@@ -107,15 +107,18 @@ void MQTTClientStation::onConnectionSubscribe()
   });
   _client.subscribe(mqtt_topic_stationMode, [this](const String &topic, const String &payload)
   {
-    if (payload == "DynamicMaintainer") {
+    if (payload == "DynamicMantainer") {
+      Serial.println("Dynamic Received");
       _stationMode = StationModes::MO_Dynamic;
       events.emplace_back(PLBEvents::EV_SwitchStationMode);
     }
-    else if (payload == "DirectorMaintainer") {
+    else if (payload == "DirectorMantainer") {
+      Serial.println("Director Received");
       _stationMode = StationModes::MO_Director;
       events.emplace_back(PLBEvents::EV_SwitchStationMode);
     }
-    else if (payload == "FCFSMaintainer") {
+    else if (payload == "FCFSMantainer") {
+      Serial.println("FCFS Received");
       _stationMode = StationModes::MO_FCFS;
       events.emplace_back(PLBEvents::EV_SwitchStationMode);
     }

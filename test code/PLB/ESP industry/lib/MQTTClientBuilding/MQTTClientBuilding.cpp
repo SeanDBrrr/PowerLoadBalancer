@@ -13,7 +13,7 @@ _lastConnectionState(true)
 {
   _client.enableDebuggingMessages();
   _client.enableLastWillMessage(mqtt_topic_PLBHeartbeat.c_str(), "PLB OFFLINE");
-  send(mqtt_topic_PLBHeartbeat.c_str(), "PLB ONLINE");
+  //send(mqtt_topic_PLBHeartbeat.c_str(), "PLB ONLINE");
 }
 
 MQTTClientBuilding::~MQTTClientBuilding() {}

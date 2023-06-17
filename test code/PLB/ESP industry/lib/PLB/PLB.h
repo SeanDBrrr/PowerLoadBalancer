@@ -49,6 +49,7 @@ private:
     void _supplyPowerDynamicMode(float availablePower);
     void _supplyPowerDirectorMode(float availablePower);
     void _supplyPowerFCFSMode(float availablePower);
+    void _updateStationsManualMode();
 
 public:
     /* Constructor and Destructor */

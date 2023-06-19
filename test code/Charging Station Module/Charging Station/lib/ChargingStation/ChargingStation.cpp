@@ -690,10 +690,11 @@ void ChargingStation::loop(Event ev)
     _powerRecieved = _IPLB->getPowerReceived();
     if (_powerRecieved != lastPower)
     {
-        if (_powerRecieved == 0) // test
+        if (_powerRecieved == 0 && _IPLB->getExplicitStopFlag()) // test. NOT PROPER implementation, too tired to do it properly, just send and recieve -1.
         {
-            _display->display("Charging:" + static_cast<String>(_powerRecieved)+ "kW", "STOPPED CHARGING");
+            _display->display("Charging:0.00kW", "STOPPED CHARGING");
             _currentEvents.emplace_back(Event::EV_STOP);
+            _IPLB->SetExplicitStopFlag(false);
         }
         else
         {
@@ -702,6 +703,7 @@ void ChargingStation::loop(Event ev)
             // because if it receives 0 power when it stops charging, it will call EV_CHARGING for no reason.
         }
         lastPower = _powerRecieved;
+        _IPLB->SetPowerRecievedFlag(false);
     }
 
     _currentEvents.emplace_back(ev); // needed for the events recieved from the PLB

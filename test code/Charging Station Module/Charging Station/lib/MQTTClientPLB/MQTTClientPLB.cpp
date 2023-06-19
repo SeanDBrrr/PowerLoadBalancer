@@ -4,6 +4,7 @@ MQTTClientPLB::MQTTClientPLB( // Few objects are not initialized yet.
     int id)
     : _id(id),
       _powerReceived(0),
+      _isExplicitStopFlag(false),
       _isPowerReceivedFlag(false),
       _isDirectorResponseFlag(false),
       _isModeChangedFlag(false),
@@ -21,7 +22,7 @@ MQTTClientPLB::MQTTClientPLB( // Few objects are not initialized yet.
   _client.enableDebuggingMessages();
   _client.setWifiReconnectionAttemptDelay(10000);
   _client.setMqttReconnectionAttemptDelay(5000);
-  _client.enableLastWillMessage("group4/heartbeat", "OFFLINE1");
+  _client.enableLastWillMessage("group4/heartbeat", "OFFLINE2");
 }
 
 EspMQTTClient &MQTTClientPLB::getClient()
@@ -108,7 +109,13 @@ void MQTTClientPLB::onConnectionSubscribe()
   _client.subscribe(mqtt_topic_receivePower, [this](const String &topic, const String &payload)
                     {
     _isPowerReceivedFlag = true;
-    _powerReceived = payload.toFloat(); });
+    _powerReceived = payload.toFloat();
+    if (payload == "STOP")
+    {
+      _isExplicitStopFlag = true;
+    }
+     
+    });
   _client.subscribe(mqtt_topic_heartbeat, [this](const String &topic, const String &payload)
   {
     if (payload == "PLB ONLINE")
@@ -190,6 +197,16 @@ void MQTTClientPLB::SetPowerRecievedFlag(bool powerRecievedFlag)
 bool MQTTClientPLB::getPowerReceievedFlag()
 {
   return _isPowerReceivedFlag;
+}
+
+void MQTTClientPLB::SetExplicitStopFlag(bool explicitStopFlag)
+{
+  _isExplicitStopFlag = explicitStopFlag;
+}
+
+bool MQTTClientPLB::getExplicitStopFlag()
+{
+  return _isExplicitStopFlag;
 }
 
 void MQTTClientPLB::callClientLoop()

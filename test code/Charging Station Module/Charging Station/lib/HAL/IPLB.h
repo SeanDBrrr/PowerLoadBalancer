@@ -13,5 +13,7 @@ public:
     virtual void directorTimeout(int waitingTime) = 0;
     virtual void SetPowerRecievedFlag(bool powerRecievedFlag) = 0;
     virtual bool getPowerReceievedFlag() = 0;
+    virtual void SetExplicitStopFlag(bool explicitStopFlag) = 0;
+    virtual bool getExplicitStopFlag() = 0;
     virtual void callClientLoop();
 };

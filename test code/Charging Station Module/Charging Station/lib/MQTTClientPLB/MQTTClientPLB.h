@@ -14,6 +14,7 @@ private:
     Event _event;
     int _id;
     float _powerReceived;
+    bool _isExplicitStopFlag;
     bool _isPowerReceivedFlag;
     bool _isDirectorResponseFlag;
     bool _isModeChangedFlag;
@@ -65,9 +66,11 @@ public:
     void directorTimeout (int waitingTime);
     void WaitingForPower();
     void checkConnection();
-    void SetPowerRecievedFlag(bool powerRecievedFlag);
     void birthMessage();
+    void SetPowerRecievedFlag(bool powerRecievedFlag);
     bool getPowerReceievedFlag();
+    void SetExplicitStopFlag(bool explicitStopFlag);
+    bool getExplicitStopFlag();
     Event getConnectionStatusEvent();
     Event getPLBChargingStatusEvent();
     Event getEvent();

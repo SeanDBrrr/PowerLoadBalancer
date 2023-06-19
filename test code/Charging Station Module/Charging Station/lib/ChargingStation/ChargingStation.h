@@ -9,10 +9,6 @@
 #include <exception>
 #include <queue>
 
-//#define NOT_WORKING_V1
-#define WORKING_V1
-//#define WORKING_V2_1
-
 enum class Event; 
 enum class State;
 

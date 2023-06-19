@@ -1,7 +1,5 @@
 #include "ChargingStation.h"
 
-#ifdef WORKING_V1
-
 #include <iostream>
 ChargingStation::ChargingStation(
     int id,
@@ -39,7 +37,6 @@ State ChargingStation::HandleIdleState(Event ev)
         state = State::STATE_PLUGGED;
         break;
     case Event::EV_RFID_DIRECTOR_DETECTED:
-
         state = State::STATE_VERIFYING_DIRECTOR;
         break;
     case Event::EV_WIFI_TRIALS:
@@ -244,7 +241,6 @@ State ChargingStation::HandlePluggedState(Event ev)
         state = State::STATE_IDLE;
         break;
     case Event::EV_RFID_DIRECTOR_DETECTED:
-
         state = State::STATE_VERIFYING_DIRECTOR;
         break;
     case Event::EV_START:
@@ -462,7 +458,6 @@ State ChargingStation::HandleChargingState(Event ev)
     case Event::EV_PLB_DISCONNECTED:
         _display->display("plb disconnected", "STOPPED CHARGING");
         state = State::STATE_STOPPED_CHARGING;
-        _IPLB->stopSupplyToStation(_id);
         break;
     case Event::noEvent:
         // do nothing
@@ -531,7 +526,6 @@ State ChargingStation::HandleStoppedChargingState(Event ev)
 
 State ChargingStation::HandleErrorState(Event ev)
 {
-    _IPLB->stopSupplyToStation(_id);
     return State::STATE_ERROR;
 }
 
@@ -698,12 +692,12 @@ void ChargingStation::loop(Event ev)
     {
         if (_powerRecieved == 0) // test
         {
-            _display->display("Charging:" + static_cast<String>(_powerRecieved), "STOPPED CHARGING");
+            _display->display("Charging:" + static_cast<String>(_powerRecieved)+ "kW", "STOPPED CHARGING");
             _currentEvents.emplace_back(Event::EV_STOP);
         }
         else
         {
-            _display->display("Charging: " + static_cast<String>(_powerRecieved));
+            _display->display("Charging:" + static_cast<String>(_powerRecieved) + "kW");
             _currentEvents.emplace_back(Event::EV_CHARGING); // technically shouldnt always call this event
             // because if it receives 0 power when it stops charging, it will call EV_CHARGING for no reason.
         }
@@ -725,5 +719,3 @@ void ChargingStation::loop(Event ev)
         std::cerr << "Exception occurred: " << e.what() << std::endl;
     }
 }
-
-#endif

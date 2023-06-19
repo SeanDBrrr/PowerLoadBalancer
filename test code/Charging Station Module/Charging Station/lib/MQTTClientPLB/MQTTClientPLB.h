@@ -6,9 +6,6 @@
 #include <string.h>
 #include "Enums.h"
 
-//#define MQTT_PLB_V0
-#define MQTT_PLB_V1
-
 using namespace std;
 
 class MQTTClientPLB : public IPLB

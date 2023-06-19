@@ -1,28 +1,14 @@
 #include "MQTTClientPLB.h"
 
-
-#ifdef MQTT_PLB_V0
-
-
 MQTTClientPLB::MQTTClientPLB( // Few objects are not initialized yet.
     int id)
     : _id(id),
       _powerReceived(0),
-<<<<<<< HEAD
       _isPowerReceivedFlag(false),
       _isDirectorResponseFlag(false),
       _isModeChangedFlag(false),
       _wifiConnectedFlag(false),
       _mqttConnectedFlag(false),
-=======
-      _isPowerReceivedFlag(0),
-      _isDirectorResponseFlag(0),
-      _isModeChangedFlag(0),
-      _wifiConnectedFlag(0),
-      _mqttConnectedFlag(0),
-      _isPLBConnected(0),
-      _plbWasConnectedBefore(0),
->>>>>>> Developing
       _directorState(DirectorState::noState),
       _previousTime(0),
       _wifiConnected(false),
@@ -33,7 +19,9 @@ MQTTClientPLB::MQTTClientPLB( // Few objects are not initialized yet.
   Serial.print("OBJECT CREATED: ");
   Serial.println(_id);
   _client.enableDebuggingMessages();
-  _client.enableLastWillMessage("group4/heartbeat", "OFFLINE0");
+  _client.setWifiReconnectionAttemptDelay(10000);
+  _client.setMqttReconnectionAttemptDelay(5000);
+  _client.enableLastWillMessage("group4/heartbeat", "OFFLINE1");
 }
 
 EspMQTTClient &MQTTClientPLB::getClient()
@@ -59,9 +47,8 @@ void MQTTClientPLB::receive()
 
   _event = Event::noEvent;
   _event = getConnectionStatusEvent();
-  // checkConnection();
 
-  if (_isPLBConnected && !_plbWasConnectedBefore && _mqttConnected)//works, Event unsure
+  if (_isPLBConnected && !_plbWasConnectedBefore && _mqttConnected) // works, Event unsure
   {
     Serial.println("PLB CONNECTED");
     _event = Event::EV_PLB_CONNECTED;
@@ -123,18 +110,17 @@ void MQTTClientPLB::onConnectionSubscribe()
     _isPowerReceivedFlag = true;
     _powerReceived = payload.toFloat(); });
   _client.subscribe(mqtt_topic_heartbeat, [this](const String &topic, const String &payload)
-                    {
-                      if (payload == "PLB ONLINE")
-                      {
-                        _isPLBConnected = true;
-                      }
-                      else if (payload == "PLB OFFLINE")
-                      {
-                        _isPLBConnected = false;
-                      }
-                    });
+  {
+    if (payload == "PLB ONLINE")
+    {
+      _isPLBConnected = true;
+    }
+    else if (payload == "PLB OFFLINE")
+    {
+      _isPLBConnected = false;
+    } });
   _client.subscribe(mqtt_topic_directorResponse, [this](const String &topic, const String &payload)
-                    {
+  {
     _isDirectorResponseFlag = true;
     if (payload == "VALID")
     {
@@ -295,7 +281,59 @@ Event MQTTClientPLB::getConnectionStatusEvent()
   return ev;
 }
 
-#endif
+Event MQTTClientPLB::getPLBChargingStatusEvent()
+{
+  Event ev = Event::noEvent;
+
+  if (!_isPowerReceivedFlag)
+  {
+    if (millis() - _previousTime >= _INTERVAL)
+    {
+      _previousTime = millis();
+
+      if (!_client.isWifiConnected() && _wifiTrials < _TRIALS)
+      {
+        _wifiTrials++;
+        ev = Event::EV_WIFI_TRIALS;
+        _wifiConnected = false;
+      }
+      else if (!_client.isWifiConnected() && _wifiTrials == _TRIALS)
+      {
+        _wifiTrials++;
+        ev = Event::EV_WIFI_NOT_CONNECTED;
+      }
+      if (!_client.isMqttConnected() && _wifiConnected && _mqttTrials < _TRIALS)
+      {
+        _mqttTrials++;
+        _mqttConnected = false;
+        ev = Event::EV_MQTT_TRIALS;
+      }
+      else if (!_client.isMqttConnected() && _wifiConnected && _mqttTrials == _TRIALS)
+      {
+        _mqttTrials++;
+        ev = Event::EV_MQTT_NOT_CONNECTED;
+      }
+    }
+
+    if (_client.isWifiConnected() && _wifiTrials > 0 && _wifiTrials < _TRIALS)
+    {
+      _wifiTrials = 0;
+      _mqttTrials = 0;
+      ev = Event::EV_WIFI_CONNECTED;
+      _wifiConnected = true;
+    }
+
+    if (_client.isMqttConnected() && _wifiConnected && _mqttTrials > 0 && _mqttTrials < _TRIALS)
+    {
+      _mqttTrials = 0;
+      _mqttConnected = true;
+      ev = Event::EV_MQTT_CONNECTED;
+      birthMessage();
+    }
+  }
+
+  return ev;
+}
 
 // void MQTTClientPLB::checkConnection()
 // {

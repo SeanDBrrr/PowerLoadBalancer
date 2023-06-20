@@ -13,6 +13,8 @@ _lastConnectionState(true)
 {
   _client.enableDebuggingMessages();
   _client.enableLastWillMessage(mqtt_topic_PLBHeartbeat.c_str(), "PLB OFFLINE");
+  _client.setMqttReconnectionAttemptDelay(5000);
+  _client.setWifiReconnectionAttemptDelay(10000);
 }
 
 MQTTClientBuilding::~MQTTClientBuilding() {}

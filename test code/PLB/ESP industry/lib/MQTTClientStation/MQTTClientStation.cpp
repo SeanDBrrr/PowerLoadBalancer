@@ -96,13 +96,13 @@ void MQTTClientStation::onConnectionSubscribe()
     { 
       events.emplace_back(PLBEvents::EV_Connected);
       idEvents.push(_stationId);
-      charge(0);
+      charge(-1);
     }
     else if (payload == offline_payload) 
     { 
       events.emplace_back(PLBEvents::EV_Disconnected);
       idEvents.push(_stationId);
-      charge(0);
+      charge(-1);
     }
   });
   _client.subscribe(mqtt_topic_stationMode, [this](const String &topic, const String &payload)
@@ -154,7 +154,14 @@ void MQTTClientStation::validateDirector(DirectorState directorState)
 
 void MQTTClientStation::charge(float power)
 {
-  send(mqtt_topic_charge_station, String(power));
+  if(power < 0)
+  {
+    send(mqtt_topic_charge_station, "STOP");
+  }
+  else
+  {
+    send(mqtt_topic_charge_station, String(power));
+  }
   //if (_timer) _setTimer(power);
 }
 

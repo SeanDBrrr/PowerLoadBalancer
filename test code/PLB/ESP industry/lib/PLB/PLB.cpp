@@ -35,7 +35,7 @@ void PLB::_initialiseStations()
 {
     for (auto &st: _stations)
     {
-        st->charge(0);
+        st->charge(-1);
     }
 }
 
@@ -86,7 +86,7 @@ StopStatus PLB::_stopSupply(IStation *station)
             _directorStations.erase(_directorStations.begin() + i);
             _occupiedStations.erase(_occupiedStations.begin() + i);
             _directorIds.erase(_directorIds.begin() + i);
-            station->charge(0);
+            station->charge(-1);
             return StopStatus::DirectorLeft;
         }
     }
@@ -98,7 +98,7 @@ StopStatus PLB::_stopSupply(IStation *station)
             _userStations.erase(_userStations.begin() + i);
             _occupiedStations.erase(_occupiedStations.begin() + i);
             Serial.print("_stopSupply USER: "); Serial.println(station->getId());
-            station->charge(0);
+            station->charge(-1);
             return StopStatus::UserLeft;
         }
     }
@@ -325,11 +325,11 @@ PLBStates PLB::handleIdleState(PLBEvents ev)
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Connected:
-        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front()) + " connected.");
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " connected.");
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Disconnected: /* Might be redundant because none of the stations are busy */
-        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front()) + " disconnected.");
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " disconnected.");
         _stopSupply(_stations.at(_stationIdEvents.front()));
         _stationIdEvents.pop();
         break;
@@ -381,11 +381,11 @@ PLBStates PLB::handleNoDirState(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         break;
     case PLBEvents::EV_Connected:
-        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front()) + " connected.");
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " connected.");
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Disconnected:
-        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front()) + " disconnected.");
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " disconnected.");
         _stopSupply(_stations.at(_stationIdEvents.front()));
         _stationIdEvents.pop();
         if (_userStations.size() == 0) _state = PLBStates::ST_Idle;
@@ -439,11 +439,11 @@ PLBStates PLB::handleDir1State(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         break;
     case PLBEvents::EV_Connected:
-        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front()) + " connected.");
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " connected.");
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Disconnected:
-        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front()) + " disconnected.");
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " disconnected.");
         if (_stopSupply(_stations.at(_stationIdEvents.front())) == StopStatus::DirectorLeft)
         {
             _state = PLBStates::ST_NoDir;
@@ -503,11 +503,11 @@ PLBStates PLB::handleDir2State(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         break;
     case PLBEvents::EV_Connected:
-        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front()) + " connected.");
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " connected.");
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Disconnected:
-        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front()) + " disconnected.");
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " disconnected.");
         if (_stopSupply(_stations.at(_stationIdEvents.front())) == StopStatus::DirectorLeft) _state = PLBStates::ST_Dir1;
         _stationIdEvents.pop();
         _distributePower(_building->getCurrentSolarPower());
@@ -566,11 +566,11 @@ PLBStates PLB::handleDir3OnlyState(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         break;
     case PLBEvents::EV_Connected:
-        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front()) + " connected.");
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " connected.");
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Disconnected:
-        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front()) + " disconnected.");
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " disconnected.");
         if (_stopSupply(_stations.at(_stationIdEvents.front())) == StopStatus::DirectorLeft) _state = PLBStates::ST_Dir2;
         _stationIdEvents.pop();
         _distributePower(_building->getCurrentSolarPower());
@@ -621,11 +621,11 @@ PLBStates PLB::handleDir3State(PLBEvents ev)
         // _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Connected:
-        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front()) + " connected.");
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " connected.");
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Disconnected:
-        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front()) + " disconnected.");
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " disconnected.");
         if (_stopSupply(_stations.at(_stationIdEvents.front())) == StopStatus::DirectorLeft)
         {
             _state = PLBStates::ST_Dir2;
@@ -673,11 +673,11 @@ PLBStates PLB::handleDir4State(PLBEvents ev)
         _distributePower(_building->getCurrentSolarPower());
         break;
     case PLBEvents::EV_Connected:
-        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front()) + " connected.");
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " connected.");
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Disconnected:
-        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front()) + " disconnected.");
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " disconnected.");
         if (_stopSupply(_stations.at(_stationIdEvents.front())) == StopStatus::DirectorLeft) _state = PLBStates::ST_Dir3Only;
         _stationIdEvents.pop();
         _distributePower(_building->getCurrentSolarPower());
@@ -795,6 +795,7 @@ void PLB::_supplyPowerFCFSMode(float solarPower)
     float availablePower = 20 + solarPower;
     for (size_t i = 0; i < _occupiedStations.size(); i++)
     {
+        Serial.println(_occupiedStations.at(i));
         if (availablePower > 11) 
         { 
             _stations.at(_occupiedStations.at(i))->charge(11);
@@ -835,11 +836,13 @@ void PLB::handleDynamicMode(PLBEvents ev)
     {
     case PLBEvents::EV_Timeout:
         _supplyPowerDynamicMode(_building->calculateSolarPower());
+        _supplyPowerToBuilding(_building->getCurrentSolarPower());
         break;
     case PLBEvents::EV_Supply:
         Serial.print("handleDynamicMode EV_Supply: "); Serial.println();
         _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
         _supplyPowerDynamicMode(_building->getCurrentSolarPower());
+        _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Director:
         checkDirector(_stations.at(_stationIdEvents.front()));
@@ -848,13 +851,14 @@ void PLB::handleDynamicMode(PLBEvents ev)
     case PLBEvents::EV_Stop:
         _stopSupply(_stations.at(_stationIdEvents.front()));
         _supplyPowerDynamicMode(_building->getCurrentSolarPower());
+        _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Connected:
-        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front()) + " connected.");
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " connected.");
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Disconnected: /* Might be redundant because none of the stations are busy */
-        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front()) + " disconnected.");
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " disconnected.");
         _stopSupply(_stations.at(_stationIdEvents.front()));
         _supplyPowerDynamicMode(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
@@ -888,10 +892,12 @@ void PLB::handleDirectorMode(PLBEvents ev)
     {
     case PLBEvents::EV_Timeout:
         _supplyPowerDirectorMode(_building->calculateSolarPower());
+        _supplyPowerToBuilding(_building->getCurrentSolarPower());
         break;
     case PLBEvents::EV_Supply:
         _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
         _supplyPowerDirectorMode(_building->getCurrentSolarPower());
+        _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Director:
         checkDirector(_stations.at(_stationIdEvents.front()));
@@ -900,13 +906,14 @@ void PLB::handleDirectorMode(PLBEvents ev)
     case PLBEvents::EV_Stop:
         _stopSupply(_stations.at(_stationIdEvents.front()));
         _supplyPowerDirectorMode(_building->getCurrentSolarPower());
+        _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Connected:
-        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front()) + " connected.");
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " connected.");
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Disconnected: /* Might be redundant because none of the stations are busy */
-        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front()) + " disconnected.");
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " disconnected.");
         _stopSupply(_stations.at(_stationIdEvents.front()));
         _supplyPowerDirectorMode(_building->getCurrentSolarPower());
         _stationIdEvents.pop();
@@ -940,10 +947,12 @@ void PLB::handleFCFSMode(PLBEvents ev)
     {
     case PLBEvents::EV_Timeout:
         _supplyPowerFCFSMode(_building->calculateSolarPower());
+        _supplyPowerToBuilding(_building->getCurrentSolarPower());
         break;
     case PLBEvents::EV_Supply:
         _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
         _supplyPowerFCFSMode(_building->getCurrentSolarPower());
+        _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Director:
         checkDirector(_stations.at(_stationIdEvents.front()));
@@ -952,13 +961,14 @@ void PLB::handleFCFSMode(PLBEvents ev)
     case PLBEvents::EV_Stop:
         _stopSupply(_stations.at(_stationIdEvents.front()));
         _supplyPowerFCFSMode(_building->getCurrentSolarPower());
+        _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Connected:
-        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front()) + " connected.");
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " connected.");
         _stationIdEvents.pop();
         break;
     case PLBEvents::EV_Disconnected: /* Might be redundant because none of the stations are busy */
-        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front()) + " disconnected.");
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " disconnected.");
         _stopSupply(_stations.at(_stationIdEvents.front()));
         _supplyPowerFCFSMode(_building->getCurrentSolarPower());
         _stationIdEvents.pop();

@@ -1,31 +1,48 @@
 #include "MQTTClientStation.h"
 #include <string>
 
-MQTTClientStation::MQTTClientStation(int Id)
+/* ----------------- Static variables */
+std::queue<int> MQTTClientStation::idEvents;
+std::vector<PLBEvents> MQTTClientStation::events;
+
+/* ----------------- Constructor and Destructor */
+MQTTClientStation::MQTTClientStation(int id) : 
+_stationId(id), 
+_directorId(0),
+_stationMode(StationModes::MO_Dynamic),
+_mode(PLBModes::MO_Auto),
+_timer(0),
+_slope(30000/11)
 {
-  _stationId = Id;
-  Serial.print("NEW OBJECT CREATED:");
-  Serial.println(Id);
-  _setStationId();
+  _setStationTopics();
   _client.setMqttClientName(mqtt_module.c_str());
+  _client.enableDebuggingMessages();
 }
 
 MQTTClientStation::~MQTTClientStation() {}
 
+/* ----------------- Private functions */
+void MQTTClientStation::_setStationTopics()
+{
+  mqtt_topic_StationId += static_cast<String>(_stationId);
+  mqtt_topic_charge_station += static_cast<String>(_stationId);
+  mqtt_module += static_cast<String>(_stationId);
+  mqtt_topic_requestSupply += static_cast<String>(_stationId);
+  mqtt_topic_stopSupply += static_cast<String>(_stationId);
+  mqtt_topic_directorId += static_cast<String>(_stationId);
+  mqtt_topic_directorValidate += static_cast<String>(_stationId);
+}
+
+void MQTTClientStation::_setTimer(float power)
+{
+  /* 30 sec to fully charge when power is max: slope (ms/kw) = 30000/11 */
+  _timer = power * _slope;
+}
+
+/* ----------------- MQTT related functions */
 EspMQTTClient &MQTTClientStation::getClient()
 {
   return _client;
-}
-
-void MQTTClientStation::_setStationId()
-{
-  mqtt_topic_StationId += String(_stationId);
-  mqtt_topic_charge_station += String(_stationId);
-  mqtt_module += String(_stationId);
-  mqtt_topic_requestSupply += String(_stationId);
-  mqtt_topic_stopSupply += String(_stationId);
-  mqtt_topic_directorId += String(_stationId);
-  mqtt_topic_directorValidate += String(_stationId);
 }
 
 void MQTTClientStation::send(String topic, String message)
@@ -36,96 +53,85 @@ void MQTTClientStation::send(String topic, String message)
 void MQTTClientStation::receive()
 {
   _client.loop();
-  _event = PLBEvents::noEvent;
-  if(_isDirectorDetectedFlag)
-  {
-    switch (_stationId) 
-    {
-      case 1:
-        _event = PLBEvents::EV_Director1;
-        break;
-      case 2:
-        _event = PLBEvents::EV_Director2;
-        break;
-      case 3:
-        _event = PLBEvents::EV_Director3;
-        break;
-      case 4:
-        _event = PLBEvents::EV_Director4;
-        break;
-    }
-    _isDirectorDetectedFlag = 0;
-  }
-
-  if(_isRequestSupplyFlag)
-  {
-    Serial.print("event supply");
-    switch (_stationId)
-    {
-      case 1:
-        _event = PLBEvents::EV_Supply1;
-        break;
-      case 2:
-        _event = PLBEvents::EV_Supply2;
-        break;
-      case 3:
-        _event = PLBEvents::EV_Supply3;
-        break;
-      case 4:
-        _event = PLBEvents::EV_Supply4;
-        break;
-    }
-    _isRequestSupplyFlag = 0;
-    Serial.println(String(_stationId));
-  }
-
-  if(_isStopSupplyFlag)
-  {
-    switch (_stationId)
-    {
-      case 1:
-        _event = PLBEvents::EV_Stop1;
-        break;
-      case 2:
-        _event = PLBEvents::EV_Stop2;
-        break;
-      case 3:
-        _event = PLBEvents::EV_Stop3;
-        break;
-      case 4:
-        _event = PLBEvents::EV_Stop4;
-        break;
-    }
-    _isStopSupplyFlag = 0;
-  }
+  //if (_timer) _timer -= millis();
 }
 
+/*
+ * Each station is subscribed to its own topics (in relation to their ID), 
+ * but every event is registered in global containers (one per event) 
+*/
 void MQTTClientStation::onConnectionSubscribe()
 {
   _client.subscribe(mqtt_topic_directorId, [this](const String &topic, const String &payload)
   {
-    _isDirectorDetectedFlag = true;
-    _directorId = payload.toInt(); 
+    /* A director tapped its RFID */
+    events.emplace_back(PLBEvents::EV_Director);
+    idEvents.push(_stationId);
+    /* -> We store the director's ID */
+    _directorId = payload.toFloat();
   });
   _client.subscribe(mqtt_topic_requestSupply, [this](const String &topic, const String &payload)
   {
-    _isRequestSupplyFlag = true;
-    // Serial.println("power requested");
-    //_stationId = payload.toInt();
-    charge(11);
+    /* _stationId requested power */
+    events.emplace_back(PLBEvents::EV_Supply);
+    /* -> We add its ID to the supplyRequest queue */
+    idEvents.push(_stationId);
   });
   _client.subscribe(mqtt_topic_stopSupply, [this](const String &topic, const String &payload)
   {
-    charge(0);
+    Serial.print("PLBEvents::EV_Stop: "); Serial.println(_stationId);
+    /* _stationId requested a stop */
+    events.emplace_back(PLBEvents::EV_Stop);
+    /* -> We add its ID to the stopSupply queue */
+    idEvents.push(_stationId);
+    /* Remove the previous director's ID if there is one */
+    if (_directorId) _directorId = 0;
+  });
+  _client.subscribe(mqtt_topic_stationHeartbeat, [this](const String &topic, const String &payload)
+  {
+    String online_payload = "ONLINE"+static_cast<String>(_stationId);
+    String offline_payload = "OFFLINE"+static_cast<String>(_stationId);
+
+    if (payload == online_payload)
+    { 
+      events.emplace_back(PLBEvents::EV_Connected);
+      idEvents.push(_stationId);
+      charge(-1);
+    }
+    else if (payload == offline_payload) 
+    { 
+      events.emplace_back(PLBEvents::EV_Disconnected);
+      idEvents.push(_stationId);
+      charge(-1);
+    }
+  });
+  _client.subscribe(mqtt_topic_stationMode, [this](const String &topic, const String &payload)
+  {
+    if (payload == "DynamicMantainer") {
+      Serial.println("Dynamic Received");
+      _stationMode = StationModes::MO_Dynamic;
+      events.emplace_back(PLBEvents::EV_SwitchStationMode);
+    }
+    else if (payload == "DirectorMantainer") {
+      Serial.println("Director Received");
+      _stationMode = StationModes::MO_Director;
+      events.emplace_back(PLBEvents::EV_SwitchStationMode);
+    }
+    else if (payload == "FCFSMantainer") {
+      Serial.println("FCFS Received");
+      _stationMode = StationModes::MO_FCFS;
+      events.emplace_back(PLBEvents::EV_SwitchStationMode);
+    }
   });
 }
 
-int MQTTClientStation::getId() //override
+/* ----------------- Interface's functions */
+int MQTTClientStation::getId()
 {
   return _stationId;
 }
 
-uint32_t MQTTClientStation::getDirectorId() //override
+float MQTTClientStation::getDirectorId()
 {
   return _directorId;
 }
@@ -146,29 +152,53 @@ void MQTTClientStation::validateDirector(DirectorState directorState)
   }
 }
 
-void MQTTClientStation::charge(float power) //override
+void MQTTClientStation::charge(float power)
 {
-  Serial.println("Charge");
-  send(mqtt_topic_charge_station, String(power));
+  if(power < 0)
+  {
+    send(mqtt_topic_charge_station, "STOP");
+  }
+  else
+  {
+    send(mqtt_topic_charge_station, String(power));
+  }
+  //if (_timer) _setTimer(power);
 }
 
-void MQTTClientStation::switchMode(StationModes mode) //override
+void MQTTClientStation::switchMode(StationModes mode)
 {
+  _stationMode = mode;
   if(mode == StationModes::MO_Director)
   {
-    send(mqtt_topic_mode, "Director Mode");
+    send(mqtt_topic_stationMode, "Director");
   }
   else if(mode == StationModes::MO_FCFS)
   {
-    send(mqtt_topic_mode, "FCFS Mode");
+    send(mqtt_topic_stationMode, "FCFS");
   }
   else if(mode == StationModes::MO_Dynamic)
   {
-    send(mqtt_topic_mode, "Dynamic Mode");
+    send(mqtt_topic_stationMode, "Dynamic");
   }
 }
 
-PLBEvents MQTTClientStation::getEvent()
+void MQTTClientStation::notifyDashboard(String message)
 {
-  return _event;
+  send(mqtt_topic_notifyDashboard, message);
+}
+
+StationModes MQTTClientStation::getStationMode()
+{
+  return _stationMode;
+}
+
+/* ----------------- Events Getters */
+std::vector<PLBEvents>& MQTTClientStation::getEvents()
+{
+  return events;
+}
+
+std::queue<int>& MQTTClientStation::getIdEvents()
+{
+  return idEvents;
 }

@@ -29,6 +29,9 @@ private:
     bool _lastOfficeState = false;
     bool _readOfficeState = false;
 
+    int currentSolarPower;
+
+
 public:
     OfficeBuilding(IPLB *plb,
                    IDisplay *display,

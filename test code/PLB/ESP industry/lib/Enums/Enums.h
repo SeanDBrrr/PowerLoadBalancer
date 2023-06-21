@@ -1,24 +1,20 @@
 #pragma once
 
 enum class PLBEvents {
-    noEvent = 0, 
+    EV_NoEvent, 
     EV_Timeout, 
-    EV_Supply1, 
-    EV_Supply2, 
-    EV_Supply3, 
-    EV_Supply4,
-    EV_Stop1,
-    EV_Stop2,
-    EV_Stop3,
-    EV_Stop4, 
-    EV_Director1,
-    EV_Director2,
-    EV_Director3,
-    EV_Director4
+    EV_Supply,
+    EV_Stop, 
+    EV_Director,
+    EV_Disconnected,
+    EV_Connected,
+    EV_SwitchMode,
+    EV_SwitchStationMode,
+    EV_SwitchBuildingState,
 };
 
 enum class PLBStates {
-    ST_Idle = 1, 
+    ST_Idle, 
     ST_NoDir, 
     ST_Dir1, 
     ST_Dir2, 
@@ -27,7 +23,30 @@ enum class PLBStates {
     ST_Dir4
 };
 
+enum class BuildingState {
+    ST_Open,
+    ST_Close,
+};
+
 enum class PLBModes {
-    MO_Auto = 1, 
+    MO_Auto, 
     MO_Manual
+};
+
+enum class StationModes {
+    MO_Dynamic,
+    MO_FCFS,
+    MO_Director,
+};
+
+enum class DirectorState {
+    VALID ,
+    INVALID,
+    ALREADY_CHECKED_IN,
+};
+
+enum class StopStatus {
+    DirectorLeft,
+    UserLeft,
+    NotOccupied,
 };

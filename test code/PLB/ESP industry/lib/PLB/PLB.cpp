@@ -1,409 +1,271 @@
 #include "PLB.h"
+#include <assert.h>
 
+/* ----------------- Constructor and Destructor */
 PLB::PLB(
     IBuilding *building,
+    IStation *station0,
     IStation *station1,
     IStation *station2,
-    IStation *station3,
-    IStation *station4
+    IStation *station3
     )
-    : _state(PLBStates::ST_Idle),
+    : busyStations(0),
+      _state(PLBStates::ST_Idle),
       _mode(PLBModes::MO_Auto),
-      _building(building)
+      _stationsMode(StationModes::MO_Dynamic),
+      _buildingState(BuildingState::ST_Open),
+      _building(building),
+      _prevMode(PLBModes::MO_Auto)
 {
+    _stations.emplace_back(station0);
     _stations.emplace_back(station1);
     _stations.emplace_back(station2);
     _stations.emplace_back(station3);
-    _stations.emplace_back(station4);
+
+    _validDirectorIds.emplace_back(RFID1);
+    _validDirectorIds.emplace_back(RFID2);
+    _validDirectorIds.emplace_back(RFID3);
+    _validDirectorIds.emplace_back(RFID4);
 }
 
-void PLB::addStation(IStation *station)
-{
-    _stations.emplace_back(station);
-}
+PLB::~PLB() {}
 
-PLBStates PLB::handleIdleState(PLBEvents ev)
+/* ----------------- Private functions (Auto mode) */
+void PLB::_initialiseStations()
 {
-    _state = PLBStates::ST_Idle;
-    int solarPower;
-    switch (ev)
+    for (auto &st: _stations)
     {
-    case PLBEvents::EV_Timeout:
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
-        break;
-    case PLBEvents::EV_Supply1:
-        Serial.println("event received");
-        if (_directorIds.size() == 0)
+        st->charge(-1);
+    }
+}
+
+void PLB::_changeStationsMode(StationModes stMode)
+{
+    _stationsMode = stMode;
+    _stations.at(0)->switchMode(stMode);
+}
+/*
+ * @brief This function is called only when a user press the start button
+ * @return void
+ */
+void PLB::_supplyPowerToStation(IStation *station)
+{
+    ++busyStations;
+    // _occupiedStations.emplace_back(station->getId());
+    // Serial.print("_userStations.size(): "); Serial.println(_userStations.size());
+    // Serial.print("busyStations: "); Serial.println(busyStations);
+    // Serial.print("_directorIds.size(): "); Serial.println(_directorIds.size());
+    if (busyStations > (_directorIds.size()+_userStations.size()))
+    {
+        _userStations.emplace_back(station->getId());
+        _occupiedStations.emplace_back(station->getId());
+    }
+}
+
+/*
+ * @brief This function sends power to the building
+ * @return 0 (success) / 1 (failure)
+ */
+void PLB::_supplyPowerToBuilding(float solarPower)
+{
+    if (_buildingState == BuildingState::ST_Open) { _building->charge(80 - solarPower); }
+    else if (_buildingState == BuildingState::ST_Close) { _building->charge(30 - solarPower); }
+}
+
+/*
+ * @brief This function is called only when a user press the stop button
+ * @return int : 1 (--director) / 0 (--user) / -1 (station was not busy)
+ */
+StopStatus PLB::_stopSupply(IStation *station)
+{
+    for (size_t i = 0; i < _directorStations.size(); i++)
+    {
+        if (station->getId() == _directorStations.at(i))
         {
-            _state = PLBStates::ST_NoDir;
-            if(_state == PLBStates::ST_NoDir)
+            if ((_userStations.size() + _directorStations.size()) == busyStations) --busyStations;
+            _directorStations.erase(_directorStations.begin() + i);
+            _occupiedStations.erase(_occupiedStations.begin() + i);
+            _directorIds.erase(_directorIds.begin() + i);
+            station->charge(-1);
+            return StopStatus::DirectorLeft;
+        }
+    }
+    for (size_t i = 0; i < _userStations.size(); i++)
+    {
+        if (station->getId() == _userStations.at(i))
+        {
+            --busyStations;
+            _userStations.erase(_userStations.begin() + i);
+            _occupiedStations.erase(_occupiedStations.begin() + i);
+            Serial.print("_stopSupply USER: "); Serial.println(station->getId());
+            station->charge(-1);
+            return StopStatus::UserLeft;
+        }
+    }
+    if (busyStations<0) busyStations = 0;
+    return StopStatus::NotOccupied;
+}
+
+/*
+ * @brief This function is called when a director swipes his RFID card
+ * @return DirectorState (enum class)
+ */
+DirectorState PLB::checkDirector(IStation *station)
+{
+    float directorId = station->getDirectorId();
+    Serial.print("directorId: "); Serial.println(directorId);
+    for (size_t i = 0; i < _directorIds.size(); i++)
+    {
+        if (_directorIds.at(i) == directorId)
+        {
+            station->validateDirector(DirectorState::ALREADY_CHECKED_IN);
+            return DirectorState::ALREADY_CHECKED_IN;
+        }
+    }
+    for(size_t i = 0; i < _validDirectorIds.size(); i++)
+    {
+        Serial.print("RFID: "); Serial.println(_validDirectorIds.at(i));
+        if(_validDirectorIds.at(i) == directorId)
+        {
+            _directorIds.emplace_back(directorId);
+            _directorStations.emplace_back(station->getId());
+            _occupiedStations.emplace_back(station->getId());
+            station->validateDirector(DirectorState::VALID);
+            return DirectorState::VALID;
+        }
+    }
+    station->validateDirector(DirectorState::INVALID);
+    return DirectorState::INVALID;
+}
+
+/*
+ *@brief Distribute power over the 4 chargers and the building (only the calculation) 
+ *@return void
+*/
+void PLB::_distributePower(float solarPower)
+{
+    static int prevBusyStations = 0;
+    static float prevSolarPower = -1;
+    static BuildingState prevBuildingState = BuildingState::ST_Open;
+
+    if (solarPower != prevSolarPower || busyStations != prevBusyStations || _buildingState != prevBuildingState || _mode != _prevMode) {
+
+        prevSolarPower = solarPower;
+        prevBusyStations = busyStations;
+        prevBuildingState = _buildingState;
+        _prevMode = _mode;
+
+        _supplyPowerToBuilding(solarPower);
+        float availablePower;
+        if (_buildingState == BuildingState::ST_Open) { availablePower = 20 + solarPower; }
+        else if (_buildingState == BuildingState::ST_Close) 
+        { 
+            for (size_t i = 0; i < _directorStations.size(); i++)
             {
-                Serial.println("no director state");
+                _stations.at(_directorStations.at(i))->charge(11);
             }
+            for (size_t i = 0; i < _userStations.size(); i++)
+            {
+                _stations.at(_userStations.at(i))->charge(11);
+            }
+            return;
         }
-        _supplyPowerToStation(_stations.at(0));
-        break;
-    case PLBEvents::EV_Supply2:
-        if (_directorIds.size() == 0)
+        float directorPower=0, userPower=0, stationPower=0;
+
+        switch (_state)
         {
-            _state = PLBStates::ST_NoDir;
+        case PLBStates::ST_Idle:
+            break;
+        case PLBStates::ST_NoDir:
+            userPower = availablePower/busyStations;
+            if (userPower > 11) userPower = 11;
+
+            for (size_t i = 0; i < _userStations.size(); i++)
+            {
+                _stations.at(_userStations.at(i))->charge(userPower);
+            }
+            break;
+        case PLBStates::ST_Dir1:
+            userPower = (availablePower-11);
+            if (_userStations.size() == 1 && userPower > 11) userPower = 11;
+
+            /* Supply director first */
+            _stations.at(_directorStations.at(0))->charge(11);
+
+            /* Then supply users */
+            for (size_t i = 0; i < _userStations.size(); i++)
+            {
+                _stations.at(_userStations.at(i))->charge(userPower/_userStations.size());
+            }
+            break;
+        case PLBStates::ST_Dir2:
+            directorPower = (availablePower >= 22) ? 11 : availablePower/2;
+            if (_userStations.size() > 0 && availablePower > 22)
+            {
+                userPower = (availablePower-directorPower*_directorStations.size());
+            }
+            else 
+            {
+                userPower = 0;
+            } 
+
+            /* Supply directors first */
+            for (size_t i = 0; i < _directorStations.size(); i++)
+            {
+                _stations.at(_directorStations.at(i))->charge(directorPower);
+            }
+
+            /* Then supply users */
+            for (size_t i = 0; i < _userStations.size(); i++)
+            {
+                _stations.at(_userStations.at(i))->charge(userPower/_userStations.size());
+            }
+            break;
+        case PLBStates::ST_Dir3:
+            for (size_t i = 0; i < _stations.size(); i++)
+            {
+                _stations.at(i)->charge(availablePower/4);
+            }
+            break;
+        case PLBStates::ST_Dir3Only:
+            if (availablePower > 22)
+            {
+                _changeStationsMode(StationModes::MO_FCFS);
+                for (size_t i = 0; i < _directorStations.size(); i++)
+                {
+                    if (availablePower < 11)
+                    {
+                        _stations.at(_directorStations.at(i))->charge(availablePower);
+                    }
+                    else
+                    {
+                        _stations.at(_directorStations.at(i))->charge(11);
+                    }
+                    availablePower -= 11;
+                }
+            }
+            else
+            {
+                _changeStationsMode(StationModes::MO_Director);
+                for (size_t i = 0; i < _directorStations.size(); i++)
+                {
+                    _stations.at(_directorStations.at(i))->charge(availablePower/3);
+                }
+            }
+            break;
+        case PLBStates::ST_Dir4:
+            Serial.print("_distributePower() ST_Dir4: power = "); Serial.println(availablePower/4);
+            for (size_t i = 0; i < _directorStations.size(); i++)
+            {
+                _stations.at(_directorStations.at(i))->charge(availablePower/4);
+            }
+            break;
         }
-        _supplyPowerToStation(_stations.at(1));
-        break;
-    case PLBEvents::EV_Supply3:
-        if (_directorIds.size() == 0)
-        {
-            _state = PLBStates::ST_NoDir;
-        }
-        _supplyPowerToStation(_stations.at(2));
-        break;
-    case PLBEvents::EV_Supply4:
-        if (_directorIds.size() == 0)
-        {
-            _state = PLBStates::ST_NoDir;
-        }
-        _supplyPowerToStation(_stations.at(3));
-        break;
-    case PLBEvents::EV_Director1:
-        Serial.println("Idle State");
-        if(checkDirector(_stations.at(0)) == 1)
-        {
-            _state = PLBStates::ST_Dir1;
-        }
-        break;
-    case PLBEvents::EV_Director2:
-        if(checkDirector(_stations.at(1)) == 1)
-        {
-            _state = PLBStates::ST_Dir1;
-        }
-        break;
-    case PLBEvents::EV_Director3:
-        if(checkDirector(_stations.at(2)) == 1)
-        {
-            _state = PLBStates::ST_Dir1;
-        }
-        break;
-    case PLBEvents::EV_Director4:
-        if(checkDirector(_stations.at(3)) == 1)
-        {
-            _state = PLBStates::ST_Dir1;
-        }
-        break;
     }
-    return _state;
 }
 
-PLBStates PLB::handleNoDirState(PLBEvents ev)
-{
-    _state = PLBStates::ST_NoDir;
-    int solarPower;
-    switch (ev)
-    {
-    case PLBEvents::EV_Timeout:
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
-        break;
-    case PLBEvents::EV_Supply1:
-        if (_directorIds.size() == 0)
-        {
-            _state = PLBStates::ST_NoDir;
-        }
-        _supplyPowerToStation(_stations.at(0));
-        break;
-    case PLBEvents::EV_Supply2:
-        if (_directorIds.size() == 0)
-        {
-            _state = PLBStates::ST_NoDir;
-        }
-        _supplyPowerToStation(_stations.at(1));
-        break;
-    case PLBEvents::EV_Supply3:
-        if (_directorIds.size() == 0)
-        {
-            _state = PLBStates::ST_NoDir;
-        }
-        _supplyPowerToStation(_stations.at(2));
-        break;
-    case PLBEvents::EV_Supply4:
-        if (_directorIds.size() == 0)
-        {
-            _state = PLBStates::ST_NoDir;
-        }
-        _supplyPowerToStation(_stations.at(3));
-        break;
-    case PLBEvents::EV_Director1:
-        Serial.println("No Dir State");
-        if (checkDirector(_stations.at(0)) == 1)
-            _state = PLBStates::ST_Dir1;
-        break;
-    case PLBEvents::EV_Director2:
-        if (checkDirector(_stations.at(1)) == 1)
-            _state = PLBStates::ST_Dir1;
-        break;
-    case PLBEvents::EV_Director3:
-        if (checkDirector(_stations.at(2)) == 1)
-            _state = PLBStates::ST_Dir1;
-        break;
-    case PLBEvents::EV_Director4:
-        if (checkDirector(_stations.at(3)) == 1)
-            _state = PLBStates::ST_Dir1;
-        break;
-    case PLBEvents::EV_Stop1:
-        _stopSupply(_stations.at(0));
-        _state = (_userStations.size() == 0) ? PLBStates::ST_Idle : PLBStates::ST_NoDir;
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
-    case PLBEvents::EV_Stop2:
-        _stopSupply(_stations.at(1));
-        _state = (_userStations.size() == 0) ? PLBStates::ST_Idle : PLBStates::ST_NoDir;
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
-    case PLBEvents::EV_Stop3:
-        _stopSupply(_stations.at(2));
-        _state = (_userStations.size() == 0) ? PLBStates::ST_Idle : PLBStates::ST_NoDir;
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
-    case PLBEvents::EV_Stop4:
-        _stopSupply(_stations.at(3));
-        _state = (_userStations.size() == 0) ? PLBStates::ST_Idle : PLBStates::ST_NoDir;
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
-        break;
-    }
-    return _state;
-}
-
-PLBStates PLB::handleDir1State(PLBEvents ev)
-{
-    _state = PLBStates::ST_Dir1;
-    int solarPower;
-    switch (ev)
-    {
-    case PLBEvents::EV_Timeout:
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
-        break;
-    case PLBEvents::EV_Supply1:
-        _state = (_directorIds.size() == 2) ? PLBStates::ST_Dir2 : PLBStates::ST_Dir1;
-        _supplyPowerToStation(_stations.at(0));
-        Serial.println("hardcoded");
-        _stations.at(0)->charge(11);
-        break;
-    case PLBEvents::EV_Supply2:
-        _state = (_directorIds.size() == 2) ? PLBStates::ST_Dir2 : PLBStates::ST_Dir1;
-        _supplyPowerToStation(_stations.at(1));
-        break;
-    case PLBEvents::EV_Supply3:
-        _state = (_directorIds.size() == 2) ? PLBStates::ST_Dir2 : PLBStates::ST_Dir1;
-        _supplyPowerToStation(_stations.at(2));
-        break;
-    case PLBEvents::EV_Supply4:
-        _state = (_directorIds.size() == 2) ? PLBStates::ST_Dir2 : PLBStates::ST_Dir1;
-        _supplyPowerToStation(_stations.at(3));
-        break;
-    case PLBEvents::EV_Director1:
-        Serial.println("Dir1 State");
-        if (checkDirector(_stations.at(0)) == 1)
-            _state = PLBStates::ST_Dir2;
-        break;
-    case PLBEvents::EV_Director2:
-        if (checkDirector(_stations.at(1)) == 1)
-            _state = PLBStates::ST_Dir2;
-        break;
-    case PLBEvents::EV_Director3:
-        if (checkDirector(_stations.at(2)) == 1)
-            _state = PLBStates::ST_Dir2;
-        break;
-    case PLBEvents::EV_Director4:
-        if (checkDirector(_stations.at(3)) == 1)
-            _state = PLBStates::ST_Dir2;
-        break;
-    case PLBEvents::EV_Stop1:
-        _state = (_stopSupply(_stations.at(0))) ? PLBStates::ST_NoDir : PLBStates::ST_Dir1;
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
-    case PLBEvents::EV_Stop2:
-        _state = (_stopSupply(_stations.at(1))) ? PLBStates::ST_NoDir : PLBStates::ST_Dir1;
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
-    case PLBEvents::EV_Stop3:
-        _state = (_stopSupply(_stations.at(2))) ? PLBStates::ST_NoDir : PLBStates::ST_Dir1;
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
-    case PLBEvents::EV_Stop4:
-        _state = (_stopSupply(_stations.at(3))) ? PLBStates::ST_NoDir : PLBStates::ST_Dir1;
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
-        break;
-    }
-    return _state;
-}
-
-PLBStates PLB::handleDir2State(PLBEvents ev)
-{
-    _state = PLBStates::ST_Dir2;
-    int solarPower;
-    switch (ev)
-    {
-    case PLBEvents::EV_Timeout:
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
-        break;
-    case PLBEvents::EV_Supply1:
-        _state = (_directorIds.size() == 3 && _userStations.size() == 0) ? PLBStates::ST_Dir3Only : PLBStates::ST_Dir3;
-        _supplyPowerToStation(_stations.at(0));
-        break;
-    case PLBEvents::EV_Supply2:
-        _state = (_directorIds.size() == 3 && _userStations.size() == 0) ? PLBStates::ST_Dir3Only : PLBStates::ST_Dir3;
-        _supplyPowerToStation(_stations.at(1));
-        break;
-    case PLBEvents::EV_Supply3:
-        _state = (_directorIds.size() == 3 && _userStations.size() == 0) ? PLBStates::ST_Dir3Only : PLBStates::ST_Dir3;
-        _supplyPowerToStation(_stations.at(2));
-        break;
-    case PLBEvents::EV_Supply4:
-        _state = (_directorIds.size() == 3 && _userStations.size() == 0) ? PLBStates::ST_Dir3Only : PLBStates::ST_Dir3;
-        _supplyPowerToStation(_stations.at(3));
-        break;
-    case PLBEvents::EV_Director1:
-        Serial.println("Dir2 State");
-        if (checkDirector(_stations.at(0)) == 1)
-            _state = PLBStates::ST_Dir3;
-        break;
-    case PLBEvents::EV_Director2:
-        if (checkDirector(_stations.at(1)) == 1)
-            _state = PLBStates::ST_Dir3;
-        break;
-    case PLBEvents::EV_Director3:
-        if (checkDirector(_stations.at(2)) == 1)
-            _state = PLBStates::ST_Dir3;
-        break;
-    case PLBEvents::EV_Director4:
-        if (checkDirector(_stations.at(3)) == 1)
-            _state = PLBStates::ST_Dir3;
-        break;
-    case PLBEvents::EV_Stop1:
-        _state = (_stopSupply(_stations.at(0))) ? PLBStates::ST_Dir1 : PLBStates::ST_Dir2;
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
-    case PLBEvents::EV_Stop2:
-        _state = (_stopSupply(_stations.at(1))) ? PLBStates::ST_Dir1 : PLBStates::ST_Dir2;
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
-    case PLBEvents::EV_Stop3:
-        _state = (_stopSupply(_stations.at(2))) ? PLBStates::ST_Dir1 : PLBStates::ST_Dir2;
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
-    case PLBEvents::EV_Stop4:
-        _state = (_stopSupply(_stations.at(3))) ? PLBStates::ST_Dir1 : PLBStates::ST_Dir2;
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
-        break;
-    }
-    return _state;
-}
-
-PLBStates PLB::handleDir3OnlyState(PLBEvents ev)
-{
-    _state = PLBStates::ST_Dir3;
-    int solarPower;
-    switch (ev)
-    {
-    case PLBEvents::EV_Timeout:
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
-        break;
-    case PLBEvents::EV_Supply1:
-        _state = (_directorStations.size() == 3) ? PLBStates::ST_Dir3 : PLBStates::ST_Dir4;
-        _supplyPowerToStation(_stations.at(0));
-        break;
-    case PLBEvents::EV_Supply2:
-        _state = (_directorStations.size() == 3) ? PLBStates::ST_Dir3 : PLBStates::ST_Dir4;
-        _supplyPowerToStation(_stations.at(1));
-        break;
-    case PLBEvents::EV_Supply3:
-        _state = (_directorStations.size() == 3) ? PLBStates::ST_Dir3 : PLBStates::ST_Dir4;
-        _supplyPowerToStation(_stations.at(2));
-        break;
-    case PLBEvents::EV_Supply4:
-        _state = (_directorStations.size() == 3) ? PLBStates::ST_Dir3 : PLBStates::ST_Dir4;
-        _supplyPowerToStation(_stations.at(3));
-        break;
-    case PLBEvents::EV_Director1:
-        Serial.println("Dir3 State");
-        if (checkDirector(_stations.at(0)) == 1)
-            _state = PLBStates::ST_Dir4;
-        break;
-    case PLBEvents::EV_Director2:
-        if (checkDirector(_stations.at(1)) == 1)
-            _state = PLBStates::ST_Dir4;
-        break;
-    case PLBEvents::EV_Director3:
-        if (checkDirector(_stations.at(2)) == 1)
-            _state = PLBStates::ST_Dir4;
-        break;
-    case PLBEvents::EV_Director4:
-        if (checkDirector(_stations.at(3)) == 1)
-            _state = PLBStates::ST_Dir4;
-        break;
-    case PLBEvents::EV_Stop1:
-        _stopSupply(_stations.at(0));
-        _state = PLBStates::ST_Dir2;
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
-    case PLBEvents::EV_Stop2:
-        _stopSupply(_stations.at(1));
-        _state = PLBStates::ST_Dir2;
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
-    case PLBEvents::EV_Stop3:
-        _stopSupply(_stations.at(2));
-        _state = PLBStates::ST_Dir2;
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
-    case PLBEvents::EV_Stop4:
-        _stopSupply(_stations.at(3));
-        _state = PLBStates::ST_Dir2;
-        solarPower = _building->calculateSolarPower();
-        _distributePower(solarPower);
-        _supplyPowerToBuilding(solarPower);
-        break;
-    }
-    return _state;
-}
-
-PLBStates PLB::handleDir3State(PLBEvents ev)
-{
-    return _state;
-}
-
-PLBStates PLB::handleDir4State(PLBEvents ev)
-{
-    return _state;
-}
-
-void PLB::handleEvents(PLBEvents ev)
+/* ----------------- Public functions (Auto mode) */
+void PLB::handleAutoModeEvents(PLBEvents ev)
 {
     switch (_state)
     {
@@ -433,207 +295,765 @@ void PLB::handleEvents(PLBEvents ev)
     }
 }
 
-/*
- * @brief This function is called only when a user press the start button
- * @return void
- */
-void PLB::_supplyPowerToStation(IStation *station)
+PLBStates PLB::handleIdleState(PLBEvents ev)
 {
-    ++busyStations;
-    int solarPower = _building->calculateSolarPower();
-    if (solarPower == -1)
+    _state = PLBStates::ST_Idle;
+    float solarPower = 0;
+    switch (ev)
     {
-        // handle timeout error
+    case PLBEvents::EV_Timeout:
+        _distributePower(_building->calculateSolarPower());
+        break;
+    case PLBEvents::EV_Supply:
+       if (_directorStations.size() == 0) 
+        { 
+            _state = PLBStates::ST_NoDir; 
+            _changeStationsMode(StationModes::MO_Dynamic); 
+        }
+        else 
+        {
+            Serial.print("handleIdleState (EV_Supply): "); Serial.println(_stationIdEvents.front());
+            _state = PLBStates::ST_Dir1; 
+            _changeStationsMode(StationModes::MO_Director); 
+        }
+        _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
+        _distributePower(_building->getCurrentSolarPower());
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Director:
+        checkDirector(_stations.at(_stationIdEvents.front()));
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Connected:
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " connected.");
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Disconnected: /* Might be redundant because none of the stations are busy */
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " disconnected.");
+        _stopSupply(_stations.at(_stationIdEvents.front()));
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_SwitchMode: 
+        _mode = _building->getPLBMode();
+        if (_mode == PLBModes::MO_Manual)
+        {
+            _updateStationsManualMode();
+            _building->notifyDashboard("PLB switched to manual mode.");
+            _prevMode = _mode;
+        }
+        break;
+    case PLBEvents::EV_SwitchBuildingState: 
+        _buildingState = _building->getState();
+        _distributePower(_building->getCurrentSolarPower());
+        break;
     }
-    if (busyStations > _directorIds.size())
-    {
-        _userStations.emplace_back(station->getId());
-    }
-    Serial.print("SupplyPowerToStation: Current sollar power is: ");
-    Serial.println(solarPower);
-            if(_state == PLBStates::ST_NoDir)
-            {
-                Serial.println("no director state");
-            }
-    _distributePower(solarPower);
+    return _state;
 }
 
-void PLB::_distributePower(int solarPower)
+PLBStates PLB::handleNoDirState(PLBEvents ev)
 {
-    //_state = PLBStates::ST_NoDir;
-    static int prevSolarPower = 0;
-    if (solarPower == prevSolarPower)
-        return;
-    int availablePower = 20 + solarPower;
-    float directorPower, userPower, stationPower;
-    if(_state == PLBStates::ST_NoDir)
+    _state = PLBStates::ST_NoDir;
+    float solarPower = 0;
+    switch (ev)
     {
-        Serial.println("State is righty");
+    case PLBEvents::EV_Timeout:
+        _distributePower(_building->calculateSolarPower());
+        break;
+    case PLBEvents::EV_Supply:
+        if (_directorIds.size() == 1)
+        {
+            _state = PLBStates::ST_Dir1; 
+            _changeStationsMode(StationModes::MO_Director); 
+        }
+        _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
+        _stationIdEvents.pop();
+        _distributePower(_building->getCurrentSolarPower());
+        break;
+    case PLBEvents::EV_Director:
+        checkDirector(_stations.at(_stationIdEvents.front()));
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Stop:
+        Serial.print("handleNoDirState EV_Stop: "); Serial.println(_stationIdEvents.front());
+        _stopSupply(_stations.at(_stationIdEvents.front()));
+        _stationIdEvents.pop();
+        if (_userStations.size() == 0) _state = PLBStates::ST_Idle;
+        _distributePower(_building->getCurrentSolarPower());
+        break;
+    case PLBEvents::EV_Connected:
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " connected.");
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Disconnected:
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " disconnected.");
+        _stopSupply(_stations.at(_stationIdEvents.front()));
+        _stationIdEvents.pop();
+        if (_userStations.size() == 0) _state = PLBStates::ST_Idle;
+        _distributePower(_building->getCurrentSolarPower());
+        break;
+    case PLBEvents::EV_SwitchMode:
+        _mode = _building->getPLBMode();
+        if (_mode == PLBModes::MO_Manual)
+        {
+            _updateStationsManualMode();
+            _building->notifyDashboard("PLB switched to manual mode.");
+            _prevMode = _mode;
+        }
+        break;
+    case PLBEvents::EV_SwitchBuildingState: 
+        _buildingState = _building->getState();
+        _distributePower(_building->getCurrentSolarPower());
+        break;
     }
-    switch (_state)
+    return _state;
+}
+
+PLBStates PLB::handleDir1State(PLBEvents ev)
+{
+    _state = PLBStates::ST_Dir1;
+    float solarPower = 0;
+    switch (ev)
     {
-    case PLBStates::ST_Idle:
-        // _stations.at(_userStations.at(0))->charge(11);
+    case PLBEvents::EV_Timeout:
+        _distributePower(_building->calculateSolarPower());
         break;
-    case PLBStates::ST_NoDir:
-        Serial.println("DistributePower: no director state entered");
-        userPower = availablePower / busyStations;
-        for (size_t i = 0; i < _userStations.size(); i++)
+    case PLBEvents::EV_Supply:
+        Serial.print("handleDir1State (EV_Supply): "); Serial.println(_stationIdEvents.front());
+        _state = (_directorIds.size() == 2) ? PLBStates::ST_Dir2 : PLBStates::ST_Dir1;
+        _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
+        _distributePower(_building->getCurrentSolarPower());
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Director:
+        Serial.print("handleDir1State EV_Director: "); Serial.println(_stationIdEvents.front());
+        checkDirector(_stations.at(_stationIdEvents.front()));
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Stop:
+        if (_stopSupply(_stations.at(_stationIdEvents.front())) == StopStatus::DirectorLeft)
         {
-            _stations.at(_userStations.at(i))->charge(userPower);
+            _state = PLBStates::ST_NoDir;
+            _changeStationsMode(StationModes::MO_Dynamic);
+        }
+        _stationIdEvents.pop();
+        _distributePower(_building->getCurrentSolarPower());
+        break;
+    case PLBEvents::EV_Connected:
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " connected.");
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Disconnected:
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " disconnected.");
+        if (_stopSupply(_stations.at(_stationIdEvents.front())) == StopStatus::DirectorLeft)
+        {
+            _state = PLBStates::ST_NoDir;
+            _changeStationsMode(StationModes::MO_Dynamic);
+        }
+        _stationIdEvents.pop();
+        _distributePower(_building->getCurrentSolarPower());
+        break;
+    case PLBEvents::EV_SwitchMode:
+        _mode = _building->getPLBMode();
+        if (_mode == PLBModes::MO_Manual)
+        {
+            _updateStationsManualMode();
+            _building->notifyDashboard("PLB switched to manual mode.");
+            _prevMode = _mode;
         }
         break;
-    case PLBStates::ST_Dir1:
-        directorPower = 11;
-        userPower = busyStations > 1 ? (availablePower - directorPower) / (busyStations - 1) : 0;
-        _stations.at(_directorStations.at(0))->charge(directorPower);
-        for (size_t i = 0; i < _userStations.size(); i++)
+    case PLBEvents::EV_SwitchBuildingState: 
+        _buildingState = _building->getState();
+        _distributePower(_building->getCurrentSolarPower());
+        break;
+    }
+    return _state;
+}
+
+PLBStates PLB::handleDir2State(PLBEvents ev)
+{
+    _state = PLBStates::ST_Dir2;
+    float solarPower = 0;
+    switch (ev)
+    {
+    case PLBEvents::EV_Timeout:
+        _distributePower(_building->calculateSolarPower());
+        break;
+    case PLBEvents::EV_Supply:
+        if (_directorIds.size() == 3 && _userStations.size() == 0) 
+        { 
+            _state = PLBStates::ST_Dir3Only; 
+            _changeStationsMode(StationModes::MO_Director); 
+        }
+        else if (_directorIds.size() == 3 && _userStations.size() == 1)
         {
-            _stations.at(_userStations.at(i))->charge(userPower);
+            _state = PLBStates::ST_Dir3; 
+            _changeStationsMode(StationModes::MO_Dynamic);
+        }
+        _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
+        _distributePower(_building->getCurrentSolarPower());
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Director:
+        checkDirector(_stations.at(_stationIdEvents.front()));
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Stop:
+        if (_stopSupply(_stations.at(_stationIdEvents.front())) == StopStatus::DirectorLeft) _state = PLBStates::ST_Dir1;
+        _stationIdEvents.pop();
+        _distributePower(_building->getCurrentSolarPower());
+        break;
+    case PLBEvents::EV_Connected:
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " connected.");
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Disconnected:
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " disconnected.");
+        if (_stopSupply(_stations.at(_stationIdEvents.front())) == StopStatus::DirectorLeft) _state = PLBStates::ST_Dir1;
+        _stationIdEvents.pop();
+        _distributePower(_building->getCurrentSolarPower());
+        break;
+    case PLBEvents::EV_SwitchMode:
+        _mode = _building->getPLBMode();
+        if (_mode == PLBModes::MO_Manual)
+        {
+            _updateStationsManualMode();
+            _building->notifyDashboard("PLB switched to manual mode.");
+            _prevMode = _mode;
         }
         break;
-    case PLBStates::ST_Dir2:
-        directorPower = (availablePower >= 22) ? 11 : availablePower / 2;
-        userPower = (busyStations > 2 && availablePower > 22) ? (availablePower - directorPower) / (busyStations - 2) : 0;
-        for (size_t i = 0; i < _directorStations.size(); i++)
+    case PLBEvents::EV_SwitchBuildingState: 
+        _buildingState = _building->getState();
+        _distributePower(_building->getCurrentSolarPower());
+        break;
+    }
+    return _state;
+}
+
+PLBStates PLB::handleDir3OnlyState(PLBEvents ev)
+{
+    _state = PLBStates::ST_Dir3Only;
+    float solarPower = 0;
+    switch (ev)
+    {
+    case PLBEvents::EV_Timeout:
+        _distributePower(_building->calculateSolarPower());
+        break;
+    case PLBEvents::EV_Supply:
+        if (_directorIds.size() == 3) 
         {
-            int stationId = _directorStations.at(i);
-            _stations.at(stationId)->switchMode(StationModes::MO_Director);
-            _stations.at(stationId)->charge(directorPower);
+            Serial.print("handleDir3OnlyState EV_Supply -> ST_Dir3: "); Serial.println(_stationIdEvents.front());
+            _state = PLBStates::ST_Dir3; 
+            _changeStationsMode(StationModes::MO_Dynamic); 
         }
-        for (size_t i = 0; i < _userStations.size(); i++)
+        else if (_directorIds.size() == 4)
         {
-            int stationId = _directorStations.at(i);
-            _stations.at(stationId)->switchMode(StationModes::MO_Dynamic);
-            _stations.at(stationId)->charge(userPower);
+            Serial.print("handleDir3OnlyState EV_Supply -> ST_Dir4: "); Serial.println(_stationIdEvents.front());
+            _state = PLBStates::ST_Dir4;
+        }
+        _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
+        _stationIdEvents.pop();
+        _distributePower(_building->getCurrentSolarPower());
+        break;
+    case PLBEvents::EV_Director:
+        Serial.print("handleDir3OnlyState EV_Director: "); Serial.println(_stationIdEvents.front());
+        checkDirector(_stations.at(_stationIdEvents.front()));
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Stop:
+        _stopSupply(_stations.at(_stationIdEvents.front()));
+        _stationIdEvents.pop();
+        _state = PLBStates::ST_Dir2;
+        _distributePower(_building->getCurrentSolarPower());
+        break;
+    case PLBEvents::EV_Connected:
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " connected.");
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Disconnected:
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " disconnected.");
+        if (_stopSupply(_stations.at(_stationIdEvents.front())) == StopStatus::DirectorLeft) _state = PLBStates::ST_Dir2;
+        _stationIdEvents.pop();
+        _distributePower(_building->getCurrentSolarPower());
+        break;
+    case PLBEvents::EV_SwitchMode:
+        _mode = _building->getPLBMode();
+        if (_mode == PLBModes::MO_Manual)
+        {
+            _updateStationsManualMode();
+            _building->notifyDashboard("PLB switched to manual mode.");
+            _prevMode = _mode;
         }
         break;
-    case PLBStates::ST_Dir3:
-        stationPower = availablePower / 4;
-        for (size_t i = 0; i < _stations.size(); i++)
-        {
-            _stations.at(i)->switchMode(StationModes::MO_Dynamic);
-            _stations.at(i)->charge(stationPower);
-        }
+    case PLBEvents::EV_SwitchBuildingState: 
+        _buildingState = _building->getState();
+        _distributePower(_building->getCurrentSolarPower());
         break;
-    case PLBStates::ST_Dir3Only:
-        if (availablePower > 22)
+    }
+    return _state;
+}
+
+PLBStates PLB::handleDir3State(PLBEvents ev)
+{
+    _state = PLBStates::ST_Dir3;
+    float solarPower = 0;
+    switch (ev)
+    {
+    case PLBEvents::EV_Timeout:
+        _distributePower(_building->calculateSolarPower());
+        break;
+    case PLBEvents::EV_Stop:
+        if (_stopSupply(_stations.at(_stationIdEvents.front())) == StopStatus::DirectorLeft)
         {
-            for (size_t i = 0; i < _directorStations.size(); i++)
-            {
-                int stationId = _directorStations.at(i);
-                _stations.at(stationId)->switchMode(StationModes::MO_FCFS);
-                availablePower -= 11;
-                if (availablePower < 11)
-                {
-                    _stations.at(stationId)->charge(availablePower);
-                }
-                else
-                {
-                    _stations.at(stationId)->charge(11);
-                }
-            }
+            _state = PLBStates::ST_Dir2;
+            _changeStationsMode(StationModes::MO_Director);
         }
         else
         {
-            for (size_t i = 0; i < _directorStations.size(); i++)
-            {
-                int stationId = _directorStations.at(i);
-                _stations.at(stationId)->switchMode(StationModes::MO_Dynamic);
-                _stations.at(stationId)->charge(availablePower / 3);
-            }
+            _state = PLBStates::ST_Dir3Only;
+            _changeStationsMode(StationModes::MO_Director);
+        }
+        _stationIdEvents.pop();
+        _distributePower(_building->getCurrentSolarPower());
+        break;
+    case PLBEvents::EV_Director:
+        Serial.print("handleDir3State EV_Director: "); Serial.println(_stationIdEvents.front());
+        // checkDirector(_stations.at(_stationIdEvents.front()));
+        // _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Connected:
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " connected.");
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Disconnected:
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " disconnected.");
+        if (_stopSupply(_stations.at(_stationIdEvents.front())) == StopStatus::DirectorLeft)
+        {
+            _state = PLBStates::ST_Dir2;
+            _changeStationsMode(StationModes::MO_Director);
+        }
+        else
+        {
+            _state = PLBStates::ST_Dir3Only;
+            _changeStationsMode(StationModes::MO_Director);
+        }
+        _stationIdEvents.pop();
+        _distributePower(_building->getCurrentSolarPower());
+        break;
+    case PLBEvents::EV_SwitchMode:
+        _mode = _building->getPLBMode();
+        if (_mode == PLBModes::MO_Manual)
+        {
+            _updateStationsManualMode();
+            _building->notifyDashboard("PLB switched to manual mode.");
+            _prevMode = _mode;
         }
         break;
+    case PLBEvents::EV_SwitchBuildingState: 
+        _buildingState = _building->getState();
+        _distributePower(_building->getCurrentSolarPower());
+        break;
     }
-    prevSolarPower = solarPower;
+    return _state;
 }
 
-/*
- * @brief This function sends power to the building
- * @return 0 (success) / 1 (failure)
- */
-void PLB::_supplyPowerToBuilding(int solarPower)
+PLBStates PLB::handleDir4State(PLBEvents ev)
 {
-    _building->charge(80 - solarPower);
+    _state = PLBStates::ST_Dir4;
+    float solarPower = 0;
+    switch (ev)
+    {
+    case PLBEvents::EV_Timeout:
+        _distributePower(_building->calculateSolarPower());
+        break;
+    case PLBEvents::EV_Stop:
+        Serial.print("handleDir4State EV_Stop: "); Serial.println(_stationIdEvents.front());
+        _stopSupply(_stations.at(_stationIdEvents.front()));
+        _stationIdEvents.pop();
+        _state = PLBStates::ST_Dir3Only;
+        _distributePower(_building->getCurrentSolarPower());
+        break;
+    case PLBEvents::EV_Connected:
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " connected.");
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Disconnected:
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " disconnected.");
+        if (_stopSupply(_stations.at(_stationIdEvents.front())) == StopStatus::DirectorLeft) _state = PLBStates::ST_Dir3Only;
+        _stationIdEvents.pop();
+        _distributePower(_building->getCurrentSolarPower());
+        break;
+    case PLBEvents::EV_SwitchMode:
+        _mode = _building->getPLBMode();
+        if (_mode == PLBModes::MO_Manual)
+        {
+            _updateStationsManualMode();
+            _building->notifyDashboard("PLB switched to manual mode.");
+            _prevMode = _mode;
+        }
+        break;
+    case PLBEvents::EV_SwitchBuildingState: 
+        _buildingState = _building->getState();
+        _distributePower(_building->getCurrentSolarPower());
+        break;
+    }
+    return _state;
 }
 
-/*
- * @brief This function is called only when a user press the stop button
- * @return int : 1 (--director) / 2 (--user)
- */
-int PLB::_stopSupply(IStation *station)
+/* ----------------- Private Functions (Manual mode) */
+void PLB::_switchToAutoMode()
 {
-    --busyStations;
+    size_t directors = _directorStations.size();
+    size_t users = _userStations.size();
+    if (directors == 0) { _state = PLBStates::ST_NoDir; }
+    else if (directors == 1) { _state = PLBStates::ST_Dir1; }
+    else if (directors == 2) { _state = PLBStates::ST_Dir2; }
+    else if (directors == 3 && users == 1) { _state = PLBStates::ST_Dir3; }
+    else if (directors == 3 && users == 0) { _state = PLBStates::ST_Dir3Only; }
+    else if (directors == 4) { _state = PLBStates::ST_Dir4; }
+    else { _state = PLBStates::ST_Idle; }
+    _distributePower(_building->calculateSolarPower());
+}
+
+void PLB::_updateStationsManualMode()
+{
+    switch (_stationsMode)
+    {
+    case StationModes::MO_Dynamic:
+        _supplyPowerDynamicMode(_building->getCurrentSolarPower());
+        break;
+    case StationModes::MO_Director:
+        _supplyPowerDirectorMode(_building->getCurrentSolarPower());
+        break;
+    case StationModes::MO_FCFS:
+        _supplyPowerFCFSMode(_building->getCurrentSolarPower());
+        break;
+    default:
+        break;
+    }
+}
+
+void PLB::_supplyPowerDynamicMode(float solarPower)
+{
+    float availablePower = 20 + solarPower;
+    float power = (availablePower/busyStations > 11) ? 11 : availablePower/busyStations;
     for (size_t i = 0; i < _directorStations.size(); i++)
     {
-        if (station->getId() == _directorStations.at(i))
-        {
-            _directorStations.erase(_directorStations.begin() + i);
-            _directorIds.erase(_directorIds.begin() + i);
-            station->charge(0);
-            return 1;
-        }
+        _stations.at(_directorStations.at(i))->charge(power);
     }
     for (size_t i = 0; i < _userStations.size(); i++)
     {
-        if (station->getId() == _userStations.at(i))
-        {
-            _userStations.erase(_userStations.begin() + i);
-            station->charge(0);
-            return 2;
-        }
+        _stations.at(_userStations.at(i))->charge(power);
     }
-    return 0;
 }
 
-/*
- * @brief This function is called when a director swipes his RFID card
- * @return true (success) / false (failure)
- */
-int PLB::checkDirector(IStation *station)
+void PLB::_supplyPowerDirectorMode(float solarPower)
 {
-    uint32_t directorId = station->getDirectorId();
-    for (size_t i = 0; i < _directorIds.size(); i++)
+    Serial.print("DIRECTOR SUPPLY EXTRA POWER: "); Serial.println(solarPower);
+    float availablePower = 20 + solarPower;
+    float directorPower = 11*_directorStations.size();
+    float userPower = availablePower-directorPower;
+
+    // /* Supply only directors dynamically */
+    if (userPower <= 0)
     {
-        /* return RFID state: failed(-1), checkedIn(1), notCheckedIn(0) */
-        if (_directorIds.at(i) == directorId)
-            station->validateDirector(DirectorState::ALREADY_CHECKED_IN);
-            return -1;
-    }
-    for(size_t i = 0; i < _validDirectorIds.size(); i++)
-    {
-        if(_validDirectorIds.at(i) == directorId)
+        for (size_t i = 0; i < _directorStations.size(); i++)
         {
-            _directorIds.emplace_back(directorId);
-            _directorStations.emplace_back(station->getId());
-            station->validateDirector(DirectorState::VALID);
-            return 1;
+            _stations.at(_directorStations.at(i))->charge(availablePower/_directorStations.size());
         }
     }
-    station->validateDirector(DirectorState::INVALID);
-    return 0;
+    /* Then supply users, if they have power left */
+    else if (userPower > 0)
+    {
+        for (size_t i = 0; i < _directorStations.size(); i++)
+        {
+            if(directorPower/_directorStations.size() >= 11)
+            {
+                _stations.at(_directorStations.at(i))->charge(11);
+            }
+            else if(directorPower/_directorStations.size() < 11)
+            {
+                _stations.at(_directorStations.at(i))->charge(directorPower/_directorStations.size());
+            }
+        }
+        for (size_t i = 0; i < _userStations.size(); i++)
+        {
+            if(userPower/_userStations.size() >= 11)
+            {
+                _stations.at(_userStations.at(i))->charge(11);
+            }
+            else if(userPower/_userStations.size() < 11)
+            {
+                _stations.at(_userStations.at(i))->charge(userPower/_userStations.size());
+            }
+        }
+    }
+    
+}
+    
+void PLB::_supplyPowerFCFSMode(float solarPower)
+{
+    float availablePower = 20 + solarPower;
+    for (size_t i = 0; i < _occupiedStations.size(); i++)
+    {
+        Serial.println(_occupiedStations.at(i));
+        if (availablePower > 11) 
+        { 
+            _stations.at(_occupiedStations.at(i))->charge(11);
+            availablePower-=11;
+        }
+        else 
+        { 
+            _stations.at(_occupiedStations.at(i))->charge(availablePower);
+            availablePower=0;
+        }   
+    }
+}
+
+/* ----------------- Public Functions (Manual mode) */
+void PLB::handleManualModeEvents(PLBEvents ev)
+{
+    switch (_stationsMode)
+    {
+    case StationModes::MO_Dynamic:
+        handleDynamicMode(ev);
+        break;
+    case StationModes::MO_Director:
+        handleDirectorMode(ev);
+        break;
+    case StationModes::MO_FCFS:
+        handleFCFSMode(ev);
+        break;
+    default:
+        break;
+    }
+}
+
+void PLB::handleDynamicMode(PLBEvents ev)
+{
+    _stationsMode = StationModes::MO_Dynamic;
+    float solarPower = 0;
+    switch (ev)
+    {
+    case PLBEvents::EV_Timeout:
+        _supplyPowerDynamicMode(_building->calculateSolarPower());
+        _supplyPowerToBuilding(_building->getCurrentSolarPower());
+        break;
+    case PLBEvents::EV_Supply:
+        Serial.print("handleDynamicMode EV_Supply: "); Serial.println();
+        _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
+        _supplyPowerDynamicMode(_building->getCurrentSolarPower());
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Director:
+        checkDirector(_stations.at(_stationIdEvents.front()));
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Stop:
+        _stopSupply(_stations.at(_stationIdEvents.front()));
+        _supplyPowerDynamicMode(_building->getCurrentSolarPower());
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Connected:
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " connected.");
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Disconnected: /* Might be redundant because none of the stations are busy */
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " disconnected.");
+        _stopSupply(_stations.at(_stationIdEvents.front()));
+        _supplyPowerDynamicMode(_building->getCurrentSolarPower());
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_SwitchMode:
+        _mode = _building->getPLBMode();
+        if(_mode == PLBModes::MO_Auto)
+        {
+            _building->notifyDashboard("PLB switched to auto mode.");
+            _switchToAutoMode();
+        }
+        break;
+    case PLBEvents::EV_SwitchStationMode: 
+        _stationsMode = _stations.at(0)->getStationMode();
+        _updateStationsManualMode();
+        break;
+    case PLBEvents::EV_SwitchBuildingState: 
+        _buildingState = _building->getState();
+        _updateStationsManualMode();
+        break;
+    default:
+        break;
+    }
+}
+
+void PLB::handleDirectorMode(PLBEvents ev)
+{
+    _stationsMode = StationModes::MO_Director;
+    float solarPower = 0;
+    switch (ev)
+    {
+    case PLBEvents::EV_Timeout:
+        _supplyPowerDirectorMode(_building->calculateSolarPower());
+        _supplyPowerToBuilding(_building->getCurrentSolarPower());
+        break;
+    case PLBEvents::EV_Supply:
+        _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
+        _supplyPowerDirectorMode(_building->getCurrentSolarPower());
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Director:
+        checkDirector(_stations.at(_stationIdEvents.front()));
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Stop:
+        _stopSupply(_stations.at(_stationIdEvents.front()));
+        _supplyPowerDirectorMode(_building->getCurrentSolarPower());
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Connected:
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " connected.");
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Disconnected: /* Might be redundant because none of the stations are busy */
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " disconnected.");
+        _stopSupply(_stations.at(_stationIdEvents.front()));
+        _supplyPowerDirectorMode(_building->getCurrentSolarPower());
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_SwitchMode:
+        _mode = _building->getPLBMode();
+        if(_mode == PLBModes::MO_Auto)
+        {
+            _building->notifyDashboard("PLB switched to auto mode.");
+            _switchToAutoMode();
+        }
+        break;
+    case PLBEvents::EV_SwitchStationMode: 
+        _stationsMode = _stations.at(0)->getStationMode();
+        _updateStationsManualMode();
+        break;
+    case PLBEvents::EV_SwitchBuildingState: 
+        _buildingState = _building->getState();
+        _updateStationsManualMode();
+        break;
+    default:
+        break;
+    }
+}
+
+void PLB::handleFCFSMode(PLBEvents ev)
+{
+    _stationsMode = StationModes::MO_FCFS;
+    float solarPower = 0;
+    switch (ev)
+    {
+    case PLBEvents::EV_Timeout:
+        _supplyPowerFCFSMode(_building->calculateSolarPower());
+        _supplyPowerToBuilding(_building->getCurrentSolarPower());
+        break;
+    case PLBEvents::EV_Supply:
+        _supplyPowerToStation(_stations.at(_stationIdEvents.front()));
+        _supplyPowerFCFSMode(_building->getCurrentSolarPower());
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Director:
+        checkDirector(_stations.at(_stationIdEvents.front()));
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Stop:
+        _stopSupply(_stations.at(_stationIdEvents.front()));
+        _supplyPowerFCFSMode(_building->getCurrentSolarPower());
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Connected:
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " connected.");
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_Disconnected: /* Might be redundant because none of the stations are busy */
+        _stations.at(_stationIdEvents.front())->notifyDashboard("Station " + String(_stationIdEvents.front() + 1) + " disconnected.");
+        _stopSupply(_stations.at(_stationIdEvents.front()));
+        _supplyPowerFCFSMode(_building->getCurrentSolarPower());
+        _stationIdEvents.pop();
+        break;
+    case PLBEvents::EV_SwitchMode:
+        _mode = _building->getPLBMode();
+        if(_mode == PLBModes::MO_Auto)
+        {
+            _building->notifyDashboard("PLB switched to auto mode.");
+            _switchToAutoMode();
+        }
+        break;
+    case PLBEvents::EV_SwitchStationMode:
+        _stationsMode = _stations.at(0)->getStationMode();
+        _updateStationsManualMode();
+        break;
+    case PLBEvents::EV_SwitchBuildingState: 
+        _buildingState = _building->getState();
+        _updateStationsManualMode();
+        break;
+    default:
+        break;
+    }
+}
+
+/* ----------------- Shared Functions (Auto & Manual mode) */
+void PLB::addStation(IStation *station)
+{
+    _stations.emplace_back(station);
+}
+
+void PLB::setIdEvents(std::queue<int>& ids)
+{
+    /* using std::move() avoids unnecessary copy by tranfersing the ownership of these containers to the PLB */
+    if (ids.size()>0) _stationIdEvents = std::move(ids);
 }
 
 bool PLB::isTimeout()
 {
     static unsigned long _prev_millis = 0;
-    if (millis() - _prev_millis > 10000) {
+    if (millis() - _prev_millis > 5000) {
         _prev_millis = millis();
         return true;
     }
     return false;
 }
 
-void PLB::loop()
+void PLB::loop(std::vector<PLBEvents>& events, PLBEvents& PLBModeEvent)
 {
-    if (isTimeout())
+    // if (isTimeout()) handleAutoModeEvents(PLBEvents::EV_Timeout);
+
+    if (_mode == PLBModes::MO_Auto) 
     {
-        int solarPower = _building->calculateSolarPower();
-        if (solarPower == -1)
+        if (isTimeout()) handleAutoModeEvents(PLBEvents::EV_Timeout);
+        /* Maintainer that can switch PLB mode from the dashboard */
+        if (PLBModeEvent != PLBEvents::EV_NoEvent) handleAutoModeEvents(std::move(PLBModeEvent));
+
+        /* Iterate through the list of PLBEvents */
+        for (const auto &ev: events)
         {
-            // handle solar request timeout error
-            // maybe display sth on the Building screen
+            if (ev==PLBEvents::EV_Supply) { Serial.println("PLB (auto) loop: EV_Supply"); }
+            else if (ev==PLBEvents::EV_Stop) { Serial.println("PLB (auto) loop: EV_Stop"); }
+            else if (ev==PLBEvents::EV_Director) { Serial.println("PLB (auto) loop: EV_Director"); }
+            else if (ev==PLBEvents::EV_Connected) { Serial.println("PLB (auto) loop: EV_Connected"); }
+            else if (ev==PLBEvents::EV_Disconnected) { Serial.println("PLB (auto) loop: EV_Disconnected"); }
+            else if (ev==PLBEvents::EV_SwitchBuildingState) { Serial.println("PLB (auto) loop: EV_SwitchBuildingState"); }
+            handleAutoModeEvents(ev);
         }
-        _distributePower(solarPower);
     }
+    else if (_mode == PLBModes::MO_Manual)
+    {
+        if (isTimeout()) handleManualModeEvents(PLBEvents::EV_Timeout);        
+        /* Maintainer that can switch PLB mode from the dashboard */
+        if (PLBModeEvent != PLBEvents::EV_NoEvent) handleManualModeEvents(std::move(PLBModeEvent));
+
+        for (const auto &ev: events)
+        {
+            if (ev==PLBEvents::EV_Supply) { Serial.println("PLB (manual) loop: EV_Supply"); }
+            else if (ev==PLBEvents::EV_Stop) { Serial.println("PLB (manual) loop: EV_Stop"); }
+            else if (ev==PLBEvents::EV_Director) { Serial.println("PLB (manual) loop: EV_Director"); }
+            else if (ev==PLBEvents::EV_Connected) { Serial.println("PLB (manual) loop: EV_Connected"); }
+            else if (ev==PLBEvents::EV_Disconnected) { Serial.println("PLB (manual) loop: EV_Disconnected"); }
+            handleManualModeEvents(ev);
+        }
+    }
+    /* Get rid of events once handled */
+    events.clear();
 }

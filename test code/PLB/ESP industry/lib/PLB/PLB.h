@@ -2,6 +2,9 @@
 #define _PLB_HPP
 
 #include <vector>
+#include <queue>
+#include <set>
+#include <string>
 #include <utility>
 #include <functional>
 #include <Arduino.h>
@@ -12,25 +15,45 @@
 class PLB
 {
     int busyStations;
+    const uint32_t RFID1 = 3812054555;
+    const uint32_t RFID2 = 2267176004;
+    const uint32_t RFID3 = 2313450178;
+    const uint32_t RFID4 = 432104642;
 
 private:
     PLBStates _state;
     PLBModes _mode;
-    PLBEvents _event;
+    PLBModes _prevMode;
+    StationModes _stationsMode;
+    BuildingState _buildingState;
+    std::queue<int> _stationIdEvents;
+
     IBuilding *_building;
     std::vector<IStation *> _stations;
-    std::vector<int> _directorStations;
+    std::vector<float> _directorStations;
     std::vector<int> _userStations;
-    std::vector<uint32_t> _directorIds;
-    std::vector<uint32_t> _validDirectorIds = {2267176004, 432104642, 1518206872, 40, 50}; //maybe make this and directorIds uint32_t? It implies other changes so be careful
-
-    /* PLB Private Functions */
-    void _distributePower(int power);
+    std::vector<int> _occupiedStations;
+    std::vector<float> _directorIds;
+    std::vector<float> _validDirectorIds;
+    
+    void _initialiseStations();
+    void _changeStationsMode(StationModes stMode);
+   
+    /* Private functions (Auto mode) */
+    void _distributePower(float solarPower);
     void _supplyPowerToStation(IStation* station);
-    void _supplyPowerToBuilding(int solarPower);
-    int _stopSupply(IStation* station);
+    void _supplyPowerToBuilding(float solarPower);
+    StopStatus _stopSupply(IStation* station);
+    
+    /* Private functions (Manual mode) */
+    void _switchToAutoMode();
+    void _supplyPowerDynamicMode(float availablePower);
+    void _supplyPowerDirectorMode(float availablePower);
+    void _supplyPowerFCFSMode(float availablePower);
+    void _updateStationsManualMode();
 
 public:
+    /* Constructor and Destructor */
     PLB(IBuilding *building,
         IStation *station1,
         IStation *station2,
@@ -38,16 +61,17 @@ public:
         IStation *station4
     );
 
-    ~PLB() {}
+    ~PLB();
 
     /* PLB Public Functions */
     void addStation(IStation* station);
-    
-    int checkDirector(IStation* station);
+    DirectorState checkDirector(IStation* station);
+    void setIdEvents(std::queue<int>& ids);
     bool isTimeout();
-    void loop();
+    void loop(std::vector<PLBEvents>& events, PLBEvents& PLBModeEvent);
 
-    void handleEvents(PLBEvents ev);
+    /* Public Functions (Auto mode) */
+    void handleAutoModeEvents(PLBEvents ev);
     PLBStates handleIdleState(PLBEvents ev);
     PLBStates handleNoDirState(PLBEvents ev);
     PLBStates handleDir1State(PLBEvents ev);
@@ -55,6 +79,12 @@ public:
     PLBStates handleDir3State(PLBEvents ev);
     PLBStates handleDir3OnlyState(PLBEvents ev);
     PLBStates handleDir4State(PLBEvents ev);
+
+    /* Public Functions (Manual mode) */
+    void handleManualModeEvents(PLBEvents ev);
+    void handleDynamicMode(PLBEvents ev);
+    void handleDirectorMode(PLBEvents ev);
+    void handleFCFSMode(PLBEvents ev);
 
     /* Getters & Setters */
     inline const IBuilding *
@@ -67,6 +97,4 @@ public:
     changeMode(PLBModes mode) { _mode = mode; }
 
 };
-
-
 #endif /* _PLB_HPP */

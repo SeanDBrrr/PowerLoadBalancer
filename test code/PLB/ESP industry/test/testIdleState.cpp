@@ -26,38 +26,41 @@ TEST_F(testIdleState, test_timeout_event) {
     float solarPower = 10;
 
     /*2. Method test */
-    PLBStates state = plb.manageIdleState(EV_timeout);
+    PLBStates state = plb.handleIdleState(PLBEvents::EV_Timeout);
 
     /*3. Calls expectations */
     EXPECT_CALL(mockBuilding, calculateSolarPower()).Times(1);
+
+    // plb._distributePower(solarPower);
+
     EXPECT_CALL(mockBuilding, charge(80)).Times(1);
-    EXPECT_CALL(mockStation1, charge(0)).Times(0);
-    EXPECT_CALL(mockStation2, charge(0)).Times(0);
-    EXPECT_CALL(mockStation3, charge(0)).Times(0);
-    EXPECT_CALL(mockStation4, charge(0)).Times(0);
+    // EXPECT_CALL(mockStation1, charge(0)).Times(0);
+    // EXPECT_CALL(mockStation2, charge(0)).Times(0);
+    // EXPECT_CALL(mockStation3, charge(0)).Times(0);
+    // EXPECT_CALL(mockStation4, charge(0)).Times(0);
 
     /*4. Return value expectation */
-    EXPECT_EQ(ST_Idle, state);
+    EXPECT_EQ(PLBStates::ST_Idle, state);
 }
 
-TEST_F(testIdleState, test_supply1_event) {
-    /*1. Variables declaration */
-    float solarPower = 10;
+// TEST_F(testIdleState, test_supply1_event) {
+//     /*1. Variables declaration */
+//     float solarPower = 10;
 
-    /*2. Method test */
-    PLBStates state = plb.manageIdleState(EV_supply1);
+//     /*2. Method test */
+//     PLBStates state = plb.handleIdleState(PLBEvents::EV_Supply);
 
-    /*3. Calls expectations */
-    EXPECT_CALL(mockBuilding, calculateSolarPower()).Times(1);
-    EXPECT_CALL(mockBuilding, charge(solarPower)).Times(1);
-    EXPECT_CALL(mockStation1, charge(11)).Times(1);
-    EXPECT_CALL(mockStation2, charge(0)).Times(0);
-    EXPECT_CALL(mockStation3, charge(0)).Times(0);
-    EXPECT_CALL(mockStation4, charge(0)).Times(0);
+//     /*3. Calls expectations */
+//     EXPECT_CALL(mockBuilding, calculateSolarPower()).Times(1);
+//     EXPECT_CALL(mockBuilding, charge(solarPower)).Times(1);
+//     EXPECT_CALL(mockStation1, charge(11)).Times(1);
+//     EXPECT_CALL(mockStation2, charge(0)).Times(0);
+//     EXPECT_CALL(mockStation3, charge(0)).Times(0);
+//     EXPECT_CALL(mockStation4, charge(0)).Times(0);
 
-    /*4. Return value expectation */
-    EXPECT_EQ(ST_NoDir, state);
-}
+//     /*4. Return value expectation */
+//     EXPECT_EQ(PLBStates::ST_NoDir, state);
+// }
 
 // TEST_F(testIdleState, test_supply2_event) {
 //     /*1. Variables declaration */

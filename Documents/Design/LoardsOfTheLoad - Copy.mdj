@@ -27729,7 +27729,7 @@
 											"font": "Arial;13;0",
 											"left": 417,
 											"top": 62,
-											"width": 16.6181640625,
+											"width": 17.33544921875,
 											"height": 13,
 											"alpha": 1.5707963267948966,
 											"distance": 15,
@@ -29967,11 +29967,12 @@
 											"_parent": {
 												"$ref": "AAAAAAGIBJlF7c08+wI="
 											},
-											"visible": false,
 											"font": "Arial;13;0",
-											"left": 80,
-											"top": -64,
-											"height": 13
+											"left": 461,
+											"top": 269,
+											"width": 122.4716796875,
+											"height": 13,
+											"text": "«Interface»"
 										},
 										{
 											"_type": "LabelView",
@@ -29981,7 +29982,7 @@
 											},
 											"font": "Arial;13;1",
 											"left": 461,
-											"top": 271,
+											"top": 284,
 											"width": 122.4716796875,
 											"height": 13,
 											"text": "ISolarPanel"
@@ -30018,7 +30019,7 @@
 									"left": 456,
 									"top": 264,
 									"width": 132.4716796875,
-									"height": 25,
+									"height": 38,
 									"stereotypeLabel": {
 										"$ref": "AAAAAAGIBJlF7c096r8="
 									},
@@ -30043,7 +30044,7 @@
 									},
 									"font": "Arial;13;0",
 									"left": 456,
-									"top": 289,
+									"top": 302,
 									"width": 132.4716796875,
 									"height": 10
 								},
@@ -30068,7 +30069,7 @@
 											},
 											"font": "Arial;13;0",
 											"left": 461,
-											"top": 304,
+											"top": 317,
 											"width": 122.4716796875,
 											"height": 13,
 											"text": "+getSolarPower(): int",
@@ -30077,7 +30078,7 @@
 									],
 									"font": "Arial;13;0",
 									"left": 456,
-									"top": 299,
+									"top": 312,
 									"width": 132.4716796875,
 									"height": 23
 								},
@@ -30119,7 +30120,7 @@
 							"left": 456,
 							"top": 264,
 							"width": 132.4716796875,
-							"height": 58,
+							"height": 71,
 							"nameCompartment": {
 								"$ref": "AAAAAAGIBJlF7c08+wI="
 							},
@@ -31614,7 +31615,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": 504,
-									"top": 349,
+									"top": 356,
 									"height": 13,
 									"alpha": 1.5707963267948966,
 									"distance": 15,
@@ -31635,7 +31636,7 @@
 									"visible": null,
 									"font": "Arial;13;0",
 									"left": 489,
-									"top": 349,
+									"top": 355,
 									"height": 13,
 									"alpha": 1.5707963267948966,
 									"distance": 30,
@@ -31656,7 +31657,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": 533,
-									"top": 350,
+									"top": 357,
 									"height": 13,
 									"alpha": -1.5707963267948966,
 									"distance": 15,
@@ -31674,7 +31675,7 @@
 								"$ref": "AAAAAAGIBJ02dOo/16Y="
 							},
 							"lineStyle": 1,
-							"points": "519:391;520:322",
+							"points": "519:391;520:335",
 							"showVisibility": true,
 							"nameLabel": {
 								"$ref": "AAAAAAGIBJ4mJPGaCV0="
@@ -40908,6 +40909,7 @@
 							}
 						}
 					],
+					"stereotype": "Interface",
 					"operations": [
 						{
 							"_type": "UMLOperation",

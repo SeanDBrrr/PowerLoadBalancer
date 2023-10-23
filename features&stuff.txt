@@ -1,0 +1,67 @@
+Design timeline evolution:
+
+- several mqttClientStation instances with separate events:
+	-> 1 set of unique topics per instance (lot of topics in the end)
+	-> call plb->handleEvents function as many times as the number of instances per loop
+
+- several mqttClientStation instances with shared events:
+	-> 1 set of unique topics per instance (lot of topics in the end) but distinguishable from one another 
+	-> call plb->handleEvents function one time per loop
+	-> vector to store events and queues for storing stations ID related to events (static variables)
+	-> removed flags in MQTTClientStation and process directly inside the subscribe() function
+	-> handleState functions much simpler + needs to pop() after an event was handled
+	-> use std::move() to transfer ownership
+	-> loop() function modified (expects a vector of PLBEvents) + vector cleared once the loop was iterated through.
+	-> more expandable (new station does not involve new PLBEvents) but probably needs to think of a new state design
+
+- one big mqttClientStation instance:
+	-> only 3 different topics
+	-> call plb->handleEvents function one time per loop
+	-> easy to deal with directorId (int)
+
+
+Miscellaneous:
+	-> include namespaces?
+	-> don't supply building when disconnected and plb should charge a station to 0 when it is disconnected (show it on the dashboard)
+	-> reponse error based disconnection
+	-> the station must know if it is being supplied and therefore read RFID (isCharging needs impelemented to make sure that the RFID is not read when being charged + display)
+	-> think about edge cases: plb disconnects, station disconnects, network off, what happens when we change the PLB mode?, 
+	-> plb should only charge stations again if solarPower changed
+	-> delay in the communication between plb and building
+	-> why every object is allocated on the heap?
+	-> when station goes off (hardware limitation)
+	-> keeps sending supply request so long as a station do not receive power from PLB
+	-> Dorin's idea with ID in states as parameters
+	-> last will message for stations (this has to be retained)
+	-> keep supplying the building with power when it is disconnected
+	-> edge cases: director gets disconnected before being supplied (needs to wait for the OFFLINE otherwise not removed from director vector), 
+
+Sioux support:
+	-> busy waiting for timeouts? : 
+	-> handle Events with only one big queue instead of 4 different queues
+	-> int& 1- int &2 //modify this so it is consistent through all the code
+
+Code Changes:
+	-> new _prevSolarPower variable & prevBusyStations
+
+Manual mode:
+	-> the maintainer should be able to control the stations state from the dashboard
+	-> he can switch to one of the mode:
+		-> Dynamic
+		-> Director
+		-> FCFS
+	-> switch to Manual mode: keeps the same stations mode
+	-> switch to Auto Mode : has to determine which PLBStates we are (cars might have driven off or arrived while in Manual mode)
+	-> if station disconnects and is busy, maintainer is notified and can manually put the user back in the list of arrival (but auto mode don't allow that)
+
+Notes from Dorin from Tuesday:
+	-> My idea with id in states as parameters.
+	-> Fixed heartbeat problems and added for building (done)
+	-> Making only one topic instead of multiple topic per station. Also implement one instance of mqtt instead of multiple?
+	-> Make building fail message not spam (done)
+	-> Fix delay of building receive power and everything
+	-> Think of maybe implementing what Tom said with one queue only.
+	-> Implement last will messages heartbeat (50%)
+
+Bugs:
+	-> Dir1 state with 3 users
